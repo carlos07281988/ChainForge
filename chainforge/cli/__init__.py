@@ -1,4 +1,4 @@
-"""ChainForge CLI — project scaffolding, skill management, and utilities."""
+"""ChainForge CLI — scaffold, skill, serve, and more."""
 
 import argparse
 import sys
@@ -15,30 +15,36 @@ def main():
 
     sub = parser.add_subparsers(dest="command", help="Available commands")
 
-    # ── chainforge init ──────────────────────────────────────────────────
-    init_parser = sub.add_parser("init", help="Scaffold a new ChainForge project")
-    init_parser.add_argument("name", help="Project name")
-    init_parser.add_argument("--dir", default=".", help="Target directory (default: current)")
+    # chainforge init
+    i = sub.add_parser("init", help="Scaffold a new ChainForge project")
+    i.add_argument("name", help="Project name")
+    i.add_argument("--dir", default=".", help="Target directory")
 
-    # ── chainforge quickstart ────────────────────────────────────────────
-    qs_parser = sub.add_parser("quickstart", help="Generate a minimal agent script")
-    qs_parser.add_argument("--provider", default="openai", choices=["openai", "anthropic", "google"],
-                           help="LLM provider to use")
+    # chainforge quickstart
+    q = sub.add_parser("quickstart", help="Generate a minimal agent script")
+    q.add_argument("--provider", default="openai", choices=["openai", "anthropic", "google"])
 
-    # ── chainforge skill ─────────────────────────────────────────────────
-    skill_parser = sub.add_parser("skill", help="Manage skills")
-    skill_sub = skill_parser.add_subparsers(dest="skill_command")
+    # chainforge skill
+    sk = sub.add_parser("skill", help="Manage skills")
+    sk_sub = sk.add_subparsers(dest="skill_command")
+    sk_sub.add_parser("list", help="List available skills")
+    sa = sk_sub.add_parser("add", help="Register a skill")
+    sa.add_argument("path", help="Path to SKILL.md or skill directory")
+    si = sk_sub.add_parser("info", help="Show skill details")
+    si.add_argument("name", help="Skill name")
 
-    # skill list
-    skill_sub.add_parser("list", help="List available skills")
+    # chainforge serve
+    sv = sub.add_parser("serve", help="Start the HTTP API server")
+    sv.add_argument("--host", default="0.0.0.0", help="Bind host")
+    sv.add_argument("--port", type=int, default=8000, help="Bind port")
+    sv.add_argument("--reload", action="store_true", help="Auto-reload on code changes")
+    sv.add_argument("--agent", action="append", dest="agent_specs",
+                    help="Register an agent: name=ClassName:param=val,...")
 
-    # skill add <path>
-    add_skill = skill_sub.add_parser("add", help="Register a skill from a file/directory")
-    add_skill.add_argument("path", help="Path to SKILL.md or directory of skills")
-
-    # skill info <name>
-    info_skill = skill_sub.add_parser("info", help="Show skill details")
-    info_skill.add_argument("name", help="Skill name")
+    # chainforge run (quick CLI run)
+    r = sub.add_parser("run", help="Run an agent directly (requires registered agent)")
+    r.add_argument("agent_id", help="Registered agent ID or inline spec")
+    r.add_argument("prompt", nargs="*", help="Prompt text")
 
     args = parser.parse_args()
 
@@ -47,17 +53,18 @@ def main():
     elif args.command == "quickstart":
         _generate_quickstart(args.provider)
     elif args.command == "skill":
-        _handle_skill_command(args)
+        _handle_skill(args)
+    elif args.command == "serve":
+        _handle_serve(args)
+    elif args.command == "run":
+        _handle_run(args)
     else:
         parser.print_help()
 
 
-def _handle_skill_command(args):
-    """Handle skill subcommands."""
+def _handle_skill(args):
     from chainforge.skills import SkillRegistry
-
     registry = SkillRegistry()
-
     if args.skill_command == "list":
         registry.load_dir(".")
         skills = registry.list()
@@ -69,137 +76,134 @@ def _handle_skill_command(args):
         for s in skills:
             tags = ", ".join(s.spec.tags) if s.spec.tags else ""
             print(f"{s.name:<24} {s.description[:46]:<48} {tags}")
-
     elif args.skill_command == "add":
         import os
-        path = args.path
-        if os.path.isfile(path) and path.endswith("SKILL.md"):
-            from chainforge.skills.loader import load_skill_from_file
-            skill = load_skill_from_file(path)
+        from chainforge.skills.loader import load_skill_from_file
+        if os.path.isfile(args.path) and args.path.endswith("SKILL.md"):
+            skill = load_skill_from_file(args.path)
             registry.register(skill)
             print(f"✅ Registered skill: {skill.name}")
-        elif os.path.isdir(path):
-            skills = registry.load_dir(path)
-            print(f"✅ Registered {len(skills)} skill(s) from {path}")
+        elif os.path.isdir(args.path):
+            skills = registry.load_dir(args.path)
+            print(f"✅ Registered {len(skills)} skill(s)")
         else:
-            print(f"❌ No SKILL.md found at {path}")
-
+            print(f"❌ No SKILL.md at {args.path}")
     elif args.skill_command == "info":
         from chainforge.skills.loader import load_skill_from_file
-        name = args.name
         found = None
-        # Try as file path first, then as registry name
-        if name.endswith("SKILL.md") or "/" in name:
+        if args.path and (args.path.endswith("SKILL.md") or "/" in args.path):
             try:
-                found = load_skill_from_file(name)
+                found = load_skill_from_file(args.path)
             except FileNotFoundError:
                 pass
         if found is None:
             registry.load_dir(".")
-            found = registry.get(name)
+            found = registry.get(args.name)
         if found:
             print(f"Name:        {found.name}")
             print(f"Description: {found.description}")
             print(f"Version:     {found.spec.version}")
             print(f"Tags:        {', '.join(found.spec.tags) if found.spec.tags else '(none)'}")
-            print(f"Tools:       {len(found.tools)}")
             print(f"\nInstructions:\n{found.instructions[:500]}")
         else:
-            print(f"❌ Skill not found: {name}")
+            print(f"❌ Skill not found: {args.name}")
 
-    else:
-        print("Usage: chainforge skill {list|add|info}")
 
+def _handle_serve(args):
+    """Start the HTTP server with optionally registered agents."""
+    from chainforge.server import register_agent, run_server
+
+    if args.agent_specs:
+        for spec in args.agent_specs:
+            _parse_and_register(spec)
+
+    run_server(host=args.host, port=args.port, reload=args.reload)
+
+
+def _parse_and_register(spec: str):
+    """Parse 'name=AgentClass:key=val,...' and register."""
+    try:
+        name_part, _, config_part = spec.partition("=")
+        name = name_part.strip()
+        cls_name, _, params_str = config_part.partition(":")
+        cls_name = cls_name.strip()
+        from chainforge import Agent
+        from chainforge.providers import OpenAIProvider
+        cls_map = {"Agent": Agent, "agent": Agent}
+        cls = cls_map.get(cls_name, Agent)
+        llm = OpenAIProvider()
+        agent = cls(llm=llm)
+        register_agent(name, agent, f"CLI-registered {cls_name}")
+        print(f"  Registered agent '{name}' ({cls_name})")
+    except Exception as e:
+        print(f"  ⚠️  Failed to register '{spec}': {e}")
+
+
+def _handle_run(args):
+    prompt = " ".join(args.prompt) if args.prompt else "Hello"
+    from chainforge.server import register_agent as reg, _agent_registry as registry
+    from chainforge import Agent
+    from chainforge.providers import OpenAIProvider
+
+    if args.agent_id not in registry:
+        # Auto-register a default agent
+        reg(args.agent_id, Agent(llm=OpenAIProvider()), "CLI-run agent")
+
+    import asyncio
+    from chainforge.server import _get_agent
+
+    agent, _ = _get_agent(args.agent_id)
+
+    async def _run():
+        stream = await agent.run(prompt)
+        async for event in stream:
+            if event.type == "text" and event.content:
+                print(event.content, end="", flush=True)
+        print()
+
+    asyncio.run(_run())
+
+
+# ── scaffold / quickstart / init ─────────────────────────────────────────────
 
 def _scaffold_project(name: str, target_dir: str):
-    """Create a new ChainForge project with basic structure."""
     from pathlib import Path
     base = Path(target_dir) / name
     if base.exists():
         print(f"❌ Directory '{base}' already exists.")
         sys.exit(1)
-
-    (base / "agents").mkdir(parents=True)
-    (base / "tools").mkdir()
-    (base / "skills").mkdir()
-    (base / "workflows").mkdir()
-    (base / "tests").mkdir()
-
     for d in ["", "agents", "tools", "skills", "workflows", "tests"]:
-        (base / d / "__init__.py").write_text("")
-
-    (base / "config.py").write_text(f'''"""ChainForge project configuration."""
-
-from chainforge import Agent
-from chainforge.providers import OpenAIProvider
-
-llm = OpenAIProvider(model="gpt-4o")
-AGENT_DEFAULTS = {{"llm": llm, "max_iterations": 10, "temperature": 0.3}}
-''')
-
-    (base / "main.py").write_text(f'''"""ChainForge agent: {name}"""
-
-import asyncio
-from chainforge import Agent, tool
-from chainforge.providers import OpenAIProvider
-
-
-@tool
-def greet(name: str) -> str:
-    """Greet someone by name."""
-    return f"Hello, {{name}}!"
-
-
-async def main():
-    agent = Agent(llm=OpenAIProvider(), tools=[greet],
-                  system_prompt="You are a friendly agent.")
-    async for event in await agent.run("Say hello to ChainForge!"):
-        if event.type == "text":
-            print(event.content, end="", flush=True)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
-''')
-
-    (base / "tests" / "test_basic.py").write_text(f'''"""Tests for {{name}}."""
-import pytest
-@pytest.mark.asyncio
-async def test_agent(): pass
-''')
-
+        p = base / d
+        p.mkdir(parents=True)
+        (p / "__init__.py").write_text("")
+    (base / "config.py").write_text(
+        '"""ChainForge config."""\nfrom chainforge import Agent\nfrom chainforge.providers import OpenAIProvider\n'
+        'llm = OpenAIProvider(model="gpt-4o")\nAGENT_DEFAULTS = {"llm": llm, "max_iterations": 10}\n'
+    )
+    (base / "main.py").write_text(
+        '"""Main agent."""\nimport asyncio\nfrom chainforge import Agent, tool\nfrom chainforge.providers import OpenAIProvider\n\n'
+        '@tool\ndef greet(name: str) -> str:\n    """Greet someone."""\n    return f"Hello, {name}!"\n\n'
+        'async def main():\n    agent = Agent(llm=OpenAIProvider(), tools=[greet], system_prompt="You are friendly.")\n'
+        '    async for e in await agent.run("Say hello to ChainForge!"):\n        if e.type == "text":\n            print(e.content, end="", flush=True)\n\n'
+        'if __name__ == "__main__":\n    asyncio.run(main())\n'
+    )
     (base / ".env.example").write_text("OPENAI_API_KEY=\nANTHROPIC_API_KEY=\nGOOGLE_API_KEY=\n")
     print(f"✅ ChainForge project '{name}' created at {base}")
 
 
 def _generate_quickstart(provider: str):
-    """Print a minimal quickstart script."""
-    provider_import = {
+    imports = {
         "openai": "from chainforge.providers import OpenAIProvider\nllm = OpenAIProvider()",
         "anthropic": "from chainforge.providers import AnthropicProvider\nllm = AnthropicProvider()",
         "google": "from chainforge.providers import GoogleProvider\nllm = GoogleProvider()",
     }
-    print(f'''"""ChainForge Quickstart — {provider}"""
-import asyncio
-from chainforge import Agent, tool
-
-
-@tool
-def get_weather(city: str) -> str:
-    """Get weather for a city."""
-    return f"Weather in {{city}}: sunny, 25°C"
-
-
-async def main():
-    {provider_import[provider]}
-    agent = Agent(llm=llm, tools=[get_weather])
-    async for event in await agent.run("Weather in Beijing?"):
-        if event.type == "text":
-            print(event.content, end="", flush=True)
-
-
-asyncio.run(main())
-''')
+    print(f'"""ChainForge Quickstart — {provider}"""\n'
+          'import asyncio\nfrom chainforge import Agent, tool\n\n'
+          '@tool\ndef get_weather(city: str) -> str:\n    """Get weather."""\n    return f"Weather in {city}: sunny, 25°C"\n\n'
+          'async def main():\n    {imports[provider]}\n'
+          '    agent = Agent(llm=llm, tools=[get_weather])\n'
+          '    async for e in await agent.run("Weather in Beijing?"):\n        if e.type == "text":\n            print(e.content, end="", flush=True)\n\n'
+          'asyncio.run(main())\n')
 
 
 if __name__ == "__main__":
