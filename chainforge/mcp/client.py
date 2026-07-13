@@ -103,7 +103,7 @@ class MCPClient(BaseModel):
                         description=tool_data.get("description", ""),
                         parameters=tool_data.get("input_schema", {"type": "object", "properties": {}}),
                     )
-                    tools.append(MCPTool(server=server_info, spec=spec, client=name))
+                    tools.append(MCPTool(server=server_info, spec=spec, client=client))
             except Exception:
                 pass
         return tools

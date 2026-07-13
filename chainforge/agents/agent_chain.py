@@ -12,6 +12,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, ConfigDict
 
+from chainforge.core.message import Message
 from chainforge.core.stream import EventType, Stream, StreamEvent
 from chainforge.core.tool import Tool, ToolSpec
 from chainforge.logging import get_logger, log_data
@@ -93,7 +94,7 @@ class AgentChain(BaseModel):
                     current_prompt = f"Context from previous step ({step.name}):\n{step_output}\n\nContinue the overall task. Original context: {ctx}"
                 else:
                     current_prompt = list(current_prompt) + [
-                        __import__("chainforge.core.message", fromlist=["Message"]).Message.assistant(step_output)
+                        Message.assistant(step_output)
                     ]
 
                 yield StreamEvent(type=EventType.state, content="step_done",

@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
-from logging import DEBUG, INFO
+from logging import DEBUG, INFO, WARNING
 from typing import Any
 
 from pydantic import BaseModel, Field, ConfigDict
@@ -73,6 +73,11 @@ class RouterAgent(BaseModel):
                 if route_name.lower() in predicted:
                     selected = route_name
                     break
+
+            if not selected and predicted:
+                log_data(logger, WARNING,
+                         f"No exact route match for predicted class: '{predicted}'",
+                         data=dict(predicted=predicted, routes=list(self.routes.keys())))
 
             if not selected:
                 selected = self.default_route if self.default_route in self.routes else None

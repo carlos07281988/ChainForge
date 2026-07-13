@@ -11,6 +11,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field, ConfigDict
 
+import re
+
 from chainforge.core.agent import Agent
 from chainforge.core.message import Message
 from chainforge.core.stream import EventType, Stream, StreamEvent
@@ -63,7 +65,7 @@ class Supervisor(BaseModel):
                 # Check if supervisor wants to delegate
                 delegated = False
                 for worker_name, worker_agent in self.workers.items():
-                    if worker_name.lower() in supervisor_response.lower():
+                    if re.search(r'' + re.escape(worker_name.lower()) + r'', supervisor_response.lower()):
                         delegated = True
                         yield StreamEvent(
                             type=EventType.status,

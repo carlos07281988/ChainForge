@@ -279,7 +279,7 @@ async def stream_dag(dag: str = Query(..., description="JSON-encoded DAG definit
         nt = n.get("type", "step")
         type_map = {"step": NodeType.step, "input": NodeType.input, "output": NodeType.output,
                      "router": NodeType.router, "merge": NodeType.merge}
-        label = n.get("label", n["id"])
+        label = n.get("label", n.get("id", "unknown"))
 
         def _mk_fn(lbl, ntype):
             def fn(x=None):

@@ -9,6 +9,9 @@ from typing import Any, TypeVar
 from pydantic import BaseModel, Field
 
 from chainforge.core.structured_output import parse_structured_response
+from chainforge.logging import get_logger
+
+logger = get_logger("stream")
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -73,9 +76,14 @@ class Stream:
     async def collect_text(self) -> str:
         """Collect all text events into a single string."""
         parts: list[str] = []
+        has_errors = False
         async for event in self:
             if event.type == EventType.text and event.content:
                 parts.append(event.content)
+            if event.type == EventType.error:
+                has_errors = True
+        if has_errors:
+            logger.warning("collect_text() encountered error events in the stream")
         return "".join(parts)
 
     async def collect(self) -> list[StreamEvent]:

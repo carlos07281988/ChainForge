@@ -139,7 +139,7 @@ class GoogleProvider(BaseModel):
             if history:
                 last = history.pop()
             else:
-                last = {"role": "user", "parts": [{"text": "Hello"}]}
+                last = {"role": "user", "parts": [{"text": messages[-1].content if messages else "Hello"}]}
 
             chat = model.start_chat(history=history)
             raw = await chat.send_message_async(last["parts"], **kwargs)
@@ -167,7 +167,7 @@ class GoogleProvider(BaseModel):
             if history:
                 last = history.pop()
             else:
-                last = {"role": "user", "parts": [{"text": "Hello"}]}
+                last = {"role": "user", "parts": [{"text": messages[-1].content if messages else "Hello"}]}
 
             chat = model.start_chat(history=history)
             response = await chat.send_message_async(last["parts"], stream=True, **kwargs)

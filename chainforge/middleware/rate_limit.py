@@ -35,6 +35,7 @@ class _TokenBucket:
         self.burst_size = burst_size
         self.tokens = burst_size
         self.last_refill = time.monotonic()
+        self._lock = asyncio.Lock()
 
     def _refill(self) -> None:
         now = time.monotonic()
@@ -44,13 +45,14 @@ class _TokenBucket:
 
     async def acquire(self) -> float | None:
         """Acquire a token. Returns wait time if waiting is needed, or None."""
-        self._refill()
-        if self.tokens < 1:
-            wait_time = (1 - self.tokens) * (60.0 / self.calls_per_minute)
-            self.tokens = 0
-            return wait_time
-        self.tokens -= 1
-        return None
+        async with self._lock:
+            self._refill()
+            if self.tokens < 1:
+                wait_time = (1 - self.tokens) * (60.0 / self.calls_per_minute)
+                self.tokens = 0
+                return wait_time
+            self.tokens -= 1
+            return None
 
 
 def rate_limit_middleware(
