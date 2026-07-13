@@ -10,6 +10,8 @@ from chainforge.core.pipeline import Pipeline
 from chainforge.core.middleware import Middleware
 from chainforge.core.graph import DAG
 from chainforge.core.human_in_loop import HumanInTheLoop, ApprovalRequest, ApprovalDecision
+from chainforge.core.state import AgentState, StateTracker, StateTransition
+from chainforge.logging import configure_logging, get_logger, log_data
 
 __all__ = [
     "__version__",
@@ -22,4 +24,6 @@ __all__ = [
     "DAG",
     "Middleware",
     "HumanInTheLoop", "ApprovalRequest", "ApprovalDecision",
+    "AgentState", "StateTracker", "StateTransition",
+    "configure_logging", "get_logger", "log_data",
 ]

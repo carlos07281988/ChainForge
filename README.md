@@ -500,3 +500,89 @@ User Prompt
 - [ ] Graph-based agent visual editor
 - [ ] Agent evaluation & testing framework
 
+
+---
+
+## Logging
+
+ChainForge provides a structured, production-ready logging system built on Python's `logging` module.
+
+### Quick Start
+
+```python
+from chainforge import configure_logging
+
+# Human-readable text output (default)
+configure_logging(level="INFO")
+
+# JSON structured logging (for log aggregators)
+configure_logging(level="DEBUG", format="json")
+
+# Per-module log levels
+configure_logging(
+    level="WARNING",
+    module_levels={
+        "agent": "DEBUG",         # Verbose agent internals
+        "providers.openai": "INFO", # Show API calls
+    },
+)
+
+# Log to file
+configure_logging(level="DEBUG", output="logs/chainforge.log")
+```
+
+### Logging Middleware
+
+The `logging_middleware` captures the full lifecycle of each agent run:
+
+```python
+from chainforge import Agent
+from chainforge.middleware.logging_mw import logging_middleware
+
+agent = Agent(
+    llm=...,
+    tools=[...],
+    middlewares=[logging_middleware(
+        log_input=True,         # Log user prompts
+        log_output=True,        # Log agent responses
+        log_tool_calls=True,    # Log tool invocations + results
+        log_states=True,        # Log state transitions
+    )],
+)
+```
+
+Example JSON output:
+
+```json
+{"ts": "14:30:01.234", "level": "INFO", "logger": "chainforge.agent", "msg": "[run_123] Agent started", "data": {"input": "Weather in Beijing?", "messages": 2}}
+{"ts": "14:30:01.456", "level": "DEBUG", "logger": "chainforge.agent", "msg": "[run_123] state → thinking", "data": {"state": {"state": "thinking", "iteration": 0}}}
+{"ts": "14:30:02.001", "level": "INFO", "logger": "chainforge.agent", "msg": "[run_123] tool → get_weather", "data": {"tool_call": {"name": "get_weather", "args": {"city": "Beijing"}}}}
+{"ts": "14:30:02.234", "level": "INFO", "logger": "chainforge.agent", "msg": "[run_123] Done in 1.20s", "data": {"duration_s": 1.2, "tool_calls": 1}}
+```
+
+### Module Loggers
+
+Every module has a namespaced logger under `chainforge.*`:
+
+| Logger | Module | Typical Level |
+|---|---|---|
+| `chainforge.agent` | Agent execution loop | INFO |
+| `chainforge.providers.openai` | OpenAI API calls | DEBUG |
+| `chainforge.providers.anthropic` | Anthropic API calls | DEBUG |
+| `chainforge.middleware.retry` | Retry attempts | INFO |
+
+### Structured Data
+
+Use `log_data()` to attach structured data to log entries:
+
+```python
+from chainforge import log_data, get_logger
+
+logger = get_logger("my_module")
+log_data(logger, "INFO", "Processing complete", data={
+    "items_processed": 42,
+    "duration_ms": 150,
+})
+```
+
+In JSON mode, the data dict appears under the `"data"` key. In text mode, it's appended to the message.
