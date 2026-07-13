@@ -674,97 +674,102 @@ chainforge skill info <name> # Show skill details
 
 ## Agent Patterns
 
-ChainForge ships with 5 agent patterns out of the box, each suited for different task types:
+ChainForge ships with **10 agent patterns** out of the box.
 
-### 1. `Agent` (Base)
-The core execution loop: send messages + tool schemas to LLM → execute tool calls → repeat until done. This is the foundation all other patterns build on.
+### 1. Agent (Base)
+The core execution loop: LLM + Tools. Foundation for all patterns.
 
 ```python
 from chainforge import Agent
-
 agent = Agent(llm=llm, tools=[search, calculator])
-async for event in await agent.run("Calculate 2+2"):
-    ...
 ```
 
-### 2. `ReActAgent`
-Thought/Action/Observation loop. The agent explicitly reasons about what to do, takes action, observes the result, and decides next steps. Best for tasks requiring clear reasoning.
+### 2. ReActAgent
+Thought/Action/Observation loop. Explicit reasoning.
 
 ```python
 from chainforge.agents import ReActAgent
-
 agent = ReActAgent(llm=llm, tools=[search], verbose=True)
 ```
 
-### 3. `PlanAndExecute`
-**Plan first, then execute step-by-step.** The agent analyzes the task, creates a multi-step plan, executes each step (potentially with tools), then synthesizes results into a final answer.
-
-Best for: complex multi-step tasks, research, data processing pipelines.
+### 3. PlanAndExecute
+Plan -> Execute -> Synthesize. Creates a plan, executes step-by-step, combines results.
 
 ```python
 from chainforge.agents import PlanAndExecute
-
 agent = PlanAndExecute(llm=llm, tools=[search, calculator])
-async for event in await agent.run("Analyze Q3 revenue trends"):
-    # Phase 1: Plan → status events
-    # Phase 2: Execute each step → tool calls + text
-    # Phase 3: Synthesize → final answer
-    ...
 ```
 
-Flow: `planning → executing (step 1, step 2, ...) → synthesizing → done`
-
-### 4. `Reflection`
-**Generate → Critique → Improve.** The agent produces an initial answer, self-critiques it, then generates an improved version. Can repeat this cycle multiple rounds.
-
-Best for: high-quality content generation, accuracy-critical tasks, writing.
+### 4. Reflection
+Generate -> Critique -> Improve. Self-improving output with multiple rounds.
 
 ```python
 from chainforge.agents import Reflection
-
-agent = Reflection(llm=llm, reflection_rounds=2)  # 2 cycles of critique+improve
-async for event in await agent.run("Write a detailed analysis of X"):
-    # Round 1: generating → critiquing → improving
-    # Round 2: critiquing → improving
-    ...
+agent = Reflection(llm=llm, reflection_rounds=2)
 ```
 
-Flow: `generating → [critiquing → improving] × N → done`
-
-### 5. `SelfAsk`
-**Decompose → Answer each → Synthesize.** The agent breaks a complex question into sub-questions, answers each independently (with tools), then synthesizes a comprehensive final answer.
-
-Best for: research questions, multi-faceted analysis, comparison tasks.
+### 5. SelfAsk
+Decompose -> Answer Each -> Synthesize. Breaks questions into sub-questions.
 
 ```python
 from chainforge.agents import SelfAsk
-
 agent = SelfAsk(llm=llm, tools=[search])
-async for event in await agent.run("Compare Python vs Rust for web development"):
-    # Phase 1: Decompose into sub-questions
-    # Phase 2: Answer each sub-question
-    # Phase 3: Synthesize final answer
-    ...
 ```
 
-Flow: `decomposing → answering (Q1, Q2, ...) → synthesizing → done`
+### 6. TreeOfThoughts
+Multi-path reasoning with BFS. Explores multiple paths, evaluates, selects best.
 
-### 6. `ToolAgent`
-Specialized for heavy tool orchestration — automatically decides which tools to call and in what order.
+```python
+from chainforge.agents import TreeOfThoughts
+agent = TreeOfThoughts(llm=llm, candidates_per_step=3, breadth=2, depth=3)
+```
+
+### 7. ChainOfThought
+Structured reasoning + Self-Consistency. N independent paths + voting.
+
+```python
+from chainforge.agents import ChainOfThought
+agent = ChainOfThought(llm=llm, tools=[calculator], num_paths=3)
+```
+
+### 8. ConversationalAgent
+Multi-turn with automatic context management. Auto-compresses long history.
+
+```python
+from chainforge.agents import ConversationalAgent
+agent = ConversationalAgent(llm=llm, tools=[search])
+```
+
+### 9. RouterAgent
+Intent classification -> Route to specialist. Routes to specialized sub-agents.
+
+```python
+from chainforge.agents import RouterAgent
+router = RouterAgent(
+    classifier_llm=OpenAIProvider(model="gpt-4o-mini"),
+    routes={"weather": weather_agent, "search": search_agent},
+)
+```
+
+### 10. ToolAgent
+Heavy tool orchestration. Automatic tool selection and ordering.
 
 ```python
 from chainforge.agents import ToolAgent
-
 agent = ToolAgent(llm=llm, tools=[search, database, calculator])
 ```
 
 ### Comparison
 
-| Pattern | Use Case | Key Strength |
-|---|---|---|
-| `Agent` (base) | General purpose, any task | Flexible, minimal overhead |
-| `ReActAgent` | Reasoning-heavy tasks | Explicit thought process |
-| `PlanAndExecute` | Multi-step, tool-heavy workflows | Structured execution |
-| `Reflection` | Quality-critical generation | Self-improving output |
-| `SelfAsk` | Complex research questions | Multi-perspective answers |
-| `ToolAgent` | Heavy tool orchestration | Automatic tool selection |
+| Pattern | File | Best For | Mechanism |
+|---|---|---|---|
+| Agent (base) | core/agent.py | General purpose | LLM -> Tools loop |
+| ReActAgent | agents/react.py | Reasoning | Thought/Action/Observation |
+| PlanAndExecute | agents/plan_execute.py | Multi-step workflows | Plan -> Execute -> Synthesize |
+| Reflection | agents/reflection.py | Quality-critical | Generate -> Critique -> Improve |
+| SelfAsk | agents/self_ask.py | Research | Decompose -> Answer -> Synthesize |
+| TreeOfThoughts | agents/tree_of_thoughts.py | Complex reasoning | BFS multi-path + evaluation |
+| ChainOfThought | agents/chain_of_thought.py | High-reliability | N paths + Self-Consistency |
+| ConversationalAgent | agents/conversational.py | Multi-turn chat | Auto context + summary |
+| RouterAgent | agents/router.py | Multi-skill systems | Intent classification + routing |
+| ToolAgent | agents/tool_agent.py | Heavy tool use | Automatic orchestration |
