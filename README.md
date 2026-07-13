@@ -672,104 +672,512 @@ chainforge skill info <name> # Show skill details
 
 ---
 
+
 ## Agent Patterns
 
-ChainForge ships with **10 agent patterns** out of the box.
+ChainForge ships with **10 agent patterns** covering reasoning, multi-step execution, quality enhancement, conversation, and routing. Each pattern produces the standard `Stream` event type, so they work interchangeably with middleware, logging, and tracing.
+
+---
 
 ### 1. Agent (Base)
-The core execution loop: LLM + Tools. Foundation for all patterns.
+
+**What it does.** The foundational execution loop: send messages + tool schemas to the LLM, execute any tool calls returned, append results, and repeat until a text response is produced. All other patterns build on this core.
+
+**When to use it.** Any task where an LLM needs tool access. Default choice — start here and switch to a specialized pattern only when you need specific reasoning behavior.
+
+**Example: Knowledge Q&A with search**
+
+```python
+from chainforge import Agent, tool
+from chainforge.providers import OpenAIProvider
+
+
+@tool
+def search(query: str) -> str:
+    """Search a knowledge base."""
+    db = {"chainforge": "A next-gen agent framework."}
+    return db.get(query.lower(), f"No results for: {query}")
+
+
+async def main():
+    agent = Agent(
+        llm=OpenAIProvider(model="gpt-4o"),
+        tools=[search],
+        system_prompt="You are a helpful assistant.",
+    )
+    async for event in await agent.run("What is ChainForge?"):
+        if event.type == "text":
+            print(event.content, end="", flush=True)
+
+
+asyncio.run(main())
+```
+
+**Key parameters:** `llm`, `tools`, `system_prompt`, `max_iterations` (default 10), `temperature`, `parallel_tool_calls` (default True).
+
+---
+
+### 2. ReActAgent
+
+**What it does.** The agent follows an explicit Thought -> Action -> Observation loop. It reasons about the situation (Thought), calls a tool (Action), reviews the result (Observation), and repeats until it can answer. The reasoning trace is preserved for debugging.
+
+**When to use it.** Tasks that benefit from visible step-by-step reasoning: research questions, troubleshooting, analysis that requires justification.
+
+**Flow:** `thought -> action (tool call) -> observation -> thought -> ... -> response`
+
+**Example: Multi-step research**
+
+```python
+from chainforge import tool
+from chainforge.providers import OpenAIProvider
+from chainforge.agents import ReActAgent
+
+
+@tool
+def search_facts(topic: str) -> str:
+    """Search for factual information."""
+    return f"Key facts about {topic}: [data from knowledge base]"
+
+
+async def main():
+    agent = ReActAgent(
+        llm=OpenAIProvider(model="gpt-4o"),
+        tools=[search_facts],
+        verbose=True,  # prints thought/action/observation steps
+    )
+    stream = await agent.run("What was the GDP growth rate in 2023?")
+    async for event in stream:
+        if event.type == "text":
+            print(event.content, end="", flush=True)
+
+
+asyncio.run(main())
+```
+
+**Key parameters:** `verbose` (print reasoning trace), `max_iterations` (default 15).
+
+---
+
+### 3. PlanAndExecute
+
+**What it does.** Three-phase execution:
+1. **Plan** - LLM analyzes the task and produces a numbered step-by-step plan
+2. **Execute** - each step runs through its own mini-Agent with full tool access
+3. **Synthesize** - LLM combines step results into a coherent final answer
+
+**When to use it.** Tasks requiring multiple distinct sub-operations: market research reports, data analysis pipelines, content creation workflows. Excels when each step depends on the previous one's output.
+
+**Flow:** `planning -> executing (step 1, step 2, ...) -> synthesizing -> done`
+
+**State events:** `planning`, `executing`, `synthesizing`, `done`
+
+**Example: Market research report**
+
+```python
+from chainforge import tool
+from chainforge.providers import OpenAIProvider
+from chainforge.agents import PlanAndExecute
+
+
+@tool
+def search_market(segment: str) -> str:
+    """Search market data for a segment."""
+    return f"Market data for {segment}: size=10B, growth=15%"
+
+
+async def main():
+    agent = PlanAndExecute(
+        llm=OpenAIProvider(model="gpt-4o"),
+        tools=[search_market],
+        max_plan_steps=5,
+    )
+    stream = await agent.run("Research the AI chip market and provide forecasts")
+    async for event in stream:
+        if event.type == "text":
+            print(event.content, end="", flush=True)
+
+
+asyncio.run(main())
+```
+
+**Key parameters:** `max_plan_steps`, `max_iterations` (per-step), `temperature`.
+
+---
+
+### 4. Reflection
+
+**What it does.** Three-phase quality cycle that repeats N times:
+1. **Generate** - produces an initial answer (with tool access)
+2. **Critique** - self-evaluates the answer for accuracy, completeness, clarity
+3. **Improve** - generates an improved version addressing all critique points
+
+**When to use it.** Quality-critical content where accuracy matters: code review, essay writing, contract analysis. Each round typically improves quality, diminishing after 2-3 rounds.
+
+**Flow:** `generating -> critiquing -> improving -> [critiquing -> improving ...] -> done`
+
+**State events:** `generating`, `critiquing`, `improving`, `done`
+
+**Example: Code review and improvement**
+
+```python
+from chainforge.providers import OpenAIProvider
+from chainforge.agents import Reflection
+
+
+async def main():
+    agent = Reflection(
+        llm=OpenAIProvider(model="gpt-4o"),
+        reflection_rounds=2,  # two critique-improve cycles
+    )
+    stream = await agent.run("Write a Python function to merge two sorted lists")
+    async for event in stream:
+        if event.type == "text":
+            print(event.content, end="", flush=True)
+        elif event.type == "state":
+            print(f"\n--- [{event.data['state']}] ---\n")
+
+
+asyncio.run(main())
+```
+
+**Key parameters:** `reflection_rounds` (default 1), `max_iterations`.
+
+---
+
+### 5. SelfAsk
+
+**What it does.** Three-phase decomposition:
+1. **Decompose** - LLM breaks the main question into 2-5 concrete sub-questions
+2. **Answer Each** - each sub-question gets its own Agent with full tool access
+3. **Synthesize** - LLM combines sub-answers into a comprehensive final answer
+
+**When to use it.** Multi-faceted questions that benefit from divide-and-conquer: comparisons ("Python vs Rust"), impact analysis ("How will AI affect healthcare?"), complex evaluations.
+
+**Flow:** `decomposing -> answering (Q1, Q2, ...) -> synthesizing -> done`
+
+**State events:** `decomposing`, `answering`, `synthesizing`, `done`
+
+**Example: Technology comparison**
+
+```python
+from chainforge import tool
+from chainforge.providers import OpenAIProvider
+from chainforge.agents import SelfAsk
+
+
+@tool
+def search_tech(topic: str) -> str:
+    """Search technical documentation."""
+    return f"Data about {topic}: [documentation results]"
+
+
+async def main():
+    agent = SelfAsk(
+        llm=OpenAIProvider(model="gpt-4o"),
+        tools=[search_tech],
+    )
+    stream = await agent.run("Compare Python and Rust for building a web API")
+    async for event in stream:
+        if event.type == "text":
+            print(event.content, end="", flush=True)
+
+
+asyncio.run(main())
+```
+
+**Key parameters:** `max_sub_questions` (default 5), `max_iterations`.
+
+---
+
+### 6. TreeOfThoughts
+
+**What it does.** BFS-based multi-path reasoning:
+1. Start with the problem as root node
+2. At each depth level, generate N candidate thoughts from each existing path
+3. Score each candidate (1-10) for promise, coherence, and progress
+4. Keep only the top-K (breadth) candidates for the next level
+5. After reaching depth D, select the highest-scoring path overall
+6. Optionally refine the answer with tools
+
+**When to use it.** Problems with multiple valid reasoning directions: mathematical proofs, logic puzzles, strategic planning. One wrong turn early can derail single-path agents, but ToT explores alternatives. More expensive than single-path (N x K x D LLM calls).
+
+**Flow:** `initializing -> exploring (depth 1, 2, 3) -> selecting -> done`
+
+**State events:** `initializing`, `exploring`, `selecting`, `done`
+
+**Example: Logic puzzle solving**
+
+```python
+from chainforge.providers import OpenAIProvider
+from chainforge.agents import TreeOfThoughts
+
+
+async def main():
+    agent = TreeOfThoughts(
+        llm=OpenAIProvider(model="gpt-4o"),
+        candidates_per_step=3,  # N = 3 thoughts per node
+        breadth=2,              # K = keep top 2 per level
+        depth=3,                # D = 3 levels deep
+        temperature=0.7,
+    )
+    stream = await agent.run(
+        "Three friends -- Alice, Bob, Carol -- each have a different favorite "
+        "color: red, blue, green. Alice doesn't like blue. Bob's favorite is "
+        "not green. Carol's favorite is red. What is each person's favorite?"
+    )
+    async for event in stream:
+        if event.type == "text":
+            print(event.content, end="", flush=True)
+
+
+asyncio.run(main())
+```
+
+**Key parameters:** `candidates_per_step` (3-5), `breadth` (2-3), `depth` (2-4), `temperature`.
+
+---
+
+### 7. ChainOfThought
+
+**What it does.** Generates N independent reasoning paths with Self-Consistency aggregation:
+1. **Reason** - N parallel CoT paths, each with slightly varied temperature for diversity
+2. **Aggregate** - analyzes all paths, identifies consensus, resolves contradictions
+3. **Output** - produces a single answer reflecting the most reliable reasoning
+
+**When to use it.** Tasks where answer reliability is paramount: factual questions, medical/legal analysis, compliance checks. Self-consistency reduces hallucination risk by cross-referencing multiple reasoning trajectories.
+
+**Flow:** `reasoning (path 1, 2, 3) -> aggregating -> done`
+
+**State events:** `reasoning`, `aggregating`, `done`
+
+**Example: High-reliability fact checking**
+
+```python
+from chainforge import tool
+from chainforge.providers import OpenAIProvider
+from chainforge.agents import ChainOfThought
+
+
+@tool
+def check_fact(claim: str) -> str:
+    """Verify a factual claim."""
+    return f"Evidence for '{claim}': [verified from sources]"
+
+
+async def main():
+    agent = ChainOfThought(
+        llm=OpenAIProvider(model="gpt-4o"),
+        tools=[check_fact],
+        num_paths=3,       # 3 independent reasoning paths
+        aggregate="vote",  # 'vote' for consensus, 'compare' for best-of-N
+    )
+    stream = await agent.run(
+        "What is the current world population and is it growing or declining?"
+    )
+    async for event in stream:
+        if event.type == "text":
+            print(event.content, end="", flush=True)
+
+
+asyncio.run(main())
+```
+
+**Key parameters:** `num_paths` (default 3), `aggregate` ("vote" or "compare").
+
+---
+
+### 8. ConversationalAgent
+
+**What it does.** Multi-turn agent with automatic context management:
+- Maintains a sliding window of recent turns (BufferMemory)
+- Maintains a running summary of older turns (SummaryMemory)
+- When the window fills, automatically compresses old history into a summary
+- Preserves full fidelity for recent N turns while keeping long-term context
+
+**When to use it.** Any multi-turn interaction: chatbots, virtual assistants, interactive tutoring, customer support. Handles sessions of 50+ turns gracefully.
+
+**Flow per turn:** `thinking -> [tool calls] -> done` (with auto-summary on overflow)
+
+**Example: Customer support bot**
+
+```python
+import asyncio
+from chainforge import tool
+from chainforge.providers import OpenAIProvider
+from chainforge.agents import ConversationalAgent
+
+
+@tool
+def lookup_order(order_id: str) -> str:
+    """Look up an order by ID."""
+    return f"Order {order_id}: status=shipped, delivery_date=2026-07-15"
+
+
+async def main():
+    agent = ConversationalAgent(
+        llm=OpenAIProvider(model="gpt-4o-mini"),
+        tools=[lookup_order],
+        system_prompt="You are a helpful customer support agent.",
+        max_turns_before_summary=6,
+    )
+
+    # Turn 1
+    async for event in await agent.run("Hi, I need help with my order"):
+        if event.type == "text":
+            print(event.content, end="", flush=True)
+
+    # Turn 2 - remembers context
+    async for event in await agent.run("My order ID is ORD-12345"):
+        if event.type == "text":
+            print(event.content, end="", flush=True)
+
+    # Turn 3 - still remembers the order ID
+    async for event in await agent.run("Can you cancel it?"):
+        if event.type == "text":
+            print(event.content, end="", flush=True)
+
+
+asyncio.run(main())
+```
+
+**Key parameters:** `max_turns_before_summary`, `system_prompt`, `max_iterations`.
+
+**Method:** `agent.clear_history()` resets conversation.
+
+---
+
+### 9. RouterAgent
+
+**What it does.** Two-phase intelligent routing:
+1. **Classify** - a fast classifier LLM identifies the user's intent from available route names
+2. **Route** - forwards the full request to the matched specialized agent
+
+Each route can have its own LLM, tools, system prompt, and even agent pattern.
+
+**When to use it.** Systems serving multiple domains: a smart assistant that handles weather, coding, search, and calculations through specialized backends.
+
+**Flow:** `classifying -> routing -> [delegated agent execution] -> done`
+
+**State events:** `classifying`, `routing`, `done`
+
+**Example: Multi-domain smart assistant**
 
 ```python
 from chainforge import Agent
-agent = Agent(llm=llm, tools=[search, calculator])
-```
-
-### 2. ReActAgent
-Thought/Action/Observation loop. Explicit reasoning.
-
-```python
-from chainforge.agents import ReActAgent
-agent = ReActAgent(llm=llm, tools=[search], verbose=True)
-```
-
-### 3. PlanAndExecute
-Plan -> Execute -> Synthesize. Creates a plan, executes step-by-step, combines results.
-
-```python
-from chainforge.agents import PlanAndExecute
-agent = PlanAndExecute(llm=llm, tools=[search, calculator])
-```
-
-### 4. Reflection
-Generate -> Critique -> Improve. Self-improving output with multiple rounds.
-
-```python
-from chainforge.agents import Reflection
-agent = Reflection(llm=llm, reflection_rounds=2)
-```
-
-### 5. SelfAsk
-Decompose -> Answer Each -> Synthesize. Breaks questions into sub-questions.
-
-```python
-from chainforge.agents import SelfAsk
-agent = SelfAsk(llm=llm, tools=[search])
-```
-
-### 6. TreeOfThoughts
-Multi-path reasoning with BFS. Explores multiple paths, evaluates, selects best.
-
-```python
-from chainforge.agents import TreeOfThoughts
-agent = TreeOfThoughts(llm=llm, candidates_per_step=3, breadth=2, depth=3)
-```
-
-### 7. ChainOfThought
-Structured reasoning + Self-Consistency. N independent paths + voting.
-
-```python
-from chainforge.agents import ChainOfThought
-agent = ChainOfThought(llm=llm, tools=[calculator], num_paths=3)
-```
-
-### 8. ConversationalAgent
-Multi-turn with automatic context management. Auto-compresses long history.
-
-```python
-from chainforge.agents import ConversationalAgent
-agent = ConversationalAgent(llm=llm, tools=[search])
-```
-
-### 9. RouterAgent
-Intent classification -> Route to specialist. Routes to specialized sub-agents.
-
-```python
+from chainforge.providers import OpenAIProvider
 from chainforge.agents import RouterAgent
-router = RouterAgent(
-    classifier_llm=OpenAIProvider(model="gpt-4o-mini"),
-    routes={"weather": weather_agent, "search": search_agent},
+
+
+weather_agent = Agent(
+    llm=OpenAIProvider(model="gpt-4o-mini"),
+    system_prompt="You are a weather specialist.",
 )
+code_agent = Agent(
+    llm=OpenAIProvider(model="gpt-4o"),
+    system_prompt="You are a coding expert. Provide runnable code.",
+)
+search_agent = Agent(
+    llm=OpenAIProvider(model="gpt-4o-mini"),
+    system_prompt="You are a research assistant.",
+)
+
+
+async def main():
+    router = RouterAgent(
+        classifier_llm=OpenAIProvider(model="gpt-4o-mini"),
+        routes={
+            "weather": weather_agent,
+            "coding": code_agent,
+            "search": search_agent,
+        },
+        default_route="search",
+    )
+
+    for query in [
+        "What is the weather in Tokyo?",
+        "Write a Python quick sort",
+        "Who won the 2022 World Cup?",
+    ]:
+        print(f"\nQ: {query}")
+        stream = await router.run(query)
+        async for event in stream:
+            if event.type == "text" and event.content:
+                print(event.content[:120], "...")
+            if event.type == "state" and event.data.get("state") == "routing":
+                print(f"  [routed to: {event.data.get('route', '?')}]")
+
+
+asyncio.run(main())
 ```
+
+**Key parameters:** `classifier_llm` (fast model), `routes` (name to agent dict), `default_route`.
+
+---
 
 ### 10. ToolAgent
-Heavy tool orchestration. Automatic tool selection and ordering.
+
+**What it does.** Heavy tool orchestration agent. Automatically analyzes the user's request, determines which tools to call and in what order, and chains them together to accomplish complex tasks.
+
+**When to use it.** Tasks involving multiple tools where orchestration logic is non-trivial: data ETL pipelines, multi-API workflows, automated reporting.
+
+**Example: Automated data pipeline**
 
 ```python
+from chainforge import tool
+from chainforge.providers import OpenAIProvider
 from chainforge.agents import ToolAgent
-agent = ToolAgent(llm=llm, tools=[search, database, calculator])
+
+
+@tool
+def extract_data(source: str) -> str:
+    """Extract data from a source."""
+    return f"Raw data from {source}: [1000 rows]"
+
+
+@tool
+def transform_data(data: str, rules: str) -> str:
+    """Transform data according to rules."""
+    return f"Transformed using rules: {rules}"
+
+
+@tool
+def load_data(data: str, destination: str) -> str:
+    """Load data to destination."""
+    return f"Loaded to {destination}"
+
+
+async def main():
+    agent = ToolAgent(
+        llm=OpenAIProvider(model="gpt-4o"),
+        tools=[extract_data, transform_data, load_data],
+    )
+    stream = await agent.run(
+        "Extract sales data from PostgreSQL, clean it, and load to Snowflake"
+    )
+    async for event in stream:
+        if event.type == "text":
+            print(event.content, end="", flush=True)
+
+
+asyncio.run(main())
 ```
 
-### Comparison
+**Key parameters:** `max_iterations` (default 20).
 
-| Pattern | File | Best For | Mechanism |
-|---|---|---|---|
-| Agent (base) | core/agent.py | General purpose | LLM -> Tools loop |
-| ReActAgent | agents/react.py | Reasoning | Thought/Action/Observation |
-| PlanAndExecute | agents/plan_execute.py | Multi-step workflows | Plan -> Execute -> Synthesize |
-| Reflection | agents/reflection.py | Quality-critical | Generate -> Critique -> Improve |
-| SelfAsk | agents/self_ask.py | Research | Decompose -> Answer -> Synthesize |
-| TreeOfThoughts | agents/tree_of_thoughts.py | Complex reasoning | BFS multi-path + evaluation |
-| ChainOfThought | agents/chain_of_thought.py | High-reliability | N paths + Self-Consistency |
-| ConversationalAgent | agents/conversational.py | Multi-turn chat | Auto context + summary |
-| RouterAgent | agents/router.py | Multi-skill systems | Intent classification + routing |
-| ToolAgent | agents/tool_agent.py | Heavy tool use | Automatic orchestration |
+---
+
+### Quick Selection Guide
+
+| Scenario | Recommended Pattern | Rationale |
+|---|---|---|
+| "Answer a question with tools" | **Agent (base)** | Simple, fast, minimal overhead |
+| "Walk me through your reasoning" | **ReActAgent** | Explicit thought process |
+| "Research and write a report" | **PlanAndExecute** | Structured multi-step execution |
+| "Review and improve this code" | **Reflection** | Self-critique quality loop |
+| "Compare two technologies" | **SelfAsk** | Divide and conquer sub-questions |
+| "Solve a logic puzzle" | **TreeOfThoughts** | Multiple path exploration |
+| "Verify a factual claim reliably" | **ChainOfThought** | Self-consistency voting |
+| "Have a long conversation" | **ConversationalAgent** | Auto context management |
+| "Build a multi-skill assistant" | **RouterAgent** | Intent-based routing |
+| "Automate a data pipeline" | **ToolAgent** | Tool orchestration |
+
