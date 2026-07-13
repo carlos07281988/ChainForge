@@ -1,6 +1,16 @@
 <div align="center">
 
-# ⚔️  ChainForge
+```
+        ________  __________   _____  _   ___________   _____  ___________
+       / ____/ / / / ____/ /  / __ \/ | / / ____/   | / __ \/ ____/ ___/
+      / /   / /_/ / /_  / /  / / / /  |/ / / __/ /| |/ / / / / __/ __ \
+     / /___/ __  / __/ / /___/ /_/ / /|  / /_/ / ___ / /_/ / /_/ / /_/ /
+     \____/_/ /_/_/   /_____/\____/_/ |_/\____/_/  |_\____/\____/_____/
+
+                          ⚒️  锻造链 - Forge Your Chain
+```
+
+## ChainForge
 
 **锻造链** — *Craft your LLM call chains, tool chains, and processing chains.*
 
@@ -16,13 +26,7 @@
 pip install chainforge
 ```
 
----
-
-**Core Principles**
-
-`protocol-based` · `streaming-first` · `async-native` · `type-safe` · `zero-overhead-abstractions`
-
-</div>
+**Core Principles:** `protocol-based` · `streaming-first` · `async-native` · `type-safe` · `zero-overhead-abstractions`
 
 ---
 
