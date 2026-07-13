@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=58.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chainforge"
+version = "0.1.0"
+description = "锻造链 — A next-generation agent framework. Streaming-first, type-safe, minimal, extensible."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "ChainForge Contributors"},
+]
+keywords = ["llm", "agent", "ai", "framework", "langchain", "tools"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "pydantic>=2.0",
+    "typing_extensions>=4.0",
+]
+
+[project.optional-dependencies]
+openai = ["openai>=1.40"]
+anthropic = ["anthropic>=0.30"]
+all = ["chainforge[openai,anthropic]"]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.24"]
+
+[tool.setuptools.packages.find]
+include = ["chainforge*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
