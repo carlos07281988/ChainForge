@@ -669,3 +669,102 @@ chainforge skill list        # List available skills
 chainforge skill add <path>  # Register a skill
 chainforge skill info <name> # Show skill details
 ```
+
+---
+
+## Agent Patterns
+
+ChainForge ships with 5 agent patterns out of the box, each suited for different task types:
+
+### 1. `Agent` (Base)
+The core execution loop: send messages + tool schemas to LLM → execute tool calls → repeat until done. This is the foundation all other patterns build on.
+
+```python
+from chainforge import Agent
+
+agent = Agent(llm=llm, tools=[search, calculator])
+async for event in await agent.run("Calculate 2+2"):
+    ...
+```
+
+### 2. `ReActAgent`
+Thought/Action/Observation loop. The agent explicitly reasons about what to do, takes action, observes the result, and decides next steps. Best for tasks requiring clear reasoning.
+
+```python
+from chainforge.agents import ReActAgent
+
+agent = ReActAgent(llm=llm, tools=[search], verbose=True)
+```
+
+### 3. `PlanAndExecute`
+**Plan first, then execute step-by-step.** The agent analyzes the task, creates a multi-step plan, executes each step (potentially with tools), then synthesizes results into a final answer.
+
+Best for: complex multi-step tasks, research, data processing pipelines.
+
+```python
+from chainforge.agents import PlanAndExecute
+
+agent = PlanAndExecute(llm=llm, tools=[search, calculator])
+async for event in await agent.run("Analyze Q3 revenue trends"):
+    # Phase 1: Plan → status events
+    # Phase 2: Execute each step → tool calls + text
+    # Phase 3: Synthesize → final answer
+    ...
+```
+
+Flow: `planning → executing (step 1, step 2, ...) → synthesizing → done`
+
+### 4. `Reflection`
+**Generate → Critique → Improve.** The agent produces an initial answer, self-critiques it, then generates an improved version. Can repeat this cycle multiple rounds.
+
+Best for: high-quality content generation, accuracy-critical tasks, writing.
+
+```python
+from chainforge.agents import Reflection
+
+agent = Reflection(llm=llm, reflection_rounds=2)  # 2 cycles of critique+improve
+async for event in await agent.run("Write a detailed analysis of X"):
+    # Round 1: generating → critiquing → improving
+    # Round 2: critiquing → improving
+    ...
+```
+
+Flow: `generating → [critiquing → improving] × N → done`
+
+### 5. `SelfAsk`
+**Decompose → Answer each → Synthesize.** The agent breaks a complex question into sub-questions, answers each independently (with tools), then synthesizes a comprehensive final answer.
+
+Best for: research questions, multi-faceted analysis, comparison tasks.
+
+```python
+from chainforge.agents import SelfAsk
+
+agent = SelfAsk(llm=llm, tools=[search])
+async for event in await agent.run("Compare Python vs Rust for web development"):
+    # Phase 1: Decompose into sub-questions
+    # Phase 2: Answer each sub-question
+    # Phase 3: Synthesize final answer
+    ...
+```
+
+Flow: `decomposing → answering (Q1, Q2, ...) → synthesizing → done`
+
+### 6. `ToolAgent`
+Specialized for heavy tool orchestration — automatically decides which tools to call and in what order.
+
+```python
+from chainforge.agents import ToolAgent
+
+agent = ToolAgent(llm=llm, tools=[search, database, calculator])
+```
+
+### Comparison
+
+| Pattern | Use Case | Key Strength |
+|---|---|---|
+| `Agent` (base) | General purpose, any task | Flexible, minimal overhead |
+| `ReActAgent` | Reasoning-heavy tasks | Explicit thought process |
+| `PlanAndExecute` | Multi-step, tool-heavy workflows | Structured execution |
+| `Reflection` | Quality-critical generation | Self-improving output |
+| `SelfAsk` | Complex research questions | Multi-perspective answers |
+| `ToolAgent` | Heavy tool orchestration | Automatic tool selection |
