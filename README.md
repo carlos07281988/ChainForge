@@ -1,16 +1,28 @@
-# ChainForge
+<div align="center">
 
-**锻造链** — 把你的 LLM 调用链、工具链、处理链"锻造"出来。
+# ⚔️  ChainForge
 
-A next-generation agent framework. Minimal, streaming-first, type-safe, and built for the post-LangChain era.
+**锻造链** — *Craft your LLM call chains, tool chains, and processing chains.*
 
-```text
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)]()
+[![License](https://img.shields.io/badge/license-Apache%202.0-green)]()
+[![Tests](https://img.shields.io/badge/tests-201%20passed-brightgreen)]()
+[![Dependencies](https://img.shields.io/badge/dependencies-2-red)]()
+
+> **ChainForge is what LangChain should have been if it were designed today.**  
+> Minimal. Streaming-first. Type-safe. Async-native. Built for the post-LangChain era.
+
+```bash
 pip install chainforge
 ```
 
-```text
-ChainForge is what LangChain should have been if it were designed today.
-```
+---
+
+**Core Principles**
+
+`protocol-based` · `streaming-first` · `async-native` · `type-safe` · `zero-overhead-abstractions`
+
+</div>
 
 ---
 
@@ -1337,3 +1349,13 @@ chain = hub.create_chain(["search", "data"], name="research_analyze")
 | **AgentTool** | Agent as callable Tool | Hierarchical agents, delegation |
 | **AgentChain** | Sequential composition | Multi-step workflows |
 | **AgentHub** | Registry + discovery | Managing many agents, auto-routing |
+
+---
+
+## License
+
+Apache 2.0
+
+---
+
+<p align="center"><strong>锻造链</strong> — 锻造你的链。</p>
