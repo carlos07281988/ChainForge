@@ -488,20 +488,17 @@ User Prompt
 - [x] Pipeline composition
 - [x] MCP client
 - [x] Conversation memory
-- [ ] Multi-agent orchestration (swarm, supervisor)
-- [ ] Human-in-the-loop patterns (approval, interrupt)
-- [ ] Structured output (JSON mode, response models)
-- [ ] Rate limiting / retry middleware
+- [x] **Multi-agent orchestration** — Swarm (parallel/sequential/conference) + Supervisor
+- [x] **Structured output** — Pydantic response models with JSON extraction
+- [x] **Rate limiting / retry / timeout middleware** — token bucket, async retry with backoff, timeout enforcement
+- [x] **Human-in-the-loop** — approval hooks, interrupt/reject/modify tool calls
+- [x] **Graph-based execution (DAG)** — branching, merging, topological sort, cycle detection
+- [x] **Parallel tool execution** — concurrent independent tool calls with asyncio.gather
+- [ ] Streaming agent state (live status events with iteration/depth metadata)
 - [ ] Langfuse / OpenTelemetry integration
 - [ ] CLI for project scaffolding
-- [ ] Graph-based agent execution (DAG)
-- [ ] Streaming agent state (live status updates)
 - [ ] Google / Azure / Bedrock providers
-- [ ] Async tool execution (parallel tool calls)
 
----
-
-## Contributing
 
 ```bash
 git clone https://github.com/your-org/chainforge

@@ -5,6 +5,8 @@ from chainforge.core.stream import StreamEvent, Stream
 from chainforge.core.agent import Agent
 from chainforge.core.pipeline import Pipeline
 from chainforge.core.middleware import Middleware
+from chainforge.core.graph import DAG
+from chainforge.core.human_in_loop import HumanInTheLoop, ApprovalRequest, ApprovalDecision
 
 __all__ = [
     "LLM", "LLMResponse",
@@ -13,5 +15,7 @@ __all__ = [
     "StreamEvent", "Stream",
     "Agent",
     "Pipeline",
+    "DAG",
     "Middleware",
+    "HumanInTheLoop", "ApprovalRequest", "ApprovalDecision",
 ]

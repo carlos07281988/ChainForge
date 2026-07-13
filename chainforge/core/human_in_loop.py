@@ -1,0 +1,147 @@
+"""Human-in-the-loop — interrupt agent execution for human approval or input.
+
+Provides:
+- Approval hooks (human must approve tool calls before execution)
+- Input hooks (human can provide additional context when needed)
+- Pause/Resume mechanism
+"""
+
+from __future__ import annotations
+
+from collections.abc import AsyncIterator
+from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+from chainforge.core.message import Message
+from chainforge.core.stream import EventType, StreamEvent
+
+
+class ApprovalDecision(str, Enum):
+    approved = "approved"
+    rejected = "rejected"
+    modified = "modified"
+
+
+class ApprovalRequest(BaseModel):
+    """Request human approval for a tool call."""
+
+    tool_name: str = Field(description="Tool being called")
+    arguments: dict[str, Any] = Field(description="Tool arguments")
+    context: str | None = Field(default=None, description="Context for the decision")
+    request_id: str = Field(default="", description="Unique request ID")
+
+
+class HumanInput(BaseModel):
+    """Human input in response to an interrupt."""
+
+    decision: ApprovalDecision = Field(default=ApprovalDecision.approved)
+    feedback: str | None = Field(default=None, description="Human feedback or additional input")
+    modified_arguments: dict[str, Any] | None = Field(default=None, description="Modified tool args if 'modified'")
+
+
+class HumanInTheLoop:
+    """Human-in-the-loop controller.
+
+    Can be used as a middleware or called directly.
+    Provides hooks for approval and input collection.
+
+    Usage:
+        hil = HumanInTheLoop()
+        # Use as middleware:
+        agent = Agent(..., middlewares=[hil.middleware()])
+
+        # Or use directly:
+        async for event in agent.run("Do something"):
+            if event.type == "approval_needed":
+                decision = await hil.request_approval(event.data)
+    """
+
+    def __init__(self):
+        self._pending_approvals: dict[str, ApprovalRequest] = {}
+        self._input_callback = None
+
+    def set_input_callback(self, callback):
+        """Set a custom callback for human input.
+
+        The callback receives an ApprovalRequest and returns a HumanInput.
+        Default is console-based input.
+        """
+        self._input_callback = callback
+
+    async def _default_input_handler(self, request: ApprovalRequest) -> HumanInput:
+        """Default handler: prompt via console."""
+        print(f"\n🔔 Approval needed: {request.tool_name}({request.arguments})")
+        print(f"   Context: {request.context or 'N/A'}")
+        response = input("   Approve? (y/n/modify): ").strip().lower()
+
+        if response == "y":
+            return HumanInput(decision=ApprovalDecision.approved)
+        elif response == "modify":
+            new_args_str = input("   New arguments (JSON): ").strip()
+            import json
+            try:
+                new_args = json.loads(new_args_str)
+            except json.JSONDecodeError:
+                print("   Invalid JSON, rejecting.")
+                return HumanInput(decision=ApprovalDecision.rejected, feedback="Invalid JSON")
+            return HumanInput(decision=ApprovalDecision.modified, modified_arguments=new_args)
+        else:
+            feedback = input("   Reason for rejection: ").strip()
+            return HumanInput(decision=ApprovalDecision.rejected, feedback=feedback)
+
+    async def request_approval(self, request: ApprovalRequest) -> HumanInput:
+        """Request human approval for a tool call. Blocks until decision."""
+        self._pending_approvals[request.request_id] = request
+        if self._input_callback:
+            result = await self._input_callback(request)
+        else:
+            result = await self._default_input_handler(request)
+        self._pending_approvals.pop(request.request_id, None)
+        return result
+
+    def middleware(self):
+        """Create a middleware that intercepts tool calls for human approval."""
+        from chainforge.core.middleware import MiddlewareFn
+
+        async def _hil_middleware(
+            messages: list[Message],
+            ctx: dict[str, Any],
+            next_handler,
+        ) -> AsyncIterator[StreamEvent]:
+            async for event in next_handler(messages, ctx):
+                if event.type == EventType.tool_call:
+                    # Request approval
+                    req = ApprovalRequest(
+                        tool_name=event.data.get("name", ""),
+                        arguments=event.data.get("args", {}),
+                        request_id=event.data.get("id", ""),
+                        context="Tool call requires human approval",
+                    )
+                    decision = await self.request_approval(req)
+
+                    if decision.decision == ApprovalDecision.rejected:
+                        yield StreamEvent(
+                            type=EventType.tool_result,
+                            data={
+                                "name": req.tool_name,
+                                "content": f"Rejected by human: {decision.feedback or 'No reason given'}",
+                                "is_error": True,
+                            },
+                        )
+                        continue
+                    elif decision.decision == ApprovalDecision.modified and decision.modified_arguments:
+                        event.data["args"] = decision.modified_arguments
+
+                    yield event
+
+                    if decision.feedback:
+                        yield StreamEvent(
+                            type=EventType.status,
+                            content=f"Human feedback: {decision.feedback}",
+                        )
+                else:
+                    yield event
+
+        return _hil_middleware

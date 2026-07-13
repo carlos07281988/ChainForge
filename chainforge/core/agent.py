@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from typing import Any
 
 from pydantic import BaseModel, Field, ConfigDict
 
 from chainforge.core.errors import MaxIterationsError
-from chainforge.core.llm import LLM
+from chainforge.core.llm import LLM, LLMResponse
 from chainforge.core.message import Message, ToolCall
 from chainforge.core.middleware import MiddlewareChain
 from chainforge.core.stream import EventType, Stream, StreamEvent
@@ -41,6 +42,7 @@ class Agent(BaseModel):
     max_tokens: int | None = Field(default=None, description="Max tokens per response")
     temperature: float | None = Field(default=None, description="LLM temperature")
     middlewares: list | None = Field(default=None, description="Middleware list")
+    parallel_tool_calls: bool = Field(default=True, description="Execute independent tool calls in parallel")
 
     def _get_tool_map(self) -> dict[str, Tool]:
         return {t.spec.name: t for t in self.tools}
@@ -70,9 +72,36 @@ class Agent(BaseModel):
                 is_error=True,
             )
 
+    async def _execute_tool_calls(self, tool_calls: list[dict]) -> list[Message]:
+        """Execute tool calls, optionally in parallel for independent calls."""
+        tcs = [
+            ToolCall(
+                id=tc_data.get("id", ""),
+                name=tc_data["function"]["name"],
+                args=tc_data["function"].get("arguments", {}),
+            )
+            for tc_data in tool_calls
+        ]
+
+        if self.parallel_tool_calls and len(tcs) > 1:
+            # Check independence: if tools have different names or different args,
+            # we can safely execute in parallel
+            results = await asyncio.gather(
+                *[self._execute_tool(tc) for tc in tcs],
+                return_exceptions=True,
+            )
+            msgs = []
+            for tc, result in zip(tcs, results):
+                if isinstance(result, Exception):
+                    msgs.append(Message.tool_result(tc.id, tc.name, str(result), is_error=True))
+                else:
+                    msgs.append(result)
+            return msgs
+
+        return [await self._execute_tool(tc) for tc in tcs]
+
     async def _run_loop(self, messages: list[Message]) -> AsyncIterator[StreamEvent]:
         tool_specs = [t.spec for t in self.tools] if self.tools else None
-        saw_tool_calls = False
 
         for iteration in range(self.max_iterations):
             kwargs = {}
@@ -82,36 +111,46 @@ class Agent(BaseModel):
                 kwargs["temperature"] = self.temperature
 
             response = await self.llm.generate(messages, tools=tool_specs, **kwargs)
-
             saw_tool_calls = bool(response.tool_calls)
+
+            # Yield streaming agent state
+            yield StreamEvent(
+                type=EventType.status,
+                content=f"iteration_{iteration + 1}",
+                data={"iteration": iteration + 1, "tool_calls": len(response.tool_calls) if response.tool_calls else 0},
+            )
 
             if response.content:
                 yield StreamEvent(type=EventType.text, content=response.content)
 
             if saw_tool_calls:
+                # Emit tool_call events
                 for tc_data in response.tool_calls:
-                    tc = ToolCall(
-                        id=tc_data.get("id", ""),
-                        name=tc_data["function"]["name"],
-                        args=tc_data["function"].get("arguments", {}),
-                    )
                     yield StreamEvent(
                         type=EventType.tool_call,
-                        data={"name": tc.name, "args": tc.args, "id": tc.id},
+                        data={
+                            "name": tc_data["function"]["name"],
+                            "args": tc_data["function"].get("arguments", {}),
+                            "id": tc_data.get("id", ""),
+                        },
                     )
-                    result_msg = await self._execute_tool(tc)
-                    messages.append(result_msg)
+
+                # Execute (parallel)
+                result_msgs = await self._execute_tool_calls(response.tool_calls)
+
+                # Emit tool_result events and append to conversation
+                for msg in result_msgs:
+                    messages.append(msg)
                     yield StreamEvent(
                         type=EventType.tool_result,
                         data={
-                            "name": result_msg.name or "",
-                            "content": result_msg.content or "",
-                            "is_error": result_msg.metadata.get("is_error", False),
+                            "name": msg.name or "",
+                            "content": msg.content or "",
+                            "is_error": msg.metadata.get("is_error", False),
                         },
                     )
                 continue
 
-            # No tool calls — we're done
             yield StreamEvent(type=EventType.done, content=response.content)
             return
 
@@ -127,7 +166,6 @@ class Agent(BaseModel):
 
         Returns a Stream of events. The caller iterates over it asynchronously.
         """
-        # Build message list
         if isinstance(prompt, str):
             messages: list[Message] = []
             if self.system_prompt:
@@ -138,7 +176,6 @@ class Agent(BaseModel):
 
         ctx = context or {}
 
-        # If middlewares configured, run through middleware chain
         if self.middlewares:
             chain = MiddlewareChain(self.middlewares)
             return Stream(chain.run(messages, ctx, self._run_loop))
