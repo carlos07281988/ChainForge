@@ -349,91 +349,105 @@ agent = Agent(llm=..., tools=mcp_tools)
 
 ```
 chainforge/
+├── __init__.py          # Public API exports
+├── __main__.py          # python -m chainforge
+├── _version.py          # Version string
+├── client.py            # HTTP client for ChainForge server
+├── server.py            # HTTP server (FastAPI + REST + SSE)
+├── logging.py           # Structured logging (text/json, per-module levels)
 │
-├── core/                 # Foundational primitives
-│   ├── agent.py          # Agent execution loop (LLM ↔ Tools ↔ LLM...)
-│   ├── llm.py            # LLM Protocol + LLMResponse
-│   ├── tool.py           # Tool Protocol + FunctionTool + @tool decorator
-│   ├── message.py        # Message, ToolCall, ToolResult, Role enum
-│   ├── stream.py         # StreamEvent (7 types) + Stream wrapper
-│   ├── pipeline.py       # Sequential step composition with >>
-│   ├── graph.py           # DAG graph execution engine
-│   ├── middleware.py     # Middleware chain — composable agent hooks
-│   ├── state.py          # Agent state machine (StateTracker)
+├── core/                # Foundational primitives
+│   ├── __init__.py
+│   ├── agent.py         # Agent execution loop (LLM ↔ Tools ↔ LLM...)
+│   ├── llm.py           # LLM Protocol + LLMResponse
+│   ├── tool.py          # Tool Protocol + FunctionTool + @tool decorator
+│   ├── message.py       # Message, ToolCall, ToolResult, Role enum
+│   ├── stream.py        # StreamEvent (7 types) + Stream wrapper
+│   ├── pipeline.py      # Sequential step composition with >>
+│   ├── graph.py         # DAG graph execution engine
+│   ├── middleware.py    # Middleware chain — composable agent hooks
+│   ├── state.py         # Agent state machine (StateTracker)
 │   ├── structured_output.py  # Pydantic response_model parsing
-│   ├── human_in_loop.py  # Human approval/interrupt hooks
-│   ├── utils.py          # Core utilities (run_sync)
-│   └── errors.py         # Typed errors (ProviderError, ToolExecutionError, ...)
+│   ├── human_in_loop.py # Human approval/interrupt hooks
+│   ├── utils.py         # Core utilities (run_sync)
+│   └── errors.py        # Typed errors (ProviderError, ToolExecutionError, ...)
 │
-├── providers/            # LLM implementations
-│   ├── openai.py         # OpenAI — streaming, tool calls, token usage
-│   ├── anthropic.py      # Anthropic — streaming, tool calls, token usage
-│   ├── google.py         # Google Gemini — streaming, tool calls
-│   ├── azure.py          # Azure OpenAI — streaming, tool calls
-│   └── bedrock.py        # AWS Bedrock — Claude, Llama, Mistral, Titan
+├── providers/           # LLM implementations
+│   ├── __init__.py
+│   ├── openai.py        # OpenAI — streaming, tool calls, token usage
+│   ├── anthropic.py     # Anthropic — streaming, tool calls, token usage
+│   ├── google.py        # Google Gemini — streaming, tool calls
+│   ├── azure.py         # Azure OpenAI — streaming, tool calls
+│   └── bedrock.py       # AWS Bedrock — Claude, Llama, Mistral, Titan
 │
-├── agents/               # 10 agent patterns
-│   ├── react.py          # ReAct (Thought/Action/Observation loop)
-│   ├── plan_execute.py   # Plan → Execute → Synthesize
-│   ├── reflection.py     # Generate → Critique → Improve
-│   ├── self_ask.py       # Decompose → Answer → Synthesize
+├── agents/              # 10 agent patterns
+│   ├── __init__.py
+│   ├── react.py         # ReAct (Thought/Action/Observation loop)
+│   ├── plan_execute.py  # Plan → Execute → Synthesize
+│   ├── reflection.py    # Generate → Critique → Improve
+│   ├── self_ask.py      # Decompose → Answer → Synthesize
 │   ├── tree_of_thoughts.py  # BFS multi-path reasoning
 │   ├── chain_of_thought.py  # CoT + Self-Consistency
-│   ├── conversational.py # Multi-turn with auto-summary compression
-│   ├── router.py         # Intent classification → route to specialist
-│   ├── tool_agent.py     # Heavy tool orchestration agent
-│   ├── agent_chain.py    # Sequential agent composition
-│   ├── agent_tool.py     # Wrap agent as callable Tool
-│   └── agent_hub.py      # Central registry + discovery + auto-routing
+│   ├── conversational.py    # Multi-turn with auto-summary compression
+│   ├── router.py        # Intent classification → route to specialist
+│   ├── tool_agent.py    # Heavy tool orchestration agent
+│   ├── agent_chain.py   # Sequential agent composition
+│   ├── agent_tool.py    # Wrap agent as callable Tool
+│   └── agent_hub.py     # Central registry + discovery + auto-routing
 │
-├── tools/                # Tool system
-│   └── builtin.py        # Built-in tools (current_time, calculate, echo)
+├── tools/               # Tool system
+│   ├── __init__.py
+│   └── builtin.py       # Built-in tools (current_time, calculate, echo)
 │
-├── skills/               # Reusable capability bundles
-│   ├── base.py           # Skill model + SkillTool wrapper
-│   ├── loader.py         # SKILL.md file loader
-│   └── registry.py       # SkillRegistry — register, search, discover
+├── skills/              # Reusable capability bundles
+│   ├── __init__.py
+│   ├── base.py          # Skill model + SkillTool wrapper
+│   ├── loader.py        # SKILL.md file loader
+│   └── registry.py      # SkillRegistry — register, search, discover
 │
-├── memory/               # Conversation memory
-│   ├── buffer.py         # Sliding-window buffer
-│   └── summary.py        # Running-summary compression
+├── memory/              # Conversation memory
+│   ├── __init__.py
+│   ├── buffer.py        # Sliding-window buffer
+│   └── summary.py       # Running-summary compression
 │
-├── middleware/            # Middleware implementations
-│   ├── logging_mw.py     # Structured logging middleware
-│   ├── retry.py          # Retry with exponential backoff
-│   ├── timeout.py        # Execution timeout guard
-│   ├── rate_limit.py     # Token bucket rate limiter
-│   ├── opentelemetry.py  # OpenTelemetry tracing middleware
-│   └── langfuse.py       # Langfuse observability middleware
+├── middleware/           # Middleware implementations
+│   ├── __init__.py
+│   ├── logging_mw.py    # Structured logging middleware
+│   ├── retry.py         # Retry with exponential backoff
+│   ├── timeout.py       # Execution timeout guard
+│   ├── rate_limit.py    # Token bucket rate limiter
+│   ├── opentelemetry.py # OpenTelemetry tracing middleware
+│   └── langfuse.py      # Langfuse observability middleware
 │
-├── orchestration/        # Multi-agent orchestration
-│   ├── supervisor.py     # Planner → delegate → synthesize
-│   └── swarm.py          # Parallel / sequential / conference modes
+├── orchestration/       # Multi-agent orchestration
+│   ├── __init__.py
+│   ├── supervisor.py    # Planner → delegate → synthesize
+│   └── swarm.py         # Parallel / sequential / conference modes
 │
-├── eval/                 # Evaluation & testing framework
-│   ├── case.py           # EvalCase — test prompts + expected behaviors
-│   ├── metrics.py        # MetricsCollector — time, tokens, cost, success
-│   ├── suite.py          # EvalSuite — collection + JSON load/save
-│   ├── runner.py         # EvalRunner — execute suites against agents
-│   └── report.py         # EvalReport — JSON / Markdown / HTML / Text
+├── eval/                # Evaluation & testing framework
+│   ├── __init__.py
+│   ├── case.py          # EvalCase — test prompts + expected behaviors
+│   ├── metrics.py       # MetricsCollector — time, tokens, cost, success
+│   ├── suite.py         # EvalSuite — collection + JSON load/save
+│   ├── runner.py        # EvalRunner — execute suites against agents
+│   └── report.py        # EvalReport — JSON / Markdown / HTML / Text
 │
-├── tracing/              # Observability
-│   └── tracer.py         # Tracer, Span, ConsoleTracer, tracing_middleware
+├── tracing/             # Observability
+│   ├── __init__.py
+│   └── tracer.py        # Tracer, Span, ConsoleTracer, tracing_middleware
 │
-├── mcp/                  # Model Context Protocol
-│   └── client.py         # MCPClient — dynamic tool discovery (stdio/SSE)
+├── mcp/                 # Model Context Protocol
+│   ├── __init__.py
+│   └── client.py        # MCPClient — dynamic tool discovery (stdio/SSE)
 │
-├── cli/                  # CLI interface
-│   └── __init__.py       # init, quickstart, skill, serve, run, eval
+├── cli/                 # CLI interface
+│   └── __init__.py      # init, quickstart, skill, serve, run, eval
 │
-├── server.py             # HTTP server (FastAPI + REST + SSE)
-├── logging.py            # Structured logging (text/json, per-module levels)
+├── examples/            # Runnable examples
+│   ├── basic_agent.py   # Weather + search agent demo
+│   └── memory_example.py  # Multi-turn conversation with memory
 │
-├── examples/             # Runnable examples
-│   ├── basic_agent.py    # Weather + search agent demo
-│   └── memory_example.py # Multi-turn conversation with memory
-│
-└── tests/                # 210+ tests
+└── tests/               # 210+ tests
 ```
 
 ### Execution Flow / 执行流程

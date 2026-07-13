@@ -270,91 +270,105 @@ result = await supervisor.run("调研并写报告")
 
 ```
 chainforge/
+├── __init__.py          # 公开 API 导出
+├── __main__.py          # python -m chainforge
+├── _version.py          # 版本号
+├── client.py            # ChainForge HTTP 客户端
+├── server.py            # HTTP 服务 (FastAPI + REST + SSE)
+├── logging.py           # 结构化日志 (text/json, 模块级日志级别)
 │
-├── core/                 # 核心基元
-│   ├── agent.py          # Agent 执行循环 (LLM ↔ Tools ↔ LLM...)
-│   ├── llm.py            # LLM 协议 + LLMResponse
-│   ├── tool.py           # Tool 协议 + FunctionTool + @tool 装饰器
-│   ├── message.py        # Message, ToolCall, ToolResult, Role 枚举
-│   ├── stream.py         # StreamEvent (7 种类型) + Stream 包装器
-│   ├── pipeline.py       # 线性步骤组合 (>>)
-│   ├── graph.py          # DAG 图执行引擎
-│   ├── middleware.py     # 中间件链 — 可组合的 Agent 钩子
-│   ├── state.py          # Agent 状态机 (StateTracker)
+├── core/                # 核心基元
+│   ├── __init__.py
+│   ├── agent.py         # Agent 执行循环 (LLM ↔ Tools ↔ LLM...)
+│   ├── llm.py           # LLM 协议 + LLMResponse
+│   ├── tool.py          # Tool 协议 + FunctionTool + @tool 装饰器
+│   ├── message.py       # Message, ToolCall, ToolResult, Role 枚举
+│   ├── stream.py        # StreamEvent (7 种类型) + Stream 包装器
+│   ├── pipeline.py      # 线性步骤组合 (>>)
+│   ├── graph.py         # DAG 图执行引擎
+│   ├── middleware.py    # 中间件链 — 可组合的 Agent 钩子
+│   ├── state.py         # Agent 状态机 (StateTracker)
 │   ├── structured_output.py  # Pydantic response_model 解析
-│   ├── human_in_loop.py  # 人为审批/中断钩子
-│   ├── utils.py          # 核心工具 (run_sync)
-│   └── errors.py         # 类型化错误 (ProviderError, ToolExecutionError, ...)
+│   ├── human_in_loop.py # 人为审批/中断钩子
+│   ├── utils.py         # 核心工具 (run_sync)
+│   └── errors.py        # 类型化错误 (ProviderError, ToolExecutionError, ...)
 │
-├── providers/            # LLM 实现
-│   ├── openai.py         # OpenAI — 流式、工具调用、Token 统计
-│   ├── anthropic.py      # Anthropic — 流式、工具调用、Token 统计
-│   ├── google.py         # Google Gemini — 流式、工具调用
-│   ├── azure.py          # Azure OpenAI — 流式、工具调用
-│   └── bedrock.py        # AWS Bedrock — Claude, Llama, Mistral, Titan
+├── providers/           # LLM 实现
+│   ├── __init__.py
+│   ├── openai.py        # OpenAI — 流式、工具调用、Token 统计
+│   ├── anthropic.py     # Anthropic — 流式、工具调用、Token 统计
+│   ├── google.py        # Google Gemini — 流式、工具调用
+│   ├── azure.py         # Azure OpenAI — 流式、工具调用
+│   └── bedrock.py       # AWS Bedrock — Claude, Llama, Mistral, Titan
 │
-├── agents/               # 10 种 Agent 模式
-│   ├── react.py          # ReAct (思考/行动/观察循环)
-│   ├── plan_execute.py   # 规划 → 执行 → 综合
-│   ├── reflection.py     # 生成 → 反思 → 改进
-│   ├── self_ask.py       # 分解 → 回答 → 综合
+├── agents/              # 10 种 Agent 模式
+│   ├── __init__.py
+│   ├── react.py         # ReAct (思考/行动/观察循环)
+│   ├── plan_execute.py  # 规划 → 执行 → 综合
+│   ├── reflection.py    # 生成 → 反思 → 改进
+│   ├── self_ask.py      # 分解 → 回答 → 综合
 │   ├── tree_of_thoughts.py  # BFS 多路径推理
 │   ├── chain_of_thought.py  # 思维链 + 自一致性
-│   ├── conversational.py # 多轮对话 + 自动摘要压缩
-│   ├── router.py         # 意图分类 → 路由到专家
-│   ├── tool_agent.py     # 重型工具编排 Agent
-│   ├── agent_chain.py    # 顺序 Agent 组合
-│   ├── agent_tool.py     # Agent 包装为可调用 Tool
-│   └── agent_hub.py      # 中央注册 + 发现 + 自动路由
+│   ├── conversational.py    # 多轮对话 + 自动摘要压缩
+│   ├── router.py        # 意图分类 → 路由到专家
+│   ├── tool_agent.py    # 重型工具编排 Agent
+│   ├── agent_chain.py   # 顺序 Agent 组合
+│   ├── agent_tool.py    # Agent 包装为可调用 Tool
+│   └── agent_hub.py     # 中央注册 + 发现 + 自动路由
 │
-├── tools/                # 工具系统
-│   └── builtin.py        # 内置工具 (current_time, calculate, echo)
+├── tools/               # 工具系统
+│   ├── __init__.py
+│   └── builtin.py       # 内置工具 (current_time, calculate, echo)
 │
-├── skills/               # 可复用技能包
-│   ├── base.py           # Skill 模型 + SkillTool 包装器
-│   ├── loader.py         # SKILL.md 文件加载器
-│   └── registry.py       # SkillRegistry — 注册、搜索、发现
+├── skills/              # 可复用技能包
+│   ├── __init__.py
+│   ├── base.py          # Skill 模型 + SkillTool 包装器
+│   ├── loader.py        # SKILL.md 文件加载器
+│   └── registry.py      # SkillRegistry — 注册、搜索、发现
 │
-├── memory/               # 对话记忆
-│   ├── buffer.py         # 滑动窗口缓冲区
-│   └── summary.py        # 运行摘要压缩
+├── memory/              # 对话记忆
+│   ├── __init__.py
+│   ├── buffer.py        # 滑动窗口缓冲区
+│   └── summary.py       # 运行摘要压缩
 │
-├── middleware/            # 中间件实现
-│   ├── logging_mw.py     # 结构化日志中间件
-│   ├── retry.py          # 指数退避重试
-│   ├── timeout.py        # 执行超时保护
-│   ├── rate_limit.py     # 令牌桶限流器
-│   ├── opentelemetry.py  # OpenTelemetry 追踪中间件
-│   └── langfuse.py       # Langfuse 可观测性中间件
+├── middleware/           # 中间件实现
+│   ├── __init__.py
+│   ├── logging_mw.py    # 结构化日志中间件
+│   ├── retry.py         # 指数退避重试
+│   ├── timeout.py       # 执行超时保护
+│   ├── rate_limit.py    # 令牌桶限流器
+│   ├── opentelemetry.py # OpenTelemetry 追踪中间件
+│   └── langfuse.py      # Langfuse 可观测性中间件
 │
-├── orchestration/        # 多 Agent 编排
-│   ├── supervisor.py     # 规划 → 委派 → 综合
-│   └── swarm.py          # 并行 / 顺序 / 会议模式
+├── orchestration/       # 多 Agent 编排
+│   ├── __init__.py
+│   ├── supervisor.py    # 规划 → 委派 → 综合
+│   └── swarm.py         # 并行 / 顺序 / 会议模式
 │
-├── eval/                 # 评估与测试框架
-│   ├── case.py           # EvalCase — 测试提示 + 预期行为
-│   ├── metrics.py        # MetricsCollector — 时间、Token、成本、成功率
-│   ├── suite.py          # EvalSuite — 集合 + JSON 加载/保存
-│   ├── runner.py         # EvalRunner — 对 Agent 执行测试套件
-│   └── report.py         # EvalReport — JSON / Markdown / HTML / Text
+├── eval/                # 评估与测试框架
+│   ├── __init__.py
+│   ├── case.py          # EvalCase — 测试提示 + 预期行为
+│   ├── metrics.py       # MetricsCollector — 时间、Token、成本、成功率
+│   ├── suite.py         # EvalSuite — 集合 + JSON 加载/保存
+│   ├── runner.py        # EvalRunner — 对 Agent 执行测试套件
+│   └── report.py        # EvalReport — JSON / Markdown / HTML / Text
 │
-├── tracing/              # 可观测性
-│   └── tracer.py         # Tracer, Span, ConsoleTracer, tracing_middleware
+├── tracing/             # 可观测性
+│   ├── __init__.py
+│   └── tracer.py        # Tracer, Span, ConsoleTracer, tracing_middleware
 │
-├── mcp/                  # Model Context Protocol
-│   └── client.py         # MCPClient — 动态工具发现 (stdio/SSE)
+├── mcp/                 # Model Context Protocol
+│   ├── __init__.py
+│   └── client.py        # MCPClient — 动态工具发现 (stdio/SSE)
 │
-├── cli/                  # CLI 接口
-│   └── __init__.py       # init, quickstart, skill, serve, run, eval
+├── cli/                 # CLI 接口
+│   └── __init__.py      # init, quickstart, skill, serve, run, eval
 │
-├── server.py             # HTTP 服务 (FastAPI + REST + SSE)
-├── logging.py            # 结构化日志 (text/json, 模块级日志级别)
+├── examples/            # 可运行示例
+│   ├── basic_agent.py   # 天气 + 搜索 Agent 演示
+│   └── memory_example.py  # 多轮对话 + 记忆
 │
-├── examples/             # 可运行示例
-│   ├── basic_agent.py    # 天气 + 搜索 Agent 演示
-│   └── memory_example.py # 多轮对话 + 记忆
-│
-└── tests/                # 210+ 测试
+└── tests/               # 210+ 测试
 ```
 
 ### 执行流程
