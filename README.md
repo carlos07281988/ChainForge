@@ -7,10 +7,11 @@
      / /___/ __  / __/ / /___/ /_/ / /|  / /_/ / ___ / /_/ / /_/ / /_/ /
      \____/_/ /_/_/   /_____/\____/_/ |_/\____/_/  |_\____/\____/_____/
 
-                          ⚒️  锻造链 - Forge Your Chain
 ```
 
-## ChainForge
+</div>
+
+# ChainForge
 
 **锻造链** — *Craft your LLM call chains, tool chains, and processing chains.*
 
@@ -30,7 +31,7 @@ pip install chainforge
 
 ---
 
-## Why ChainForge?
+## Why ChainForge?## Why ChainForge?
 
 LangChain pioneered the agent framework space, but its architecture carries years of backward-compatibility debt. ChainForge is a clean-slate redesign driven by what we've learned since:
 
