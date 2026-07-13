@@ -1181,3 +1181,159 @@ asyncio.run(main())
 | "Build a multi-skill assistant" | **RouterAgent** | Intent-based routing |
 | "Automate a data pipeline" | **ToolAgent** | Tool orchestration |
 
+
+## Agent Linking
+
+ChainForge provides three mechanisms for connecting agents: **AgentTool** (agent as callable), **AgentChain** (sequential composition), and **AgentHub** (registry + discovery).
+
+These enable hierarchical agent systems, multi-step workflows, and dynamic agent selection.
+
+---
+
+### AgentTool — Agent as a Tool
+
+Wrap any Agent into a Tool that other agents can call. This enables **hierarchical agent systems**: a high-level agent delegates sub-tasks to specialized agents.
+
+```python
+from chainforge import Agent
+from chainforge.providers import OpenAIProvider
+from chainforge.agents import AgentTool
+
+# Create a specialized agent
+search_agent = Agent(
+    llm=OpenAIProvider(model="gpt-4o-mini"),
+    tools=[],
+    system_prompt="You are a web search specialist.",
+)
+
+# Wrap it as a Tool
+search_tool = AgentTool(
+    search_agent,
+    name="web_search",
+    description="Search the web for information",
+)
+
+# Another specialized agent
+calc_agent = Agent(
+    llm=OpenAIProvider(model="gpt-4o"),
+    system_prompt="You are a calculation specialist.",
+)
+calc_tool = AgentTool(calc_agent, name="calculator", description="Perform calculations")
+
+# Main agent uses specialized agents as tools
+main_agent = Agent(
+    llm=OpenAIProvider(model="gpt-4o"),
+    tools=[search_tool, calc_tool],
+    system_prompt="Delegate to specialists when needed.",
+)
+```
+
+**Flow:** Main agent receives a task -> decides to call `web_search` -> `search_agent` runs as sub-agent -> returns text result -> main agent continues.
+
+**Key parameters:** `agent` (any agent), `name`, `description`, `timeout_seconds`.
+
+---
+
+### AgentChain — Sequential Agent Composition
+
+Chain agents in sequence, where each agent receives the previous agent's output as context. The Agent version of Pipeline, purpose-built for agents.
+
+```python
+from chainforge import Agent
+from chainforge.providers import OpenAIProvider
+from chainforge.agents import AgentChain
+
+# Define individual agents
+researcher = Agent(
+    llm=OpenAIProvider(model="gpt-4o"),
+    system_prompt="You are a thorough researcher. Gather detailed information.",
+)
+analyzer = Agent(
+    llm=OpenAIProvider(model="gpt-4o"),
+    system_prompt="You are a data analyst. Analyze and extract insights.",
+)
+writer = Agent(
+    llm=OpenAIProvider(model="gpt-4o-mini"),
+    system_prompt="You are a report writer. Write clear, concise reports.",
+)
+
+# Compose them
+chain = AgentChain(name="research_pipeline")
+chain.add_step("research", researcher, "Researches the topic")
+chain.add_step("analyze", analyzer, "Analyzes findings")
+chain.add_step("write", writer, "Writes final report")
+
+# Execute the chain
+stream = await chain.run("Impact of AI on healthcare in 2026")
+async for event in stream:
+    if event.type == "state":
+        print(f"[{event.data['state']}] {event.data.get('step', '')}")
+    elif event.type == "text":
+        print(event.content, end="", flush=True)
+```
+
+**Flow:** `chain_start -> step_start (research) -> step_done -> step_start (analyze) -> step_done -> step_start (write) -> step_done -> chain_done`
+
+**State events:** `chain_start`, `step_start`, `step_done`, `chain_done`
+
+**Nesting:** AgentChain can itself be wrapped as a Tool via `.to_tool()`:
+
+```python
+research_tool = chain.to_tool("research_pipeline", "Full research pipeline")
+main_agent = Agent(llm=llm, tools=[research_tool, other_tools])
+```
+
+---
+
+### AgentHub — Registry + Discovery + Auto-Routing
+
+Central registry for managing agents at scale. Register agents with metadata, search/discover them, and auto-generate routers.
+
+```python
+from chainforge import Agent
+from chainforge.providers import OpenAIProvider
+from chainforge.agents import AgentHub
+
+hub = AgentHub()
+
+# Register agents with metadata
+hub.register("weather", weather_agent, "Weather forecasts", tags=["info", "public"])
+hub.register("coding", code_agent, "Code generation and review", tags=["dev", "private"])
+hub.register("search", search_agent, "Web search", tags=["info", "public"])
+hub.register("data", data_agent, "Data analysis", tags=["analytics"])
+
+# Discover
+all_agents = hub.list()
+public_agents = hub.find_by_tag("public")
+matching = hub.search("code")
+
+# Auto-create a router from all registered agents
+router = hub.create_router(
+    classifier_llm=OpenAIProvider(model="gpt-4o-mini"),
+    default_route="search",
+)
+stream = await router.run("Write a Python function")  # routes to "coding" agent
+
+# Create a chain from selected agents
+chain = hub.create_chain(["search", "data"], name="research_analyze")
+```
+
+**Methods:**
+- `register(name, agent, description, tags)` — register with metadata
+- `get(name)` — retrieve an agent
+- `list()` — list all with metadata
+- `search(query)` — search by name/description
+- `find_by_tag(tag)` — filter by tag
+- `create_router(classifier_llm)` — auto-generate RouterAgent
+- `create_chain(step_names)` — auto-generate AgentChain
+- `summary()` — human-readable overview
+
+---
+
+### Linking Patterns Summary
+
+| Mechanism | Purpose | When to Use |
+|---|---|---|
+| **AgentTool** | Agent as callable Tool | Hierarchical agents, delegation |
+| **AgentChain** | Sequential composition | Multi-step workflows |
+| **AgentHub** | Registry + discovery | Managing many agents, auto-routing |
