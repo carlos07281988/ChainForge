@@ -4,9 +4,13 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from enum import Enum
-from typing import Any
+from typing import Any, TypeVar
 
 from pydantic import BaseModel, Field
+
+from chainforge.core.structured_output import parse_structured_response
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class EventType(str, Enum):
@@ -46,21 +50,22 @@ class StreamEvent(BaseModel):
         return cls(type=EventType.done, content=content)
 
     @classmethod
-    def status(cls, message: str) -> "StreamEvent":
-        return cls(type=EventType.status, content=message)
+    def status(cls, message: str, data: dict | None = None) -> "StreamEvent":
+        return cls(type=EventType.status, content=message, data=data or {})
 
 
 class Stream:
-    """A wrapper around an async event stream that also provides sync iteration."""
+    """A wrapper around an async event stream with utility methods."""
 
-    def __init__(self, async_iter: AsyncIterator[StreamEvent]):
+    def __init__(self, async_iter: AsyncIterator[StreamEvent], response_model: type[BaseModel] | None = None):
         self._async_iter = async_iter
+        self._response_model = response_model
 
     def __aiter__(self) -> AsyncIterator[StreamEvent]:
         return self._async_iter
 
     async def collect_text(self) -> str:
-        """Collect all text events into a single string (ignores tool calls, errors, etc.)."""
+        """Collect all text events into a single string."""
         parts: list[str] = []
         async for event in self:
             if event.type == EventType.text and event.content:
@@ -73,3 +78,24 @@ class Stream:
         async for event in self:
             events.append(event)
         return events
+
+    async def collect_structured(self, model: type[T] | None = None) -> T | None:
+        """Collect the stream and parse the final response into a Pydantic model.
+
+        Args:
+            model: The Pydantic model class to parse into. Falls back to
+                  the response_model passed at construction time.
+
+        Returns:
+            An instance of the model, or None if no text content was produced.
+        """
+        response_model = model or self._response_model
+        if response_model is None:
+            raise ValueError(
+                "No response_model provided. Either pass one to collect_structured() "
+                "or set response_model when calling agent.run()"
+            )
+        text = await self.collect_text()
+        if not text:
+            return None
+        return parse_structured_response(text, response_model)

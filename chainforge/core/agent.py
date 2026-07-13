@@ -31,6 +31,16 @@ class Agent(BaseModel):
         )
         async for event in agent.run("Weather in Beijing?"):
             ...
+
+    With structured output:
+        class Weather(BaseModel):
+            city: str
+            temperature: float
+
+        result: Weather = await agent.run(
+            "Weather in Beijing?",
+            response_model=Weather,
+        ).collect_structured(Weather)
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -73,7 +83,6 @@ class Agent(BaseModel):
             )
 
     async def _execute_tool_calls(self, tool_calls: list[dict]) -> list[Message]:
-        """Execute tool calls, optionally in parallel for independent calls."""
         tcs = [
             ToolCall(
                 id=tc_data.get("id", ""),
@@ -82,10 +91,7 @@ class Agent(BaseModel):
             )
             for tc_data in tool_calls
         ]
-
         if self.parallel_tool_calls and len(tcs) > 1:
-            # Check independence: if tools have different names or different args,
-            # we can safely execute in parallel
             results = await asyncio.gather(
                 *[self._execute_tool(tc) for tc in tcs],
                 return_exceptions=True,
@@ -97,7 +103,6 @@ class Agent(BaseModel):
                 else:
                     msgs.append(result)
             return msgs
-
         return [await self._execute_tool(tc) for tc in tcs]
 
     async def _run_loop(self, messages: list[Message]) -> AsyncIterator[StreamEvent]:
@@ -113,18 +118,16 @@ class Agent(BaseModel):
             response = await self.llm.generate(messages, tools=tool_specs, **kwargs)
             saw_tool_calls = bool(response.tool_calls)
 
-            # Yield streaming agent state
             yield StreamEvent(
                 type=EventType.status,
                 content=f"iteration_{iteration + 1}",
-                data={"iteration": iteration + 1, "tool_calls": len(response.tool_calls) if response.tool_calls else 0},
+                data={"iteration": iteration + 1, "tool_calls": len(response.tool_calls) if response.tool_calls else 0, "depth": iteration},
             )
 
             if response.content:
                 yield StreamEvent(type=EventType.text, content=response.content)
 
             if saw_tool_calls:
-                # Emit tool_call events
                 for tc_data in response.tool_calls:
                     yield StreamEvent(
                         type=EventType.tool_call,
@@ -134,11 +137,7 @@ class Agent(BaseModel):
                             "id": tc_data.get("id", ""),
                         },
                     )
-
-                # Execute (parallel)
                 result_msgs = await self._execute_tool_calls(response.tool_calls)
-
-                # Emit tool_result events and append to conversation
                 for msg in result_msgs:
                     messages.append(msg)
                     yield StreamEvent(
@@ -161,10 +160,17 @@ class Agent(BaseModel):
         prompt: str | list[Message],
         *,
         context: dict[str, Any] | None = None,
+        response_model: type[BaseModel] | None = None,
     ) -> Stream:
         """Execute the agent with the given prompt.
 
-        Returns a Stream of events. The caller iterates over it asynchronously.
+        Args:
+            prompt: String prompt or list of messages.
+            context: Optional context dict passed to middleware.
+            response_model: Optional Pydantic model for structured output.
+                           When set, the Stream will provide `collect_structured()`.
+
+        Returns a Stream of events.
         """
         if isinstance(prompt, str):
             messages: list[Message] = []
@@ -174,10 +180,13 @@ class Agent(BaseModel):
         else:
             messages = list(prompt)
 
+        # If response_model is set, inject it as context for the stream
         ctx = context or {}
+        if response_model is not None:
+            ctx["_response_model"] = response_model
 
         if self.middlewares:
             chain = MiddlewareChain(self.middlewares)
-            return Stream(chain.run(messages, ctx, self._run_loop))
+            return Stream(chain.run(messages, ctx, self._run_loop), response_model=response_model)
 
-        return Stream(self._run_loop(messages))
+        return Stream(self._run_loop(messages), response_model=response_model)

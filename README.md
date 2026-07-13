@@ -488,35 +488,22 @@ User Prompt
 - [x] Pipeline composition
 - [x] MCP client
 - [x] Conversation memory
-- [x] **Multi-agent orchestration** — Swarm (parallel/sequential/conference) + Supervisor
-- [x] **Structured output** — Pydantic response models with JSON extraction
-- [x] **Rate limiting / retry / timeout middleware** — token bucket, async retry with backoff, timeout enforcement
-- [x] **Human-in-the-loop** — approval hooks, interrupt/reject/modify tool calls
-- [x] **Graph-based execution (DAG)** — branching, merging, topological sort, cycle detection
-- [x] **Parallel tool execution** — concurrent independent tool calls with asyncio.gather
+- [x] Multi-agent orchestration
+- [x] Structured output / response_model
+- [x] Rate limiting / retry / timeout middleware
+- [x] Human-in-the-loop
+- [x] Graph-based execution (DAG)
+- [x] Parallel tool execution
+- [x] **Google Gemini provider** — `GoogleProvider`
+- [x] **Azure OpenAI provider** — `AzureProvider`
+- [x] **OpenTelemetry middleware** — `otel_tracing_middleware`
+- [x] **CLI scaffolding** — `chainforge init`, `chainforge quickstart`
+- [x] **Agent response_model** — `agent.run(..., response_model=MyModel)`
+- [x] **Stream.collect_structured()** — typed output collection
 - [ ] Streaming agent state (live status events with iteration/depth metadata)
-- [ ] Langfuse / OpenTelemetry integration
-- [ ] CLI for project scaffolding
-- [ ] Google / Azure / Bedrock providers
+- [ ] Langfuse integration
+- [ ] Bedrock provider
 
-
-```bash
-git clone https://github.com/your-org/chainforge
-cd chainforge
-
-# Install in development mode with dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest
-
-# Code style
-ruff check .
-```
-
----
-
-## License
 
 Apache 2.0
 
