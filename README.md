@@ -586,3 +586,86 @@ log_data(logger, "INFO", "Processing complete", data={
 ```
 
 In JSON mode, the data dict appears under the `"data"` key. In text mode, it's appended to the message.
+
+---
+
+## Skills
+
+Skills are reusable capability bundles — instructions + optional tools — that agents can load, compose, and invoke. Compatible with Codex SKILL.md format.
+
+### Using Skills
+
+```python
+from chainforge.skills import Skill, SkillRegistry
+
+# Create a skill inline
+greeting_skill = Skill(
+    name="greeter",
+    description="Creates enthusiastic greetings",
+    instructions="""
+You are a greeting specialist. Always use an enthusiastic tone
+and include emojis.
+""",
+)
+
+# Load from SKILL.md (Codex-compatible format)
+skill = Skill.load("./skills/my-skill/SKILL.md")
+
+# Compose into an agent
+agent = Agent(
+    llm=llm,
+    tools=[...],
+    skills=[greeting_skill, skill],
+)
+```
+
+### SKILL.md Format
+
+ChainForge loads skills from standard Codex SKILL.md files:
+
+```markdown
+---
+name: my-skill
+description: What this skill does
+tags: [tag1, tag2]
+---
+
+## Instructions
+
+Markdown instructions here...
+```
+
+### Skill Registry
+
+```python
+from chainforge.skills import SkillRegistry
+
+registry = SkillRegistry()
+registry.load_dir("./skills")
+registry.register(my_skill)
+
+# Query
+skill = registry.get("skill-name")
+results = registry.search("weather")
+tagged = registry.find_by_tag("demo")
+
+# Convert all skills to tools
+tools = registry.to_tools()
+```
+
+### Skills as Tools
+
+Each skill automatically generates a tool specification, enabling agents to discover and invoke skills dynamically:
+
+```python
+skill_tool = skill.to_tool()
+# The agent can now call this skill via tool calls
+```
+
+### CLI
+
+```bash
+chainforge skill list        # List available skills
+chainforge skill add <path>  # Register a skill
+chainforge skill info <name> # Show skill details
+```

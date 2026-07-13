@@ -22,17 +22,26 @@ logger = get_logger("agent")
 
 
 class Agent(BaseModel):
-    """An agent that uses an LLM and tools to accomplish tasks.
+    """An agent that uses an LLM and tools (and skills) to accomplish tasks.
 
-    Emits rich streaming events including state transitions, tool calls,
-    text content, and errors. Use the `state` event type to track
-    real-time agent progress.
+    Skills are automatically composed into the agent's system prompt
+    and their tools are added to the available tool list.
+
+    Usage:
+        agent = Agent(
+            llm=OpenAIProvider(),
+            tools=[get_weather],
+            skills=[weather_skill],
+        )
+        async for event in await agent.run("Weather in Beijing?"):
+            ...
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     llm: LLM = Field(description="LLM provider")
     tools: list[Tool] = Field(default_factory=list, description="Available tools")
+    skills: list[Any] = Field(default_factory=list, description="Skills to compose into the agent")
     system_prompt: str | None = Field(default=None, description="System instructions")
     max_iterations: int = Field(default=10, description="Max tool-use iterations")
     max_tokens: int | None = Field(default=None, description="Max tokens per response")
@@ -40,8 +49,44 @@ class Agent(BaseModel):
     middlewares: list | None = Field(default=None, description="Middleware list")
     parallel_tool_calls: bool = Field(default=True, description="Execute independent tool calls in parallel")
 
+    def _build_system_prompt(self) -> str | None:
+        """Compose the full system prompt from user prompt + skill blocks."""
+        parts = []
+        if self.system_prompt:
+            parts.append(self.system_prompt)
+
+        for skill in self.skills:
+            block = skill.to_system_block() if hasattr(skill, "to_system_block") else str(skill)
+            parts.append(block)
+
+        return "\n\n".join(parts) if parts else None
+
+    def _collect_skill_tools(self) -> list[Tool]:
+        """Collect tools from skills."""
+        skill_tools = []
+        for skill in self.skills:
+            if hasattr(skill, "tools"):
+                skill_tools.extend(skill.tools)
+            # Also add the skill itself as a callable tool
+            if hasattr(skill, "to_tool"):
+                skill_tools.append(skill.to_tool())
+        return skill_tools
+
+    def _all_tools(self) -> list[Tool]:
+        """Combine direct tools + skill tools."""
+        seen = set()
+        result = []
+        for t in self.tools + self._collect_skill_tools():
+            name = t.spec.name if hasattr(t, "spec") else id(t)
+            if name not in seen:
+                seen.add(name)
+                result.append(t)
+        return result
+
+    # ── Rest of Agent unchanged ──────────────────────────────────────────
+
     def _get_tool_map(self) -> dict[str, Tool]:
-        return {t.spec.name: t for t in self.tools}
+        return {t.spec.name: t for t in self._all_tools()}
 
     async def _execute_tool(self, tc: ToolCall) -> Message:
         tool_map = self._get_tool_map()
@@ -97,11 +142,12 @@ class Agent(BaseModel):
         *,
         tracker: StateTracker | None = None,
     ) -> AsyncIterator[StreamEvent]:
-        tool_specs = [t.spec for t in self.tools] if self.tools else None
+        all_tools = self._all_tools()
+        tool_specs = [t.spec for t in all_tools] if all_tools else None
         tracker = tracker or StateTracker()
 
         log_data(logger, INFO, f"Agent loop starting (max_iterations={self.max_iterations})",
-                 data={"tools": [t.spec.name for t in self.tools], "llm": str(self.llm.model)})
+                 data={"tools": [t.spec.name for t in all_tools], "llm": str(self.llm.model)})
 
         for iteration in range(self.max_iterations):
             for e in self._emit_state(tracker, AgentState.thinking, iteration=iteration):
@@ -125,32 +171,21 @@ class Agent(BaseModel):
             if saw_tool_calls:
                 for e in self._emit_state(tracker, AgentState.executing_tool, iteration=iteration):
                     yield e
-
                 for tc_data in response.tool_calls:
-                    yield StreamEvent(
-                        type=EventType.tool_call,
-                        data={
-                            "name": tc_data["function"]["name"],
-                            "args": tc_data["function"].get("arguments", {}),
-                            "id": tc_data.get("id", ""),
-                        },
-                    )
-
+                    yield StreamEvent(type=EventType.tool_call, data={
+                        "name": tc_data["function"]["name"],
+                        "args": tc_data["function"].get("arguments", {}),
+                        "id": tc_data.get("id", ""),
+                    })
                 result_msgs = await self._execute_tool_calls(response.tool_calls)
-
                 for e in self._emit_state(tracker, AgentState.observing, iteration=iteration):
                     yield e
-
                 for msg in result_msgs:
                     messages.append(msg)
-                    yield StreamEvent(
-                        type=EventType.tool_result,
-                        data={
-                            "name": msg.name or "",
-                            "content": msg.content or "",
-                            "is_error": msg.metadata.get("is_error", False),
-                        },
-                    )
+                    yield StreamEvent(type=EventType.tool_result, data={
+                        "name": msg.name or "", "content": msg.content or "",
+                        "is_error": msg.metadata.get("is_error", False),
+                    })
                 continue
 
             for e in self._emit_state(tracker, AgentState.responding, iteration=iteration):
@@ -158,7 +193,6 @@ class Agent(BaseModel):
             yield StreamEvent(type=EventType.done, content=response.content)
             for e in self._emit_state(tracker, AgentState.done, iteration=iteration):
                 yield e
-
             log_data(logger, INFO, f"Agent finished after {iteration + 1} iterations",
                      data={"iterations": iteration + 1, "response_length": len(response.content or "")})
             return
@@ -175,12 +209,13 @@ class Agent(BaseModel):
     ) -> Stream:
         """Execute the agent with the given prompt."""
         if isinstance(prompt, str):
-            messages: list[Message] = []
-            if self.system_prompt:
-                messages.append(Message.system(self.system_prompt))
-            messages.append(Message.user(prompt))
+            mgs: list[Message] = []
+            composed = self._build_system_prompt()
+            if composed:
+                mgs.append(Message.system(composed))
+            mgs.append(Message.user(prompt))
         else:
-            messages = list(prompt)
+            mgs = list(prompt)
 
         ctx = context or {}
         if response_model is not None:
@@ -189,7 +224,8 @@ class Agent(BaseModel):
         log_data(logger, INFO, "Agent.run() called",
                  data={"input_length": len(prompt) if isinstance(prompt, str) else len(prompt),
                        "has_system": self.system_prompt is not None,
-                       "tools": len(self.tools),
+                       "has_skills": len(self.skills) > 0,
+                       "tools": len(self._all_tools()),
                        "response_model": response_model.__name__ if response_model else None})
 
         tracker = StateTracker()
@@ -200,6 +236,6 @@ class Agent(BaseModel):
 
         if self.middlewares:
             chain = MiddlewareChain(self.middlewares)
-            return Stream(chain.run(messages, ctx, _handler), response_model=response_model)
+            return Stream(chain.run(mgs, ctx, _handler), response_model=response_model)
 
-        return Stream(_handler(messages, ctx), response_model=response_model)
+        return Stream(_handler(mgs, ctx), response_model=response_model)
