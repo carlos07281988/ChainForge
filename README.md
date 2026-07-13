@@ -480,33 +480,23 @@ User Prompt
 ## Roadmap
 
 - [x] Core protocols and agent loop
-- [x] OpenAI provider with streaming
-- [x] Anthropic provider with streaming
+- [x] OpenAI / Anthropic / Google / Azure / Bedrock providers
 - [x] Tool system with `@tool` decorator
 - [x] Middleware chain
-- [x] Built-in tracing
-- [x] Pipeline composition
+- [x] Built-in tracing (ConsoleTracer, OpenTelemetry, Langfuse)
+- [x] Pipeline composition + DAG graph execution
 - [x] MCP client
-- [x] Conversation memory
-- [x] Multi-agent orchestration
+- [x] Conversation memory (buffer + summary)
+- [x] Multi-agent orchestration (Swarm / Supervisor)
 - [x] Structured output / response_model
 - [x] Rate limiting / retry / timeout middleware
 - [x] Human-in-the-loop
-- [x] Graph-based execution (DAG)
 - [x] Parallel tool execution
-- [x] **Google Gemini provider** — `GoogleProvider`
-- [x] **Azure OpenAI provider** — `AzureProvider`
-- [x] **OpenTelemetry middleware** — `otel_tracing_middleware`
-- [x] **CLI scaffolding** — `chainforge init`, `chainforge quickstart`
-- [x] **Agent response_model** — `agent.run(..., response_model=MyModel)`
-- [x] **Stream.collect_structured()** — typed output collection
-- [ ] Streaming agent state (live status events with iteration/depth metadata)
-- [ ] Langfuse integration
-- [ ] Bedrock provider
+- [x] **Streaming agent state** — explicit state machine (StateTracker) with iteration/depth metadata
+- [x] **Langfuse integration** — `langfuse_tracing_middleware`
+- [x] **Bedrock provider** — AWS Bedrock (Claude, Llama, etc.)
+- [x] **CLI scaffolding** — `chainforge init` / `quickstart`
+- [ ] Streaming agent state visualization (dashboard/UI)
+- [ ] Graph-based agent visual editor
+- [ ] Agent evaluation & testing framework
 
-
-Apache 2.0
-
----
-
-<p align="center"><strong>锻造链</strong> — 锻造你的链。<p align="center">

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator
+from functools import partial
 from typing import Any
 
 from pydantic import BaseModel, Field, ConfigDict
@@ -12,6 +13,7 @@ from chainforge.core.errors import MaxIterationsError
 from chainforge.core.llm import LLM, LLMResponse
 from chainforge.core.message import Message, ToolCall
 from chainforge.core.middleware import MiddlewareChain
+from chainforge.core.state import AgentState, StateTracker
 from chainforge.core.stream import EventType, Stream, StreamEvent
 from chainforge.core.tool import Tool
 
@@ -19,28 +21,9 @@ from chainforge.core.tool import Tool
 class Agent(BaseModel):
     """An agent that uses an LLM and tools to accomplish tasks.
 
-    Core execution loop:
-    1. Send messages + tool schemas to LLM
-    2. If LLM returns tool calls → execute tools → append results → repeat
-    3. If LLM returns text → done
-
-    Usage:
-        agent = Agent(
-            llm=OpenAI(model="gpt-4"),
-            tools=[get_weather, search],
-        )
-        async for event in agent.run("Weather in Beijing?"):
-            ...
-
-    With structured output:
-        class Weather(BaseModel):
-            city: str
-            temperature: float
-
-        result: Weather = await agent.run(
-            "Weather in Beijing?",
-            response_model=Weather,
-        ).collect_structured(Weather)
+    Emits rich streaming events including state transitions, tool calls,
+    text content, and errors. Use the `state` event type to track
+    real-time agent progress.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -61,41 +44,20 @@ class Agent(BaseModel):
         tool_map = self._get_tool_map()
         tool_obj = tool_map.get(tc.name)
         if tool_obj is None:
-            return Message.tool_result(
-                tool_call_id=tc.id,
-                name=tc.name,
-                content=f"Unknown tool: {tc.name}",
-                is_error=True,
-            )
+            return Message.tool_result(tc.id, tc.name, f"Unknown tool: {tc.name}", is_error=True)
         try:
             result = await tool_obj.run(**tc.args)
-            return Message.tool_result(
-                tool_call_id=tc.id,
-                name=tc.name,
-                content=str(result),
-            )
+            return Message.tool_result(tc.id, tc.name, str(result))
         except Exception as e:
-            return Message.tool_result(
-                tool_call_id=tc.id,
-                name=tc.name,
-                content=str(e),
-                is_error=True,
-            )
+            return Message.tool_result(tc.id, tc.name, str(e), is_error=True)
 
     async def _execute_tool_calls(self, tool_calls: list[dict]) -> list[Message]:
         tcs = [
-            ToolCall(
-                id=tc_data.get("id", ""),
-                name=tc_data["function"]["name"],
-                args=tc_data["function"].get("arguments", {}),
-            )
-            for tc_data in tool_calls
+            ToolCall(id=td.get("id", ""), name=td["function"]["name"], args=td["function"].get("arguments", {}))
+            for td in tool_calls
         ]
         if self.parallel_tool_calls and len(tcs) > 1:
-            results = await asyncio.gather(
-                *[self._execute_tool(tc) for tc in tcs],
-                return_exceptions=True,
-            )
+            results = await asyncio.gather(*[self._execute_tool(tc) for tc in tcs], return_exceptions=True)
             msgs = []
             for tc, result in zip(tcs, results):
                 if isinstance(result, Exception):
@@ -105,10 +67,33 @@ class Agent(BaseModel):
             return msgs
         return [await self._execute_tool(tc) for tc in tcs]
 
-    async def _run_loop(self, messages: list[Message]) -> AsyncIterator[StreamEvent]:
+    def _emit_state(self, tracker: StateTracker, to_state: AgentState, **kw) -> list[StreamEvent]:
+        t = tracker.transition(to_state, **kw)
+        data = {
+            "state": to_state.value,
+            "from_state": t.from_state.value if t.from_state else None,
+            "iteration": t.iteration,
+            "depth": t.depth,
+        }
+        if kw.get("tool_name"):
+            data["tool_name"] = kw["tool_name"]
+        return [StreamEvent(type=EventType.state, content=t.message or to_state.value, data=data)]
+
+    async def _run_loop(
+        self,
+        messages: list[Message],
+        ctx: dict[str, Any] | None = None,
+        *,
+        tracker: StateTracker | None = None,
+    ) -> AsyncIterator[StreamEvent]:
         tool_specs = [t.spec for t in self.tools] if self.tools else None
+        tracker = tracker or StateTracker()
 
         for iteration in range(self.max_iterations):
+            """emit state: thinking"""
+            for e in self._emit_state(tracker, AgentState.thinking, iteration=iteration):
+                yield e
+
             kwargs = {}
             if self.max_tokens is not None:
                 kwargs["max_tokens"] = self.max_tokens
@@ -118,16 +103,13 @@ class Agent(BaseModel):
             response = await self.llm.generate(messages, tools=tool_specs, **kwargs)
             saw_tool_calls = bool(response.tool_calls)
 
-            yield StreamEvent(
-                type=EventType.status,
-                content=f"iteration_{iteration + 1}",
-                data={"iteration": iteration + 1, "tool_calls": len(response.tool_calls) if response.tool_calls else 0, "depth": iteration},
-            )
-
             if response.content:
                 yield StreamEvent(type=EventType.text, content=response.content)
 
             if saw_tool_calls:
+                for e in self._emit_state(tracker, AgentState.executing_tool, iteration=iteration):
+                    yield e
+
                 for tc_data in response.tool_calls:
                     yield StreamEvent(
                         type=EventType.tool_call,
@@ -137,7 +119,12 @@ class Agent(BaseModel):
                             "id": tc_data.get("id", ""),
                         },
                     )
+
                 result_msgs = await self._execute_tool_calls(response.tool_calls)
+
+                for e in self._emit_state(tracker, AgentState.observing, iteration=iteration):
+                    yield e
+
                 for msg in result_msgs:
                     messages.append(msg)
                     yield StreamEvent(
@@ -150,7 +137,11 @@ class Agent(BaseModel):
                     )
                 continue
 
+            for e in self._emit_state(tracker, AgentState.responding, iteration=iteration):
+                yield e
             yield StreamEvent(type=EventType.done, content=response.content)
+            for e in self._emit_state(tracker, AgentState.done, iteration=iteration):
+                yield e
             return
 
         raise MaxIterationsError(f"Agent exceeded {self.max_iterations} iterations")
@@ -166,11 +157,10 @@ class Agent(BaseModel):
 
         Args:
             prompt: String prompt or list of messages.
-            context: Optional context dict passed to middleware.
+            context: Optional context dict (passed to middleware).
             response_model: Optional Pydantic model for structured output.
-                           When set, the Stream will provide `collect_structured()`.
 
-        Returns a Stream of events.
+        Returns a Stream of events with typed StateEvent transitions.
         """
         if isinstance(prompt, str):
             messages: list[Message] = []
@@ -180,13 +170,19 @@ class Agent(BaseModel):
         else:
             messages = list(prompt)
 
-        # If response_model is set, inject it as context for the stream
         ctx = context or {}
         if response_model is not None:
             ctx["_response_model"] = response_model
 
+        tracker = StateTracker()
+        # Create a handler that accepts (messages, ctx) for middleware chain,
+        # with tracker pre-bound via closure
+        async def _handler(msgs: list[Message], c: dict[str, Any]) -> AsyncIterator[StreamEvent]:
+            async for event in self._run_loop(msgs, c, tracker=tracker):
+                yield event
+
         if self.middlewares:
             chain = MiddlewareChain(self.middlewares)
-            return Stream(chain.run(messages, ctx, self._run_loop), response_model=response_model)
+            return Stream(chain.run(messages, ctx, _handler), response_model=response_model)
 
-        return Stream(self._run_loop(messages), response_model=response_model)
+        return Stream(_handler(messages, ctx), response_model=response_model)

@@ -20,6 +20,7 @@ class EventType(str, Enum):
     error = "error"
     done = "done"
     status = "status"
+    state = "state"  # explicit agent state transition
 
 
 class StreamEvent(BaseModel):
@@ -53,6 +54,11 @@ class StreamEvent(BaseModel):
     def status(cls, message: str, data: dict | None = None) -> "StreamEvent":
         return cls(type=EventType.status, content=message, data=data or {})
 
+    @classmethod
+    def state_transition(cls, to_state: str, message: str | None = None, data: dict | None = None) -> "StreamEvent":
+        """Create a state transition event."""
+        return cls(type=EventType.state, content=message or to_state, data=data or {"state": to_state})
+
 
 class Stream:
     """A wrapper around an async event stream with utility methods."""
@@ -80,15 +86,7 @@ class Stream:
         return events
 
     async def collect_structured(self, model: type[T] | None = None) -> T | None:
-        """Collect the stream and parse the final response into a Pydantic model.
-
-        Args:
-            model: The Pydantic model class to parse into. Falls back to
-                  the response_model passed at construction time.
-
-        Returns:
-            An instance of the model, or None if no text content was produced.
-        """
+        """Collect the stream and parse the final response into a Pydantic model."""
         response_model = model or self._response_model
         if response_model is None:
             raise ValueError(
@@ -99,3 +97,15 @@ class Stream:
         if not text:
             return None
         return parse_structured_response(text, response_model)
+
+    async def collect_states(self) -> list[dict]:
+        """Collect only state transition events with metadata."""
+        states: list[dict] = []
+        async for event in self:
+            if event.type == EventType.state:
+                states.append({
+                    "state": event.data.get("state", event.content),
+                    "message": event.content,
+                    "data": event.data,
+                })
+        return states
