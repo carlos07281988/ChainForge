@@ -1,0 +1,46 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ChainForge Dashboard</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head><body>
+<div class="navbar">
+  <a href="/dashboard" class="logo">&#9876; ChainForge</a>
+  <nav>
+    <a href="/dashboard" class="active">Dashboard</a>
+    <a href="/dashboard/agent-run">Agent Run</a>
+    <a href="/dashboard/dag-editor">DAG Editor</a>
+  </nav>
+  <div style="margin-left:auto;font-size:0.8rem;color:var(--text-muted)" id="version"></div>
+</div>
+<div class="container">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <h1 style="font-size:1.25rem;font-weight:600">Dashboard</h1>
+    <button class="btn btn-sm" onclick="refresh()">&#x21bb; Refresh</button>
+  </div>
+  <div class="grid-4" id="summary">
+    <div class="metric"><div class="value" id="agent-count">-</div><div class="label">Agents</div></div>
+    <div class="metric"><div class="value" id="tool-count">-</div><div class="label">Tools</div></div>
+    <div class="metric"><div class="value" id="suite-count">-</div><div class="label">Eval Suites</div></div>
+    <div class="metric"><div class="value" id="status">&#9679;</div><div class="label">Server Status</div></div>
+  </div>
+  <div class="card">
+    <h2>Registered Agents</h2>
+    <div id="agents-section"><div class="empty-state"><h3>No agents registered</h3><p>Register via <code>chainforge serve --agent</code> or the API.</p></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <h2>Quick Actions</h2>
+      <div style="display:flex;flex-direction:column;gap:0.5rem">
+        <a href="/dashboard/agent-run" class="btn">&#9654; Run Agent</a>
+        <a href="/dashboard/dag-editor" class="btn">&#935; Edit DAG</a>
+        <a href="/docs" class="btn" target="_blank">&#63; API Docs</a>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Server Info</h2>
+      <div id="server-info">Loading...</div>
+    </div>
+  </div>
+</div>
+<script src="/static/js/main.js"></script>
+</body></html>

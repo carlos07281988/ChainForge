@@ -41,6 +41,14 @@ def main():
     sv.add_argument("--agent", action="append", dest="agent_specs",
                     help="Register an agent: name=ClassName:param=val,...")
 
+    # chainforge eval
+    ev = sub.add_parser("eval", help="Run evaluation tests")
+    ev.add_argument("agent_id", help="Registered agent ID")
+    ev.add_argument("--cases", nargs="*", default=None, help="Specific test case names to run")
+    ev.add_argument("--suite", default=None, help="Eval suite JSON file or inline JSON")
+    ev.add_argument("--format", default="text", choices=["text", "json", "markdown", "html"], help="Report format")
+    ev.add_argument("--output", default=None, help="Save report to file")
+
     # chainforge run (quick CLI run)
     r = sub.add_parser("run", help="Run an agent directly (requires registered agent)")
     r.add_argument("agent_id", help="Registered agent ID or inline spec")
@@ -58,6 +66,8 @@ def main():
         _handle_serve(args)
     elif args.command == "run":
         _handle_run(args)
+    elif args.command == "eval":
+        _handle_eval(args)
     else:
         parser.print_help()
 
@@ -137,6 +147,62 @@ def _parse_and_register(spec: str):
         print(f"  Registered agent '{name}' ({cls_name})")
     except Exception as e:
         print(f"  ⚠️  Failed to register '{spec}': {e}")
+
+
+
+def _handle_eval(args):
+    """Run evaluation tests against a registered agent."""
+    import asyncio
+    import json
+    from pathlib import Path
+
+    from chainforge.server import _agent_registry as registry, _get_agent
+    from chainforge.eval.case import EvalCase
+    from chainforge.eval.suite import EvalSuite
+    from chainforge.eval.runner import EvalRunner
+    from chainforge.eval.report import format_report
+
+    if args.agent_id not in registry:
+        print(f"❌ Agent '{args.agent_id}' not found. Registered: {list(registry.keys())}")
+        return
+
+    agent, _ = _get_agent(args.agent_id)
+
+    # Load suite from file or use default
+    if args.suite:
+        try:
+            if Path(args.suite).exists():
+                suite = EvalSuite.from_json(args.suite)
+            else:
+                suite = EvalSuite.from_json_str(args.suite)
+        except Exception as e:
+            print(f"❌ Failed to load suite: {e}")
+            return
+    else:
+        from chainforge.eval.case import sample_cases
+        suite = EvalSuite(name="cli-run", description="CLI evaluation", cases=sample_cases())
+
+    # Filter cases
+    if args.cases:
+        suite = suite.filter(names=args.cases)
+
+    if len(suite) == 0:
+        print("❌ No matching test cases found.")
+        return
+
+    print(f"🧪 Evaluating agent '{args.agent_id}' with {len(suite)} test case(s)...")
+    runner = EvalRunner(agent, suite, name=args.agent_id)
+
+    result = asyncio.run(runner.run_all())
+
+    # Output report
+    report = format_report(result, fmt=args.format, path=args.output)
+    print(report)
+
+    if result.pass_rate == 1.0:
+        print(f"\n✅ All {result.total_cases} tests passed!")
+    else:
+        print(f"\n⚠️  {result.total_passed}/{result.total_cases} passed ({round(result.pass_rate * 100, 1)}%)")
 
 
 def _handle_run(args):

@@ -481,9 +481,9 @@ User Prompt
 - [x] **Langfuse integration** — `langfuse_tracing_middleware`
 - [x] **Bedrock provider** — AWS Bedrock (Claude, Llama, etc.)
 - [x] **CLI scaffolding** — `chainforge init` / `quickstart`
-- [ ] Streaming agent state visualization (dashboard/UI)
-- [ ] Graph-based agent visual editor
-- [ ] Agent evaluation & testing framework
+- [x] **Agent evaluation & testing framework** — `chainforge eval` CLI, `EvalSuite`/`EvalRunner`/`EvalReport` API
+- [x] **Streaming agent state visualization** — real-time web dashboard with SSE agent state visualization
+- [x] **Graph-based agent visual editor** — interactive DAG editor with drag-and-drop, export, run
 
 ---
 
@@ -1269,6 +1269,207 @@ chain = hub.create_chain(["search", "data"], name="research_analyze")
 ### Linking Patterns Summary / 链接模式总结
 
 | **AgentHub** | Registry + discovery | Managing many agents, auto-routing |
+
+
+## Evaluation & Testing / 评估测试
+
+ChainForge includes a built-in evaluation framework for benchmarking agent performance against test cases.
+
+### Quick Start / 快速开始
+
+```python
+from chainforge.eval import EvalCase, EvalSuite, EvalRunner, format_report
+
+# Define test cases
+cases = [
+    EvalCase(
+        name="greeting",
+        prompt="Say hello!",
+        expected_contains=["hello", "Hello"],
+        tags=["basic"],
+    ),
+    EvalCase(
+        name="tool_use",
+        prompt="What is the weather in Beijing?",
+        expected_tool="get_weather",
+        tags=["tools"],
+    ),
+]
+
+# Create a suite
+suite = EvalSuite(name="demo", cases=cases)
+
+# Run evaluation
+runner = EvalRunner(agent, suite, name="my_agent")
+result = await runner.run_all()
+
+# Print report
+print(format_report(result, fmt="text"))
+```
+
+### CLI / 命令行
+
+```bash
+# Run evaluation on a registered agent
+chainforge eval my_agent
+
+# Run specific test cases only
+chainforge eval my_agent --cases greeting
+
+# Load test suite from a JSON file
+chainforge eval my_agent --suite test_suite.json
+
+# Export report as HTML or JSON
+chainforge eval my_agent --format html --output report.html
+```
+
+### Test Case Configuration / 测试用例配置
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `str` | Unique test case name |
+| `prompt` | `str` | Input prompt for the agent |
+| `expected` | `list[ExpectedBehavior]` | Behavior checks (contains, tool_called, no_errors, json_valid, custom) |
+| `expected_contains` | `list[str]` | Strings that should appear in output |
+| `expected_tool` | `str \| None` | Tool the agent should have called |
+| `context` | `dict \| None` | Optional context data |
+| `tags` | `list[str]` | Tags for filtering |
+| `weight` | `float` | Weight for scoring (default 1.0) |
+| `custom_check` | `str \| None` | Python expression with `output` and `events` vars |
+
+### Metrics Collected / 收集的指标
+
+| Metric | Description |
+|--------|-------------|
+| `response_time` | Total time in seconds |
+| `tool_call_count` | Number of tool calls made |
+| `iterations` | Agent loop iterations |
+| `response_length` | Length of final text response |
+| `success` | Whether agent completed without errors |
+| `token_count` | Estimated token usage |
+| `cost` | Estimated cost in USD |
+
+### Report Formats / 报告格式
+
+```python
+# Plain text (default)
+text_report = format_report(result, fmt="text")
+
+# Markdown (great for PR descriptions)
+md_report = format_report(result, fmt="markdown")
+
+# HTML (standalone, shareable)
+html_report = format_report(result, fmt="html")
+
+# JSON (machine-readable)
+json_report = format_report(result, fmt="json")
+
+# Save to file
+format_report(result, fmt="html", path="eval_report.html")
+```
+
+### HTTP API / HTTP API 端点
+
+```bash
+curl -X POST http://localhost:8000/api/v1/eval/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "my_agent",
+    "cases": [
+      {"name": "test1", "prompt": "Hello", "expected": ["no_errors"]}
+    ]
+  }'
+```
+
+---
+
+## Dashboard / 控制台
+
+ChainForge provides a web dashboard for real-time agent streaming visualization and DAG editing.
+
+### Starting the Dashboard / 启动
+
+```bash
+# Install server dependencies
+pip install "chainforge[server]"
+
+# Start with agents
+chainforge serve --port 8000
+
+# Open browser to http://localhost:8000/dashboard
+```
+
+### Dashboard Pages / 页面
+
+| Page | URL | Description |
+|------|-----|-------------|
+| **Overview** | `/dashboard` | Registered agents list, server status, quick actions |
+| **Agent Run** | `/dashboard/agent-run` | Real-time streaming visualization with state machine |
+| **DAG Editor** | `/dashboard/dag-editor` | Interactive graph-based pipeline editor |
+
+### API Endpoints / API 端点
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/agents` | List all registered agents |
+| GET | `/api/v1/agents/{id}` | Agent details and tools |
+| POST | `/api/v1/agents/{id}/run` | Run agent, returns JSON |
+| GET | `/api/v1/agents/{id}/run/stream` | Run agent, SSE streaming |
+| POST | `/api/v1/eval/run` | Run evaluation tests |
+| GET | `/api/v1/dag/stream` | Execute DAG via SSE |
+| GET | `/api/v1/health` | Health check |
+
+---
+
+## DAG Visual Editor / DAG 可视化编辑器
+
+The DAG (Directed Acyclic Graph) editor lets you visually construct and execute agent pipelines.
+
+### Features / 功能
+
+- **Drag-and-drop** — Move nodes freely on the canvas
+- **Visual connections** — Click output port → input port to create edges
+- **Node types** — Step, Input, Output, Router, Merge
+- **JSON export** — Export your DAG as JSON for reuse
+- **Live execution** — Run the DAG and see results in real-time via SSE
+
+### Node Types / 节点类型
+
+| Type | Purpose | Example |
+|------|---------|---------|
+| **Input** | Entry point, accepts initial data | `"Hello DAG"` |
+| **Step** | Processing step with function | Double input, transform text |
+| **Router** | Conditional branching | Route based on value |
+| **Merge** | Combine multiple inputs | Concatenate results |
+| **Output** | Terminal node, final result | Return processed data |
+
+### Programmatic DAG / 编程式 DAG
+
+```python
+from chainforge import DAG
+
+dag = DAG(name="pipeline")
+dag.add_node("double", fn=lambda x: x * 2)
+dag.add_node("add_one", fn=lambda x: x + 1)
+dag.add_edge("double", "add_one")
+
+stream = dag.run(21)
+async for event in stream:
+    if event.type == "text":
+        print(event.content)  # 42
+```
+
+### DAG API / 执行 API
+
+You can also execute DAGs programmatically via the API:
+
+```bash
+curl "http://localhost:8000/api/v1/dag/stream?dag=\
+  {\"name\":\"test\",\"nodes\":[{\"id\":\"n1\",\"type\":\"step\"}],\"edges\":[]}"
+```
+
+---
+
 
 ---
 

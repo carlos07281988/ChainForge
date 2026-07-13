@@ -1,0 +1,65 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Agent Run - ChainForge</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head><body>
+<div class="navbar">
+  <a href="/dashboard" class="logo">&#9876; ChainForge</a>
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/dashboard/agent-run" class="active">Agent Run</a>
+    <a href="/dashboard/dag-editor">DAG Editor</a>
+  </nav>
+</div>
+<div class="container">
+  <h1 style="font-size:1.25rem;font-weight:600;margin-bottom:1rem">Agent Streaming Visualization</h1>
+  <div class="grid-2" style="margin-bottom:1rem">
+    <div class="card">
+      <label for="agent-select">Agent</label>
+      <select id="agent-select"><option value="">-- Select Agent --</option></select>
+      <div style="margin-top:0.5rem">
+        <label for="prompt-input">Prompt</label>
+        <textarea id="prompt-input" rows="2" style="resize:vertical">What tools are available?</textarea>
+      </div>
+      <div style="margin-top:0.75rem;display:flex;gap:0.5rem">
+        <button class="btn btn-primary" onclick="runAgent()" id="run-btn">&#9654; Run</button>
+        <button class="btn" onclick="stopRun()" id="stop-btn" disabled>&#9632; Stop</button>
+        <button class="btn" onclick="clearEvents()">&#x1f5d1; Clear</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>State Machine</h2>
+      <div class="state-machine" id="state-machine">
+        <span class="state-node" data-state="initializing">Init</span>
+        <span class="state-arrow">&rarr;</span>
+        <span class="state-node" data-state="thinking">Think</span>
+        <span class="state-arrow">&rarr;</span>
+        <span class="state-node" data-state="executing_tool">Tool</span>
+        <span class="state-arrow">&rarr;</span>
+        <span class="state-node" data-state="observing">Observe</span>
+        <span class="state-arrow">&rarr;</span>
+        <span class="state-node" data-state="responding">Respond</span>
+        <span class="state-arrow">&rarr;</span>
+        <span class="state-node" data-state="done">Done</span>
+      </div>
+    </div>
+  </div>
+  <div class="grid-4" id="run-metrics" style="display:none">
+    <div class="metric"><div class="value" id="m-duration">0s</div><div class="label">Duration</div></div>
+    <div class="metric"><div class="value" id="m-tool-calls">0</div><div class="label">Tool Calls</div></div>
+    <div class="metric"><div class="value" id="m-iterations">0</div><div class="label">Iterations</div></div>
+    <div class="metric"><div class="value" id="m-state">-</div><div class="label">Current State</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+      <h2 style="margin:0">Event Stream</h2>
+      <span id="event-count" style="font-size:0.8rem;color:var(--text-muted)">0 events</span>
+    </div>
+    <div id="event-log" class="console" style="max-height:400px">
+      <div class="log">Ready. Select an agent and click Run.</div>
+    </div>
+  </div>
+</div>
+<script src="/static/js/sse-client.js"></script>
+<script src="/static/js/main.js"></script>
+</body></html>

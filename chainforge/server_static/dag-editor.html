@@ -1,0 +1,54 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DAG Editor - ChainForge</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head><body>
+<div class="navbar">
+  <a href="/dashboard" class="logo">&#9876; ChainForge</a>
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/dashboard/agent-run">Agent Run</a>
+    <a href="/dashboard/dag-editor" class="active">DAG Editor</a>
+  </nav>
+</div>
+<div class="container">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <h1 style="font-size:1.25rem;font-weight:600">DAG Visual Editor</h1>
+    <div style="display:flex;gap:0.5rem">
+      <button class="btn btn-sm" onclick="dagEditor.clear()">&#x1f5d1; Clear</button>
+      <button class="btn btn-sm" onclick="dagEditor.exportJSON()">&#x21e9; Export</button>
+      <button class="btn btn-sm btn-primary" onclick="dagEditor.runDAG()">&#9654; Run</button>
+    </div>
+  </div>
+  <div class="dag-toolbar">
+    <button class="btn btn-sm" onclick="dagEditor.addNode('step')">+ Step Node</button>
+    <button class="btn btn-sm" onclick="dagEditor.addNode('input')">+ Input</button>
+    <button class="btn btn-sm" onclick="dagEditor.addNode('output')">+ Output</button>
+    <button class="btn btn-sm" onclick="dagEditor.addNode('router')">+ Router</button>
+    <button class="btn btn-sm" onclick="dagEditor.addNode('merge')">+ Merge</button>
+    <span style="flex:1"></span>
+    <span style="font-size:0.75rem;color:var(--text-muted)">Select/drag nodes. Click ports to connect.</span>
+  </div>
+  <div class="grid-2">
+    <div><canvas id="dag-canvas" class="dag-canvas"></canvas></div>
+    <div>
+      <div class="card" style="margin-bottom:0.5rem">
+        <h2>Node Properties</h2>
+        <div id="node-props"><div class="empty-state" style="padding:1rem"><p>Select a node to edit.</p></div></div>
+      </div>
+      <div class="card">
+        <h2>DAG JSON</h2>
+        <textarea id="dag-json" rows="8" style="font-family:'SF Mono',monospace;font-size:0.75rem;resize:vertical" readonly></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:1rem">
+    <h2>Execution Output</h2>
+    <div id="dag-output" class="console" style="max-height:200px">
+      <div class="log">Build a DAG and click Run.</div>
+    </div>
+  </div>
+</div>
+<script src="/static/js/dag-editor.js"></script>
+<script src="/static/js/main.js"></script>
+</body></html>

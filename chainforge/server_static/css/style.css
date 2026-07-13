@@ -1,0 +1,124 @@
+/* ChainForge Dashboard Styles */
+:root {
+  --bg: #0f1117;
+  --bg-card: #1a1d27;
+  --bg-hover: #22253a;
+  --border: #2a2d3e;
+  --text: #e1e4ed;
+  --text-muted: #8b8fa3;
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --blue: #3b82f6;
+  --cyan: #06b6d4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6;
+}
+.navbar {
+  background: var(--bg-card); border-bottom: 1px solid var(--border);
+  padding: 0 2rem; display: flex; align-items: center; height: 56px; gap: 2rem;
+}
+.navbar .logo { font-weight: 700; font-size: 1.1rem; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
+.navbar nav { display: flex; gap: 1rem; }
+.navbar nav a {
+  color: var(--text-muted); text-decoration: none; font-size: 0.9rem;
+  padding: 0.25rem 0.5rem; border-radius: 4px; transition: all 0.2s;
+}
+.navbar nav a:hover, .navbar nav a.active { color: var(--text); background: var(--bg-hover); }
+.container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem;
+}
+.card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 1rem; border-radius: 6px;
+  font-size: 0.875rem; font-weight: 500;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text);
+  cursor: pointer; transition: all 0.2s;
+}
+.btn:hover { background: var(--bg-hover); border-color: var(--accent); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-sm { padding: 0.25rem 0.75rem; font-size: 0.8rem; }
+.badge {
+  display: inline-flex; padding: 0.125rem 0.5rem;
+  border-radius: 12px; font-size: 0.75rem; font-weight: 500;
+}
+.badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+.badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+.badge-blue { background: rgba(59,130,246,0.15); color: var(--blue); }
+input, select, textarea {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 0.5rem 0.75rem; color: var(--text);
+  font-size: 0.875rem; width: 100%; outline: none; transition: border-color 0.2s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+th, td { padding: 0.625rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+th { color: var(--text-muted); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+tr:hover { background: var(--bg); }
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.5rem; }
+.status-dot.online { background: var(--green); }
+.status-dot.offline { background: var(--text-muted); }
+.status-dot.running { background: var(--yellow); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.state-machine { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+.state-node {
+  display: flex; align-items: center; gap: 0.375rem;
+  padding: 0.375rem 0.75rem; border-radius: 6px;
+  font-size: 0.8rem; font-weight: 500;
+  background: var(--bg); border: 1px solid var(--border); transition: all 0.3s;
+}
+.state-node.active { background: var(--accent); border-color: var(--accent); color: white; }
+.state-node.completed { background: rgba(34,197,94,0.15); border-color: var(--green); color: var(--green); }
+.state-arrow { color: var(--text-muted); font-size: 0.9rem; }
+.event-entry {
+  padding: 0.625rem; border-left: 2px solid var(--border);
+  margin-bottom: 0.25rem; font-size: 0.85rem; transition: all 0.2s;
+}
+.event-entry:hover { border-left-color: var(--accent); background: var(--bg); }
+.event-entry .type { font-weight: 600; color: var(--accent); }
+.event-entry .time { color: var(--text-muted); font-size: 0.75rem; margin-left: 0.5rem; }
+.event-entry.text { border-left-color: var(--blue); }
+.event-entry.tool_call { border-left-color: var(--yellow); }
+.event-entry.tool_result { border-left-color: var(--green); }
+.event-entry.error { border-left-color: var(--red); }
+.event-entry.state { border-left-color: var(--cyan); }
+.metric { text-align: center; padding: 1rem; background: var(--bg); border-radius: 8px; }
+.metric .value { font-size: 1.5rem; font-weight: 700; }
+.metric .label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+.dag-canvas { width: 100%; height: 500px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; cursor: grab; }
+.dag-canvas:active { cursor: grabbing; }
+.dag-toolbar {
+  display: flex; gap: 0.5rem; padding: 0.75rem;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px 8px 0 0; border-bottom: none;
+}
+.console {
+  background: #000; border: 1px solid var(--border); border-radius: 8px;
+  padding: 1rem; font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.8rem; color: #a8b2d1; max-height: 300px; overflow-y: auto; white-space: pre-wrap;
+}
+.console .log { color: #a8b2d1; }
+.console .warn { color: var(--yellow); }
+.console .error { color: var(--red); }
+.console .info { color: var(--cyan); }
+.empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+.empty-state h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+.empty-state p { font-size: 0.9rem; }
+.spinner {
+  display: inline-block; width: 1rem; height: 1rem;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
