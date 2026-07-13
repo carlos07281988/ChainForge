@@ -29,34 +29,39 @@ pip install chainforge
 
 **Core Principles:** `protocol-based` · `streaming-first` · `async-native` · `type-safe` · `zero-overhead-abstractions`
 
+<p align="right">
+  <a href="README.md">🇬🇧 English</a> · <a href="README.zh.md">🇨🇳 中文</a>
+</p>
+
+
 ---
 
-## Why ChainForge?## Why ChainForge?
+## Why ChainForge? / 为什么选择 ChainForge
 
 LangChain pioneered the agent framework space, but its architecture carries years of backward-compatibility debt. ChainForge is a clean-slate redesign driven by what we've learned since:
 
-| Pain Point | LangChain | ChainForge |
-|---|---|---|
-| API complexity | Chain, Runnable, LCEL, runnable graph... pick your abstraction | **Protocol-based** — minimal interfaces via Python `typing.Protocol` |
-| Streaming | Bolted on, callbacks needed | **Streaming-first** — `Stream` is the default return type everywhere |
-| Tool integration | `@tool` decorator is clean, but execution pipeline is layered | **Tool Protocol** — `Tool` is a first-class citizen from day one |
-| State management | Separate LangGraph framework | **Agent loop built-in**, Pipeline with `>>` composition |
-| Observability | LangSmith as external service, callbacks are complex | **Built-in middleware** — `ConsoleTracer` in 3 lines, no external dependency |
-| Async | Supported but secondary | **Async-native** — sync is a thin convenience wrapper |
-| Error handling | Opaque, long stack traces | **Typed errors** (`ProviderError`, `ToolExecutionError`, `MaxIterationsError`) |
-| Dependencies | 100+ transitive deps | **Core: just `pydantic` + stdlib** |
-| Type safety | Partial (pydantic v1, optional) | **Pydantic v2** everywhere — every message, tool spec, and event is typed |
+LangChain 开创了 Agent 框架的先河，但其架构背负着多年的向后兼容债务。ChainForge 是一次彻底的重构。
+
+| Pain Point | LangChain | ChainForge | 对比说明 |
+|---|---|---|---|
+| API complexity | Chain, Runnable, LCEL | **Protocol-based** — minimal | API 复杂度降低 80% |
+| Streaming | Bolted on, callbacks | **Streaming-first** | 流式原生支持 |
+| Tool integration | Layered pipeline | **Tool Protocol** | 工具即插即用 |
+| State management | Separate LangGraph | **Agent loop built-in** | 无需额外框架 |
+| Observability | LangSmith external | **Built-in middleware** | 零外部依赖 |
+| Async | Secondary | **Async-native** | 性能更优 |
+| Error handling | Opaque traces | **Typed errors** | 精确定位 |
+| Dependencies | 100+ transitive | **Only pydantic + stdlib** | 极致轻量 |
 
 ---
 
-## Quick Start
+## Quick Start / 快速开始
 
 ```python
 import asyncio
 from chainforge import Agent
 from chainforge.providers import OpenAIProvider
 from chainforge.tools import tool
-
 
 @tool
 def get_weather(city: str, unit: str = "celsius") -> str:
@@ -66,7 +71,6 @@ def get_weather(city: str, unit: str = "celsius") -> str:
     if unit == "fahrenheit":
         temp = temp * 9 / 5 + 32
     return f"{city.title()}: {temp:.0f}°{'C' if unit == 'celsius' else 'F'}, Sunny"
-
 
 async def main():
     agent = Agent(
@@ -88,16 +92,17 @@ async def main():
         elif event.type == "error":
             print(f"\n❌ Error: {event.content}")
 
-
 asyncio.run(main())
 ```
 
 ---
 
-## Installation
+## Installation / 安装
+
+**Requires Python 3.11+ / 需要 Python 3.11+**
 
 ```bash
-# Core — only pydantic + typing_extensions
+# Core — only pydantic + typing_extensions / 核心（仅 pydantic）
 pip install chainforge
 
 # With OpenAI provider
@@ -114,9 +119,9 @@ pip install "chainforge[all]"
 
 ---
 
-## Core Concepts
+## Core Concepts / 核心概念
 
-### Message
+### Message / 消息
 A conversation message with typed roles (`system`, `user`, `assistant`, `tool`). Supports tool calls and tool results natively.
 
 ```python
@@ -133,7 +138,7 @@ msgs = [
 ]
 ```
 
-### Tool
+### Tool / 工具
 Any callable that provides a JSON Schema spec and implements `run(**kwargs) -> str`. The `@tool` decorator auto-generates the schema from type hints.
 
 ```python
@@ -150,7 +155,7 @@ search.spec.description  # "Search for information."
 search.spec.parameters   # {"type": "object", "properties": {...}, "required": ["query"]}
 ```
 
-### Agent
+### Agent / 代理
 The core execution loop: send messages + tool schemas to the LLM → execute tool calls → repeat until a text response is returned.
 
 ```python
@@ -163,7 +168,7 @@ agent = Agent(
 )
 ```
 
-### Stream
+### Stream / 流
 Every agent execution returns a `Stream` of typed `StreamEvent` objects. Events include `text`, `tool_call`, `tool_result`, `error`, `done`, and `status`.
 
 ```python
@@ -177,7 +182,7 @@ async for event in stream:
         case "error":      print(f"Failed: {event.content}")
 ```
 
-### Pipeline
+### Pipeline / 流水线
 A linear sequence of processing steps, composable with `>>`. Think of it as a simpler, more predictable alternative to LCEL.
 
 ```python
@@ -198,7 +203,7 @@ result = pipe("hello,world,chainforge")
 pipe2 = pipe >> (lambda x: x.upper())
 ```
 
-### Middleware
+### Middleware / 中间件
 Composable hooks that wrap agent execution for cross-cutting concerns like tracing, rate limiting, retry, or logging.
 
 ```python
@@ -217,7 +222,7 @@ agent = Agent(
 
 ---
 
-## Examples
+## Examples / 示例
 
 ### With Anthropic
 
@@ -268,7 +273,7 @@ async def chat(prompt: str):
     await memory.save([Message.user(prompt), Message.assistant(response)])
 ```
 
-### Pipeline Composition
+### Pipeline / 流水线 Composition
 
 ```python
 from chainforge import Pipeline
@@ -298,7 +303,7 @@ def analyze(text: str) -> str:
 print(processing("Hello World!  "))  # 2
 ```
 
-### Middleware: Custom Logger
+### Middleware / 中间件: Custom Logger
 
 ```python
 from collections.abc import AsyncIterator
@@ -340,7 +345,7 @@ agent = Agent(llm=..., tools=mcp_tools)
 
 ---
 
-## Architecture
+## Architecture / 架构
 
 ```
 chainforge/
@@ -383,7 +388,7 @@ chainforge/
 └── tests/                # 51 tests, 100% pass rate
 ```
 
-### Execution Flow
+### Execution Flow / 执行流程
 
 ```
 User Prompt
@@ -414,76 +419,39 @@ User Prompt
 
 ---
 
-## API Reference
+## API Reference / API 参考
 
 ### `chainforge`
 
-| Symbol | Description |
-|---|---|
-| `Agent` | Core agent with LLM + Tools execution loop |
-| `Pipeline` | Sequential processing step composition |
-| `Message` | Typed conversation message (system/user/assistant/tool) |
-| `ToolCall` | Tool invocation request from the LLM |
-| `ToolResult` | Result of executing a tool call |
-| `Stream` | Async iterator over `StreamEvent` objects |
-| `StreamEvent` | Typed event: `text`, `tool_call`, `tool_result`, `error`, `done`, `status` |
-| `LLM` | Protocol for LLM providers |
-| `LLMResponse` | Structured response from an LLM |
-| `Tool` | Protocol for callable tools |
-| `tool()` | Decorator that wraps a function into a `Tool` |
 | `Middleware` | Composable hook wrapper |
 
 ### `chainforge.core.errors`
 
-| Error | Description |
-|---|---|
-| `ChainForgeError` | Base error for all framework exceptions |
-| `ProviderError` | LLM provider returned an error |
-| `ToolExecutionError` | A tool raised during execution |
-| `ConfigurationError` | Invalid configuration |
 | `MaxIterationsError` | Agent exceeded max iterations |
 
 ### `chainforge.providers`
 
-| Provider | Dependencies |
-|---|---|
-| `OpenAIProvider(model, api_key, base_url)` | `openai>=1.40` |
 | `AnthropicProvider(model, api_key, max_tokens)` | `anthropic>=0.30` |
 
 ### `chainforge.agents`
 
-| Agent | Description |
-|---|---|
-| `ReActAgent` | Structured Thought/Action/Observation loop |
 | `ToolAgent` | High-level tool orchestration agent |
 
 ### `chainforge.tracing`
 
-| Symbol | Description |
-|---|---|
-| `Tracer` | In-memory trace/span recorder |
-| `ConsoleTracer` | Real-time span printing with timings |
-| `tracing_middleware(tracer)` | Middleware factory for agent tracing |
-| `Span` | A single operation span with timing |
 | `Trace` | Complete trace containing spans |
 
 ### `chainforge.memory`
 
-| Memory | Description |
-|---|---|
-| `BufferMemory(max_messages)` | Sliding window of recent messages |
 | `SummaryMemory(max_recent)` | Running summary + recent messages |
 
 ### `chainforge.mcp`
 
-| Symbol | Description |
-|---|---|
-| `MCPClient` | Client for MCP server tool discovery |
 | `MCPServer` | MCP server configuration (stdio/SSE) |
 
 ---
 
-## Design Principles
+## Design Principles / 设计原则
 
 1. **Protocols, not base classes** — interfaces are `typing.Protocol` subclasses. You don't inherit, you implement.
 2. **Streaming is the default** — every execution returns `Stream`. Non-streaming is just `await stream.collect_text()`.
@@ -494,7 +462,7 @@ User Prompt
 
 ---
 
-## Roadmap
+## Roadmap / 路线图
 
 - [x] Core protocols and agent loop
 - [x] OpenAI / Anthropic / Google / Azure / Bedrock providers
@@ -517,14 +485,13 @@ User Prompt
 - [ ] Graph-based agent visual editor
 - [ ] Agent evaluation & testing framework
 
-
 ---
 
-## Logging
+## Logging / 日志
 
 ChainForge provides a structured, production-ready logging system built on Python's `logging` module.
 
-### Quick Start
+### Quick Start / 快速开始
 
 ```python
 from chainforge import configure_logging
@@ -548,7 +515,7 @@ configure_logging(
 configure_logging(level="DEBUG", output="logs/chainforge.log")
 ```
 
-### Logging Middleware
+### Logging / 日志 Middleware
 
 The `logging_middleware` captures the full lifecycle of each agent run:
 
@@ -581,11 +548,6 @@ Example JSON output:
 
 Every module has a namespaced logger under `chainforge.*`:
 
-| Logger | Module | Typical Level |
-|---|---|---|
-| `chainforge.agent` | Agent execution loop | INFO |
-| `chainforge.providers.openai` | OpenAI API calls | DEBUG |
-| `chainforge.providers.anthropic` | Anthropic API calls | DEBUG |
 | `chainforge.middleware.retry` | Retry attempts | INFO |
 
 ### Structured Data
@@ -606,7 +568,7 @@ In JSON mode, the data dict appears under the `"data"` key. In text mode, it's a
 
 ---
 
-## Skills
+## Skills / 技能
 
 Skills are reusable capability bundles — instructions + optional tools — that agents can load, compose, and invoke. Compatible with Codex SKILL.md format.
 
@@ -670,7 +632,7 @@ tagged = registry.find_by_tag("demo")
 tools = registry.to_tools()
 ```
 
-### Skills as Tools
+### Skills / 技能 as Tools
 
 Each skill automatically generates a tool specification, enabling agents to discover and invoke skills dynamically:
 
@@ -689,18 +651,17 @@ chainforge skill info <name> # Show skill details
 
 ---
 
-
-## Agent Patterns
+## Agent Patterns / 代理模式
 
 ChainForge ships with **10 agent patterns** covering reasoning, multi-step execution, quality enhancement, conversation, and routing. Each pattern produces the standard `Stream` event type, so they work interchangeably with middleware, logging, and tracing.
 
 ---
 
-### 1. Agent (Base)
+### 1. Agent (Base) / 基础代理
 
-**What it does.** The foundational execution loop: send messages + tool schemas to the LLM, execute any tool calls returned, append results, and repeat until a text response is produced. All other patterns build on this core.
+**功能.** The foundational execution loop: send messages + tool schemas to the LLM, execute any tool calls returned, append results, and repeat until a text response is produced. All other patterns build on this core.
 
-**When to use it.** Any task where an LLM needs tool access. Default choice — start here and switch to a specialized pattern only when you need specific reasoning behavior.
+**适用场景.** Any task where an LLM needs tool access. Default choice — start here and switch to a specialized pattern only when you need specific reasoning behavior.
 
 **Example: Knowledge Q&A with search**
 
@@ -708,13 +669,11 @@ ChainForge ships with **10 agent patterns** covering reasoning, multi-step execu
 from chainforge import Agent, tool
 from chainforge.providers import OpenAIProvider
 
-
 @tool
 def search(query: str) -> str:
     """Search a knowledge base."""
     db = {"chainforge": "A next-gen agent framework."}
     return db.get(query.lower(), f"No results for: {query}")
-
 
 async def main():
     agent = Agent(
@@ -726,21 +685,20 @@ async def main():
         if event.type == "text":
             print(event.content, end="", flush=True)
 
-
 asyncio.run(main())
 ```
 
-**Key parameters:** `llm`, `tools`, `system_prompt`, `max_iterations` (default 10), `temperature`, `parallel_tool_calls` (default True).
+**关键参数:** `llm`, `tools`, `system_prompt`, `max_iterations` (default 10), `temperature`, `parallel_tool_calls` (default True).
 
 ---
 
-### 2. ReActAgent
+### 2. ReActAgent / 反应代理
 
-**What it does.** The agent follows an explicit Thought -> Action -> Observation loop. It reasons about the situation (Thought), calls a tool (Action), reviews the result (Observation), and repeats until it can answer. The reasoning trace is preserved for debugging.
+**功能.** The agent follows an explicit Thought -> Action -> Observation loop. It reasons about the situation (Thought), calls a tool (Action), reviews the result (Observation), and repeats until it can answer. The reasoning trace is preserved for debugging.
 
-**When to use it.** Tasks that benefit from visible step-by-step reasoning: research questions, troubleshooting, analysis that requires justification.
+**适用场景.** Tasks that benefit from visible step-by-step reasoning: research questions, troubleshooting, analysis that requires justification.
 
-**Flow:** `thought -> action (tool call) -> observation -> thought -> ... -> response`
+**流程:** `thought -> action (tool call) -> observation -> thought -> ... -> response`
 
 **Example: Multi-step research**
 
@@ -749,12 +707,10 @@ from chainforge import tool
 from chainforge.providers import OpenAIProvider
 from chainforge.agents import ReActAgent
 
-
 @tool
 def search_facts(topic: str) -> str:
     """Search for factual information."""
     return f"Key facts about {topic}: [data from knowledge base]"
-
 
 async def main():
     agent = ReActAgent(
@@ -767,26 +723,25 @@ async def main():
         if event.type == "text":
             print(event.content, end="", flush=True)
 
-
 asyncio.run(main())
 ```
 
-**Key parameters:** `verbose` (print reasoning trace), `max_iterations` (default 15).
+**关键参数:** `verbose` (print reasoning trace), `max_iterations` (default 15).
 
 ---
 
-### 3. PlanAndExecute
+### 3. PlanAndExecute / 规划执行
 
-**What it does.** Three-phase execution:
+**功能.** Three-phase execution:
 1. **Plan** - LLM analyzes the task and produces a numbered step-by-step plan
 2. **Execute** - each step runs through its own mini-Agent with full tool access
 3. **Synthesize** - LLM combines step results into a coherent final answer
 
-**When to use it.** Tasks requiring multiple distinct sub-operations: market research reports, data analysis pipelines, content creation workflows. Excels when each step depends on the previous one's output.
+**适用场景.** Tasks requiring multiple distinct sub-operations: market research reports, data analysis pipelines, content creation workflows. Excels when each step depends on the previous one's output.
 
-**Flow:** `planning -> executing (step 1, step 2, ...) -> synthesizing -> done`
+**流程:** `planning -> executing (step 1, step 2, ...) -> synthesizing -> done`
 
-**State events:** `planning`, `executing`, `synthesizing`, `done`
+**状态事件:** `planning`, `executing`, `synthesizing`, `done`
 
 **Example: Market research report**
 
@@ -795,12 +750,10 @@ from chainforge import tool
 from chainforge.providers import OpenAIProvider
 from chainforge.agents import PlanAndExecute
 
-
 @tool
 def search_market(segment: str) -> str:
     """Search market data for a segment."""
     return f"Market data for {segment}: size=10B, growth=15%"
-
 
 async def main():
     agent = PlanAndExecute(
@@ -813,33 +766,31 @@ async def main():
         if event.type == "text":
             print(event.content, end="", flush=True)
 
-
 asyncio.run(main())
 ```
 
-**Key parameters:** `max_plan_steps`, `max_iterations` (per-step), `temperature`.
+**关键参数:** `max_plan_steps`, `max_iterations` (per-step), `temperature`.
 
 ---
 
-### 4. Reflection
+### 4. Reflection / 反思代理
 
-**What it does.** Three-phase quality cycle that repeats N times:
+**功能.** Three-phase quality cycle that repeats N times:
 1. **Generate** - produces an initial answer (with tool access)
 2. **Critique** - self-evaluates the answer for accuracy, completeness, clarity
 3. **Improve** - generates an improved version addressing all critique points
 
-**When to use it.** Quality-critical content where accuracy matters: code review, essay writing, contract analysis. Each round typically improves quality, diminishing after 2-3 rounds.
+**适用场景.** Quality-critical content where accuracy matters: code review, essay writing, contract analysis. Each round typically improves quality, diminishing after 2-3 rounds.
 
-**Flow:** `generating -> critiquing -> improving -> [critiquing -> improving ...] -> done`
+**流程:** `generating -> critiquing -> improving -> [critiquing -> improving ...] -> done`
 
-**State events:** `generating`, `critiquing`, `improving`, `done`
+**状态事件:** `generating`, `critiquing`, `improving`, `done`
 
 **Example: Code review and improvement**
 
 ```python
 from chainforge.providers import OpenAIProvider
 from chainforge.agents import Reflection
-
 
 async def main():
     agent = Reflection(
@@ -853,26 +804,25 @@ async def main():
         elif event.type == "state":
             print(f"\n--- [{event.data['state']}] ---\n")
 
-
 asyncio.run(main())
 ```
 
-**Key parameters:** `reflection_rounds` (default 1), `max_iterations`.
+**关键参数:** `reflection_rounds` (default 1), `max_iterations`.
 
 ---
 
-### 5. SelfAsk
+### 5. SelfAsk / 自问代理
 
-**What it does.** Three-phase decomposition:
+**功能.** Three-phase decomposition:
 1. **Decompose** - LLM breaks the main question into 2-5 concrete sub-questions
 2. **Answer Each** - each sub-question gets its own Agent with full tool access
 3. **Synthesize** - LLM combines sub-answers into a comprehensive final answer
 
-**When to use it.** Multi-faceted questions that benefit from divide-and-conquer: comparisons ("Python vs Rust"), impact analysis ("How will AI affect healthcare?"), complex evaluations.
+**适用场景.** Multi-faceted questions that benefit from divide-and-conquer: comparisons ("Python vs Rust"), impact analysis ("How will AI affect healthcare?"), complex evaluations.
 
-**Flow:** `decomposing -> answering (Q1, Q2, ...) -> synthesizing -> done`
+**流程:** `decomposing -> answering (Q1, Q2, ...) -> synthesizing -> done`
 
-**State events:** `decomposing`, `answering`, `synthesizing`, `done`
+**状态事件:** `decomposing`, `answering`, `synthesizing`, `done`
 
 **Example: Technology comparison**
 
@@ -881,12 +831,10 @@ from chainforge import tool
 from chainforge.providers import OpenAIProvider
 from chainforge.agents import SelfAsk
 
-
 @tool
 def search_tech(topic: str) -> str:
     """Search technical documentation."""
     return f"Data about {topic}: [documentation results]"
-
 
 async def main():
     agent = SelfAsk(
@@ -898,17 +846,16 @@ async def main():
         if event.type == "text":
             print(event.content, end="", flush=True)
 
-
 asyncio.run(main())
 ```
 
-**Key parameters:** `max_sub_questions` (default 5), `max_iterations`.
+**关键参数:** `max_sub_questions` (default 5), `max_iterations`.
 
 ---
 
-### 6. TreeOfThoughts
+### 6. TreeOfThoughts / 思维树
 
-**What it does.** BFS-based multi-path reasoning:
+**功能.** BFS-based multi-path reasoning:
 1. Start with the problem as root node
 2. At each depth level, generate N candidate thoughts from each existing path
 3. Score each candidate (1-10) for promise, coherence, and progress
@@ -916,18 +863,17 @@ asyncio.run(main())
 5. After reaching depth D, select the highest-scoring path overall
 6. Optionally refine the answer with tools
 
-**When to use it.** Problems with multiple valid reasoning directions: mathematical proofs, logic puzzles, strategic planning. One wrong turn early can derail single-path agents, but ToT explores alternatives. More expensive than single-path (N x K x D LLM calls).
+**适用场景.** Problems with multiple valid reasoning directions: mathematical proofs, logic puzzles, strategic planning. One wrong turn early can derail single-path agents, but ToT explores alternatives. More expensive than single-path (N x K x D LLM calls).
 
-**Flow:** `initializing -> exploring (depth 1, 2, 3) -> selecting -> done`
+**流程:** `initializing -> exploring (depth 1, 2, 3) -> selecting -> done`
 
-**State events:** `initializing`, `exploring`, `selecting`, `done`
+**状态事件:** `initializing`, `exploring`, `selecting`, `done`
 
 **Example: Logic puzzle solving**
 
 ```python
 from chainforge.providers import OpenAIProvider
 from chainforge.agents import TreeOfThoughts
-
 
 async def main():
     agent = TreeOfThoughts(
@@ -946,26 +892,25 @@ async def main():
         if event.type == "text":
             print(event.content, end="", flush=True)
 
-
 asyncio.run(main())
 ```
 
-**Key parameters:** `candidates_per_step` (3-5), `breadth` (2-3), `depth` (2-4), `temperature`.
+**关键参数:** `candidates_per_step` (3-5), `breadth` (2-3), `depth` (2-4), `temperature`.
 
 ---
 
-### 7. ChainOfThought
+### 7. ChainOfThought / 思维链
 
-**What it does.** Generates N independent reasoning paths with Self-Consistency aggregation:
+**功能.** Generates N independent reasoning paths with Self-Consistency aggregation:
 1. **Reason** - N parallel CoT paths, each with slightly varied temperature for diversity
 2. **Aggregate** - analyzes all paths, identifies consensus, resolves contradictions
 3. **Output** - produces a single answer reflecting the most reliable reasoning
 
-**When to use it.** Tasks where answer reliability is paramount: factual questions, medical/legal analysis, compliance checks. Self-consistency reduces hallucination risk by cross-referencing multiple reasoning trajectories.
+**适用场景.** Tasks where answer reliability is paramount: factual questions, medical/legal analysis, compliance checks. Self-consistency reduces hallucination risk by cross-referencing multiple reasoning trajectories.
 
-**Flow:** `reasoning (path 1, 2, 3) -> aggregating -> done`
+**流程:** `reasoning (path 1, 2, 3) -> aggregating -> done`
 
-**State events:** `reasoning`, `aggregating`, `done`
+**状态事件:** `reasoning`, `aggregating`, `done`
 
 **Example: High-reliability fact checking**
 
@@ -974,12 +919,10 @@ from chainforge import tool
 from chainforge.providers import OpenAIProvider
 from chainforge.agents import ChainOfThought
 
-
 @tool
 def check_fact(claim: str) -> str:
     """Verify a factual claim."""
     return f"Evidence for '{claim}': [verified from sources]"
-
 
 async def main():
     agent = ChainOfThought(
@@ -995,23 +938,22 @@ async def main():
         if event.type == "text":
             print(event.content, end="", flush=True)
 
-
 asyncio.run(main())
 ```
 
-**Key parameters:** `num_paths` (default 3), `aggregate` ("vote" or "compare").
+**关键参数:** `num_paths` (default 3), `aggregate` ("vote" or "compare").
 
 ---
 
-### 8. ConversationalAgent
+### 8. ConversationalAgent / 对话代理
 
-**What it does.** Multi-turn agent with automatic context management:
+**功能.** Multi-turn agent with automatic context management:
 - Maintains a sliding window of recent turns (BufferMemory)
 - Maintains a running summary of older turns (SummaryMemory)
 - When the window fills, automatically compresses old history into a summary
 - Preserves full fidelity for recent N turns while keeping long-term context
 
-**When to use it.** Any multi-turn interaction: chatbots, virtual assistants, interactive tutoring, customer support. Handles sessions of 50+ turns gracefully.
+**适用场景.** Any multi-turn interaction: chatbots, virtual assistants, interactive tutoring, customer support. Handles sessions of 50+ turns gracefully.
 
 **Flow per turn:** `thinking -> [tool calls] -> done` (with auto-summary on overflow)
 
@@ -1023,12 +965,10 @@ from chainforge import tool
 from chainforge.providers import OpenAIProvider
 from chainforge.agents import ConversationalAgent
 
-
 @tool
 def lookup_order(order_id: str) -> str:
     """Look up an order by ID."""
     return f"Order {order_id}: status=shipped, delivery_date=2026-07-15"
-
 
 async def main():
     agent = ConversationalAgent(
@@ -1053,29 +993,28 @@ async def main():
         if event.type == "text":
             print(event.content, end="", flush=True)
 
-
 asyncio.run(main())
 ```
 
-**Key parameters:** `max_turns_before_summary`, `system_prompt`, `max_iterations`.
+**关键参数:** `max_turns_before_summary`, `system_prompt`, `max_iterations`.
 
 **Method:** `agent.clear_history()` resets conversation.
 
 ---
 
-### 9. RouterAgent
+### 9. RouterAgent / 路由代理
 
-**What it does.** Two-phase intelligent routing:
+**功能.** Two-phase intelligent routing:
 1. **Classify** - a fast classifier LLM identifies the user's intent from available route names
 2. **Route** - forwards the full request to the matched specialized agent
 
 Each route can have its own LLM, tools, system prompt, and even agent pattern.
 
-**When to use it.** Systems serving multiple domains: a smart assistant that handles weather, coding, search, and calculations through specialized backends.
+**适用场景.** Systems serving multiple domains: a smart assistant that handles weather, coding, search, and calculations through specialized backends.
 
-**Flow:** `classifying -> routing -> [delegated agent execution] -> done`
+**流程:** `classifying -> routing -> [delegated agent execution] -> done`
 
-**State events:** `classifying`, `routing`, `done`
+**状态事件:** `classifying`, `routing`, `done`
 
 **Example: Multi-domain smart assistant**
 
@@ -1083,7 +1022,6 @@ Each route can have its own LLM, tools, system prompt, and even agent pattern.
 from chainforge import Agent
 from chainforge.providers import OpenAIProvider
 from chainforge.agents import RouterAgent
-
 
 weather_agent = Agent(
     llm=OpenAIProvider(model="gpt-4o-mini"),
@@ -1097,7 +1035,6 @@ search_agent = Agent(
     llm=OpenAIProvider(model="gpt-4o-mini"),
     system_prompt="You are a research assistant.",
 )
-
 
 async def main():
     router = RouterAgent(
@@ -1123,19 +1060,18 @@ async def main():
             if event.type == "state" and event.data.get("state") == "routing":
                 print(f"  [routed to: {event.data.get('route', '?')}]")
 
-
 asyncio.run(main())
 ```
 
-**Key parameters:** `classifier_llm` (fast model), `routes` (name to agent dict), `default_route`.
+**关键参数:** `classifier_llm` (fast model), `routes` (name to agent dict), `default_route`.
 
 ---
 
-### 10. ToolAgent
+### 10. ToolAgent / 工具代理
 
-**What it does.** Heavy tool orchestration agent. Automatically analyzes the user's request, determines which tools to call and in what order, and chains them together to accomplish complex tasks.
+**功能.** Heavy tool orchestration agent. Automatically analyzes the user's request, determines which tools to call and in what order, and chains them together to accomplish complex tasks.
 
-**When to use it.** Tasks involving multiple tools where orchestration logic is non-trivial: data ETL pipelines, multi-API workflows, automated reporting.
+**适用场景.** Tasks involving multiple tools where orchestration logic is non-trivial: data ETL pipelines, multi-API workflows, automated reporting.
 
 **Example: Automated data pipeline**
 
@@ -1144,24 +1080,20 @@ from chainforge import tool
 from chainforge.providers import OpenAIProvider
 from chainforge.agents import ToolAgent
 
-
 @tool
 def extract_data(source: str) -> str:
     """Extract data from a source."""
     return f"Raw data from {source}: [1000 rows]"
-
 
 @tool
 def transform_data(data: str, rules: str) -> str:
     """Transform data according to rules."""
     return f"Transformed using rules: {rules}"
 
-
 @tool
 def load_data(data: str, destination: str) -> str:
     """Load data to destination."""
     return f"Loaded to {destination}"
-
 
 async def main():
     agent = ToolAgent(
@@ -1175,31 +1107,18 @@ async def main():
         if event.type == "text":
             print(event.content, end="", flush=True)
 
-
 asyncio.run(main())
 ```
 
-**Key parameters:** `max_iterations` (default 20).
+**关键参数:** `max_iterations` (default 20).
 
 ---
 
-### Quick Selection Guide
+### Quick Selection Guide / 快速选择指南
 
-| Scenario | Recommended Pattern | Rationale |
-|---|---|---|
-| "Answer a question with tools" | **Agent (base)** | Simple, fast, minimal overhead |
-| "Walk me through your reasoning" | **ReActAgent** | Explicit thought process |
-| "Research and write a report" | **PlanAndExecute** | Structured multi-step execution |
-| "Review and improve this code" | **Reflection** | Self-critique quality loop |
-| "Compare two technologies" | **SelfAsk** | Divide and conquer sub-questions |
-| "Solve a logic puzzle" | **TreeOfThoughts** | Multiple path exploration |
-| "Verify a factual claim reliably" | **ChainOfThought** | Self-consistency voting |
-| "Have a long conversation" | **ConversationalAgent** | Auto context management |
-| "Build a multi-skill assistant" | **RouterAgent** | Intent-based routing |
 | "Automate a data pipeline" | **ToolAgent** | Tool orchestration |
 
-
-## Agent Linking
+## Agent Linking / 代理链接
 
 ChainForge provides three mechanisms for connecting agents: **AgentTool** (agent as callable), **AgentChain** (sequential composition), and **AgentHub** (registry + discovery).
 
@@ -1207,7 +1126,7 @@ These enable hierarchical agent systems, multi-step workflows, and dynamic agent
 
 ---
 
-### AgentTool — Agent as a Tool
+### Agent / 代理Tool — Agent as a Tool / Agent 工具化
 
 Wrap any Agent into a Tool that other agents can call. This enables **hierarchical agent systems**: a high-level agent delegates sub-tasks to specialized agents.
 
@@ -1245,13 +1164,13 @@ main_agent = Agent(
 )
 ```
 
-**Flow:** Main agent receives a task -> decides to call `web_search` -> `search_agent` runs as sub-agent -> returns text result -> main agent continues.
+**流程:** Main agent receives a task -> decides to call `web_search` -> `search_agent` runs as sub-agent -> returns text result -> main agent continues.
 
-**Key parameters:** `agent` (any agent), `name`, `description`, `timeout_seconds`.
+**关键参数:** `agent` (any agent), `name`, `description`, `timeout_seconds`.
 
 ---
 
-### AgentChain — Sequential Agent Composition
+### Agent / 代理Chain — Sequential Agent Composition / 顺序代理链
 
 Chain agents in sequence, where each agent receives the previous agent's output as context. The Agent version of Pipeline, purpose-built for agents.
 
@@ -1289,9 +1208,9 @@ async for event in stream:
         print(event.content, end="", flush=True)
 ```
 
-**Flow:** `chain_start -> step_start (research) -> step_done -> step_start (analyze) -> step_done -> step_start (write) -> step_done -> chain_done`
+**流程:** `chain_start -> step_start (research) -> step_done -> step_start (analyze) -> step_done -> step_start (write) -> step_done -> chain_done`
 
-**State events:** `chain_start`, `step_start`, `step_done`, `chain_done`
+**状态事件:** `chain_start`, `step_start`, `step_done`, `chain_done`
 
 **Nesting:** AgentChain can itself be wrapped as a Tool via `.to_tool()`:
 
@@ -1302,7 +1221,7 @@ main_agent = Agent(llm=llm, tools=[research_tool, other_tools])
 
 ---
 
-### AgentHub — Registry + Discovery + Auto-Routing
+### Agent / 代理Hub — Registry + Discovery + Auto-Routing / 注册中心
 
 Central registry for managing agents at scale. Register agents with metadata, search/discover them, and auto-generate routers.
 
@@ -1335,7 +1254,7 @@ stream = await router.run("Write a Python function")  # routes to "coding" agent
 chain = hub.create_chain(["search", "data"], name="research_analyze")
 ```
 
-**Methods:**
+**方法:**
 - `register(name, agent, description, tags)` — register with metadata
 - `get(name)` — retrieve an agent
 - `list()` — list all with metadata
@@ -1347,17 +1266,13 @@ chain = hub.create_chain(["search", "data"], name="research_analyze")
 
 ---
 
-### Linking Patterns Summary
+### Linking Patterns Summary / 链接模式总结
 
-| Mechanism | Purpose | When to Use |
-|---|---|---|
-| **AgentTool** | Agent as callable Tool | Hierarchical agents, delegation |
-| **AgentChain** | Sequential composition | Multi-step workflows |
 | **AgentHub** | Registry + discovery | Managing many agents, auto-routing |
 
 ---
 
-## License
+## License / 许可
 
 Apache 2.0
 
