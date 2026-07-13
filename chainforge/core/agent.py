@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import AsyncIterator
 from logging import DEBUG, INFO, WARNING
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -18,6 +19,7 @@ from chainforge.core.stream import EventType, Stream, StreamEvent
 from chainforge.core.tool import Tool
 from chainforge.logging import get_logger, log_data
 
+from chainforge.skills.base import Skill
 logger = get_logger("agent")
 
 
@@ -41,7 +43,7 @@ class Agent(BaseModel):
 
     llm: LLM = Field(description="LLM provider")
     tools: list[Tool] = Field(default_factory=list, description="Available tools")
-    skills: list[Any] = Field(default_factory=list, description="Skills to compose into the agent")
+    skills: list[Skill] = Field(default_factory=list, description="Skills to compose into the agent")
     system_prompt: str | None = Field(default=None, description="System instructions")
     max_iterations: int = Field(default=10, description="Max tool-use iterations")
     max_tokens: int | None = Field(default=None, description="Max tokens per response")
@@ -96,7 +98,13 @@ class Agent(BaseModel):
             return Message.tool_result(tc.id, tc.name, f"Unknown tool: {tc.name}", is_error=True)
         try:
             log_data(logger, DEBUG, f"Executing tool {tc.name}", data={"tool": tc.name, "args": tc.args})
-            result = await tool_obj.run(**tc.args)
+            args = tc.args
+            if isinstance(args, str):
+                try:
+                    args = json.loads(args)
+                except json.JSONDecodeError:
+                    args = {"_raw": args}
+            result = await tool_obj.run(**args)
             log_data(logger, DEBUG, f"Tool {tc.name} OK", data={"tool": tc.name, "result_length": len(str(result))})
             return Message.tool_result(tc.id, tc.name, str(result))
         except Exception as e:
@@ -239,3 +247,5 @@ class Agent(BaseModel):
             return Stream(chain.run(mgs, ctx, _handler), response_model=response_model)
 
         return Stream(_handler(mgs, ctx), response_model=response_model)
+
+# Resolve forward reference for Skill via model_rebuild

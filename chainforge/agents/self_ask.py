@@ -14,15 +14,24 @@ from chainforge.core.agent import Agent
 from chainforge.core.llm import LLM
 from chainforge.core.message import Message
 from chainforge.core.stream import EventType, Stream, StreamEvent
+from chainforge.core.structured_output import parse_structured_response, model_to_json_schema
 from chainforge.core.tool import Tool
 from chainforge.logging import get_logger, log_data
 
 logger = get_logger("agents.self_ask")
 
-DECOMPOSE_PROMPT = """Break the user's question into 2-5 specific, answerable sub-questions.
 
-Respond in JSON:
-{{"sub_questions": ["Q1?", "Q2?"]}}"""
+class DecomposeSchema(BaseModel):
+    """Schema for question decomposition."""
+    sub_questions: list[str] = Field(description="List of sub-questions to answer")
+
+
+_DECOMPOSE_SCHEMA = model_to_json_schema(DecomposeSchema)
+
+DECOMPOSE_PROMPT = f"""Break the user's question into 2-5 specific, answerable sub-questions.
+
+Respond in JSON that matches this schema:
+{json.dumps(_DECOMPOSE_SCHEMA, indent=2)}"""
 
 
 class SelfAsk(BaseModel):
@@ -48,13 +57,14 @@ class SelfAsk(BaseModel):
             resp = await self.llm.generate([Message.system(DECOMPOSE_PROMPT), Message.user(user_prompt)])
             text = resp.content or ""
 
+            # Parse using Pydantic model
             sub_questions = []
-            m = re.search(r'"sub_questions"\s*:\s*\[(.*?)\]', text, re.DOTALL)
-            if m:
-                try:
-                    sub_questions = json.loads(f'[{m.group(1)}]')
-                except json.JSONDecodeError:
-                    pass
+            try:
+                parsed = parse_structured_response(text, DecomposeSchema)
+                sub_questions = parsed.sub_questions
+            except Exception:
+                pass
+
             if not sub_questions:
                 for line in text.split("\n"):
                     mm = re.match(r'^\s*\d+[\.\)]\s*(.*)', line)

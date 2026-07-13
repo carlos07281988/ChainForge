@@ -42,8 +42,8 @@ class MCPTool(Tool):
             return f"MCP error: {e}"
 
     def __call__(self, **kwargs: Any) -> str:
-        import asyncio
-        return asyncio.run(self.run(**kwargs))
+        from chainforge.core.utils import run_sync
+        return run_sync(self.run(**kwargs))
 
 
 class MCPClient(BaseModel):

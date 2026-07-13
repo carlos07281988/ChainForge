@@ -20,6 +20,12 @@ class GoogleProvider(BaseModel):
     Usage:
         llm = GoogleProvider(model="gemini-2.0-flash")
         response = await llm.generate(messages)
+
+    WARNING: genai.configure() sets global SDK state in the google-generativeai
+    library, so only one GoogleProvider instance with one API key can be active
+    per process. Creating a second GoogleProvider with a different API key will
+    overwrite the first instance's configuration, causing the first instance to
+    use the second instance's API key.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

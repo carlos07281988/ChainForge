@@ -77,8 +77,8 @@ class AgentTool:
         return result or f"[{self._name}: completed with no text output]"
 
     def __call__(self, task: str = "", **kwargs: Any) -> str:
-        import asyncio
-        return asyncio.run(self.run(task=task, **kwargs))
+        from chainforge.core.utils import run_sync
+        return run_sync(self.run(task=task, **kwargs))
 
     def __repr__(self) -> str:
         return f"AgentTool(name={self._name!r})"

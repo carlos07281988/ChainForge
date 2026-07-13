@@ -7,10 +7,19 @@ from pydantic import BaseModel, Field
 from chainforge.core.message import Message
 
 
+SUMMARY_COMPRESS_PROMPT = """Summarize the following conversation, keeping key information, decisions, and context for future reference.
+
+Conversation:
+{content}
+
+Provide a concise summary:"""
+
+
 class SummaryMemory(BaseModel):
     """Conversation memory that maintains a running summary.
 
     Useful for long conversations where full history is too large.
+    Call compress(llm) to generate a running summary from recent_messages.
     """
 
     summary: str = Field(default="", description="Running summary of conversation")
@@ -29,3 +38,38 @@ class SummaryMemory(BaseModel):
         # Trim recent buffer
         if len(self.recent_messages) > self.max_recent:
             self.recent_messages = self.recent_messages[-self.max_recent :]
+
+    async def compress(self, llm: "LLM") -> str:
+        """Generate a running summary from recent_messages using the given LLM.
+
+        Calls llm.generate() with a summarization prompt + the recent message content,
+        then sets self.summary to the result and clears recent_messages.
+
+        Returns the generated summary string.
+        """
+        from chainforge.core.llm import LLM as _LLMType
+
+        if not self.recent_messages:
+            return self.summary
+
+        content = "\n".join(
+            f"[{m.role.value}] {m.content or ''}"
+            for m in self.recent_messages
+            if m.content
+        )
+        if not content:
+            return self.summary
+
+        prompt = SUMMARY_COMPRESS_PROMPT.format(content=content)
+        response = await llm.generate([Message.user(prompt)])
+        new_summary = response.content or ""
+
+        if new_summary:
+            # Combine with existing summary
+            if self.summary:
+                self.summary = f"{self.summary}\n{new_summary}"
+            else:
+                self.summary = new_summary
+            self.recent_messages.clear()
+
+        return self.summary

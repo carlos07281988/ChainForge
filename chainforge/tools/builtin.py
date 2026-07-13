@@ -1,10 +1,104 @@
-"""Built-in utility tools."""
+"""Built-in utility tools.
+
+WARNING: The calculate() tool previously used eval(), which was a security risk.
+It now uses an AST-based safe math parser that only permits numeric expressions
+and a restricted set of math functions.
+"""
 
 from __future__ import annotations
 
+import ast
 import datetime
+import math as _math
+import operator
+from typing import Any
 
 from chainforge.core.tool import tool
+
+
+_SAFE_MATH_FUNCS = {
+    "abs": abs,
+    "round": round,
+    "min": min,
+    "max": max,
+    "sqrt": _math.sqrt,
+    "pow": _math.pow,
+    "sin": _math.sin,
+    "cos": _math.cos,
+    "tan": _math.tan,
+    "log": _math.log,
+    "log10": _math.log10,
+    "exp": _math.exp,
+    "ceil": _math.ceil,
+    "floor": _math.floor,
+    "pi": _math.pi,
+    "e": _math.e,
+    "inf": _math.inf,
+    "nan": _math.nan,
+}
+
+_SAFE_OPS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.FloorDiv: operator.floordiv,
+    ast.Mod: operator.mod,
+    ast.Pow: operator.pow,
+    ast.USub: operator.neg,
+    ast.UAdd: operator.pos,
+}
+
+
+class _SafeMathVisitor(ast.NodeVisitor):
+    """AST visitor that evaluates a math expression safely."""
+
+    def visit_Expression(self, node: ast.Expression) -> Any:
+        return self.visit(node.body)
+
+    def visit_Constant(self, node: ast.Constant) -> Any:
+        if isinstance(node.value, (int, float)):
+            return node.value
+        raise ValueError(f"Unsupported constant: {node.value!r}")
+
+    def visit_UnaryOp(self, node: ast.UnaryOp) -> Any:
+        op = _SAFE_OPS.get(type(node.op))
+        if op is None:
+            raise ValueError(f"Unsupported operator: {type(node.op).__name__}")
+        return op(self.visit(node.operand))
+
+    def visit_BinOp(self, node: ast.BinOp) -> Any:
+        op = _SAFE_OPS.get(type(node.op))
+        if op is None:
+            raise ValueError(f"Unsupported operator: {type(node.op).__name__}")
+        return op(self.visit(node.left), self.visit(node.right))
+
+    def visit_Call(self, node: ast.Call) -> Any:
+        func_name = node.func.id if isinstance(node.func, ast.Name) else None
+        if func_name is None or func_name not in _SAFE_MATH_FUNCS:
+            raise ValueError(f"Unsupported function: {func_name!r}")
+        args = [self.visit(arg) for arg in node.args]
+        return _SAFE_MATH_FUNCS[func_name](*args)
+
+    def visit_Name(self, node: ast.Name) -> Any:
+        if node.id in _SAFE_MATH_FUNCS:
+            val = _SAFE_MATH_FUNCS[node.id]
+            if not callable(val):
+                return val
+        raise ValueError(f"Unsupported name: {node.id!r}")
+
+    def generic_visit(self, node: ast.AST) -> Any:
+        raise ValueError(f"Unsupported syntax: {type(node).__name__}")
+
+
+def _safe_eval(expression: str) -> float:
+    """Evaluate a mathematical expression safely using AST parsing.
+
+    Only allows: numbers, +, -, *, /, //, %, **, parentheses, and a
+    restricted set of math functions (sqrt, sin, cos, log, etc.).
+    """
+    tree = ast.parse(expression, mode="eval")
+    return _SafeMathVisitor().visit(tree)
 
 
 @tool
@@ -17,7 +111,7 @@ def current_time(format: str = "%Y-%m-%d %H:%M:%S") -> str:
 def calculate(expression: str) -> str:
     """Evaluate a mathematical expression. Use with caution."""
     try:
-        result = eval(expression, {"__builtins__": {}}, {})
+        result = _safe_eval(expression)
         return str(result)
     except Exception as e:
         return f"Error: {e}"

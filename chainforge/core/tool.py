@@ -95,8 +95,8 @@ class FunctionTool:
         return str(result)
 
     def __call__(self, **kwargs: Any) -> str:
-        import asyncio
-        return asyncio.run(self.run(**kwargs))
+        from chainforge.core.utils import run_sync
+        return run_sync(self.run(**kwargs))
 
     def __repr__(self) -> str:
         return f"FunctionTool(name={self._name!r})"

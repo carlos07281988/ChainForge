@@ -52,8 +52,7 @@ class ConversationalAgent(BaseModel):
     max_iterations: int = Field(default=8, description="Max iterations per turn")
     temperature: float | None = Field(default=None)
 
-    def __init__(self, **data):
-        super().__init__(**data)
+    def model_post_init(self, __context):
         self._buffer = BufferMemory(max_messages=self.max_turns_before_summary * 2)
         self._summary = SummaryMemory(max_recent=self.max_turns_before_summary)
 

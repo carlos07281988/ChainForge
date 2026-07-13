@@ -73,5 +73,5 @@ class Pipeline(BaseModel):
 
     def __call__(self, input: Any) -> Any:
         """Convenience: call the pipeline directly."""
-        import asyncio
-        return asyncio.run(self.run(input))
+        from chainforge.core.utils import run_sync
+        return run_sync(self.run(input))

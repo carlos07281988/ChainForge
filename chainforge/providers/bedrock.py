@@ -199,14 +199,21 @@ class BedrockProvider(BaseModel):
                         content_parts.append(text)
                 elif delta.get("type") == "tool_use_delta":
                     tc_input = delta.get("input", "")
-                    # Accumulate tool call input
+                    idx = chunk.get("index", 0)
+                    # Accumulate tool call input character by character
+                    if idx in tool_call_deltas:
+                        tool_call_deltas[idx]["input"] += tc_input
 
             elif chunk_type == "content_block_start":
                 start = chunk.get("content_block", {})
                 if start.get("type") == "tool_use":
                     idx = chunk.get("index", len(tool_call_deltas))
+                    # Bedrock can use different field paths: direct 'id' string or nested
+                    tc_id = start.get("id", "")
+                    if isinstance(tc_id, dict):
+                        tc_id = tc_id.get("toolUseId", "")
                     tool_call_deltas[idx] = {
-                        "id": start.get("id", "").get("toolUseId", ""),
+                        "id": tc_id,
                         "name": start.get("name", ""),
                         "input": "",
                     }
@@ -217,10 +224,18 @@ class BedrockProvider(BaseModel):
                     tc_list = []
                     for idx in sorted(tool_call_deltas):
                         d = tool_call_deltas[idx]
+                        raw_input = d.get("input", "")
+                        # Parse accumulated JSON string
+                        parsed_input = {}
+                        if raw_input:
+                            try:
+                                parsed_input = json.loads(raw_input)
+                            except json.JSONDecodeError:
+                                parsed_input = {"_raw": raw_input}
                         tc_list.append({
                             "id": d["id"],
                             "type": "function",
-                            "function": {"name": d["name"], "arguments": d.get("input", {})},
+                            "function": {"name": d["name"], "arguments": parsed_input},
                         })
                 yield LLMResponse(
                     content="".join(content_parts) if content_parts else None,

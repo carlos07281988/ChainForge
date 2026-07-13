@@ -103,8 +103,8 @@ class SkillTool:
         return "\n\n".join(parts)
 
     def __call__(self, query: str = "", **kwargs: Any) -> str:
-        import asyncio
-        return asyncio.run(self.run(query=query, **kwargs))
+        from chainforge.core.utils import run_sync
+        return run_sync(self.run(query=query, **kwargs))
 
     def __repr__(self) -> str:
         return f"SkillTool(name={self._skill.name!r})"
