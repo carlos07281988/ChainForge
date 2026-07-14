@@ -30,6 +30,18 @@
 
 ## Phase 2: Production Ready 🛠 (Current)
 
+### 🔥 Guardrails (Input/Output Safety)
+
+| State | Feature |
+|-------|---------|
+| ✅ | InjectionDetector — prompt injection & jailbreak detection |
+| ✅ | TopicFilter — allow/block topic restrictions |
+| ✅ | PIILeakGuard — prevent sensitive data leakage in outputs |
+| ✅ | ContentSafetyGuard — detect harmful content |
+| ✅ | ToolPermissionPolicy — allow/block/dangerous tool lists |
+| ✅ | QualityGuard — basic output quality checks |
+| ✅ | GuardrailMiddleware — integrate into Agent pipeline |
+
 ### 🔥 Code Sandbox + Multi-modal
 
 | State | Feature |
