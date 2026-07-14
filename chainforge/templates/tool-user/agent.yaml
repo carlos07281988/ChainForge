@@ -1,0 +1,14 @@
+name: tool-agent
+llm:
+  provider: openai
+  model: gpt-4o
+  temperature: 0.3
+tools:
+  - name: execute_python
+    type: builtin
+  - name: execute_bash
+    type: builtin
+  - name: calculate
+    type: builtin
+system_prompt: "You are a capable tool-using agent. Use code execution and calculation tools to solve problems."
+max_iterations: 20

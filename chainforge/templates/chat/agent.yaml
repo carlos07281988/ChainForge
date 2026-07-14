@@ -1,0 +1,7 @@
+name: chat-assistant
+llm:
+  provider: openai
+  model: gpt-4o
+  temperature: 0.7
+system_prompt: "You are a helpful, friendly chat assistant. Keep responses concise and engaging."
+max_iterations: 5

@@ -52,6 +52,25 @@ def main():
     ev.add_argument("--format", default="text", choices=["text", "json", "markdown", "html"], help="Report format")
     ev.add_argument("--output", default=None, help="Save report to file")
 
+    # chainforge mcp
+    mcp = sub.add_parser("mcp", help="Manage MCP tool servers")
+    mcp_sub = mcp.add_subparsers(dest="mcp_command")
+    mcp_sub.add_parser("list", help="List registered MCP servers")
+    mcp_install = mcp_sub.add_parser("install", help="Install a built-in MCP server")
+    mcp_install.add_argument("name", help="Server name (e.g. filesystem, github, sqlite)")
+    mcp_add = mcp_sub.add_parser("add", help="Add a custom MCP server")
+    mcp_add.add_argument("name", help="Server name")
+    mcp_add.add_argument("--command", required=True, help="Shell command to start server")
+    mcp_add.add_argument("--desc", default="", help="Server description")
+    mcp_add.add_argument("--transport", default="stdio", choices=["stdio", "sse"], help="Transport type")
+    mcp_remove = mcp_sub.add_parser("remove", help="Remove an MCP server")
+    mcp_remove.add_argument("name", help="Server name to remove")
+    mcp_search = mcp_sub.add_parser("search", help="Search MCP servers")
+    mcp_search.add_argument("query", help="Search query")
+    mcp_info = mcp_sub.add_parser("info", help="Show MCP server details")
+    mcp_info.add_argument("name", help="Server name")
+    mcp_builtins = mcp_sub.add_parser("builtins", help="List built-in MCP servers")
+
     # chainforge config
     cfg = sub.add_parser("config", help="Validate and show agent config")
     cfg.add_argument("path", help="Path to config file (YAML/JSON)")
@@ -65,13 +84,15 @@ def main():
     args = parser.parse_args()
 
     if args.command == "init":
-        _scaffold_project(args.name, args.dir)
+        _scaffold_project(args.name, args.dir, getattr(args, 'template', None))
     elif args.command == "quickstart":
         _generate_quickstart(args.provider)
     elif args.command == "skill":
         _handle_skill(args)
     elif args.command == "serve":
         _handle_serve(args)
+    elif args.command == "mcp":
+        _handle_mcp(args)
     elif args.command == "config":
         _handle_config(args)
     elif args.command == "run":
@@ -296,12 +317,18 @@ def _handle_config(args):
 
 # ── scaffold / quickstart / init ─────────────────────────────────────────────
 
-def _scaffold_project(name: str, target_dir: str):
+def _scaffold_project(name: str, target_dir: str, template: str | None = None):
     from pathlib import Path
     base = Path(target_dir) / name
     if base.exists():
         print(f"❌ Directory '{base}' already exists.")
         sys.exit(1)
+        if template:
+            from chainforge.templates import scaffold_from_template
+            result = scaffold_from_template(name, target_dir, template)
+            print("Project created from template '" + template + "' at " + str(result))
+            return
+        
     for d in ["", "agents", "tools", "skills", "workflows", "tests"]:
         p = base / d
         p.mkdir(parents=True)

@@ -1,0 +1,14 @@
+name: research-assistant
+llm:
+  provider: openai
+  model: gpt-4o
+  temperature: 0.3
+tools:
+  - name: web_search
+    type: builtin
+  - name: execute_python
+    type: builtin
+system_prompt: "You are a thorough research assistant. Search for information, analyze data, and provide well-sourced answers."
+memory:
+  type: vector
+max_iterations: 15
