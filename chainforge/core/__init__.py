@@ -8,6 +8,7 @@ from chainforge.core.middleware import Middleware
 from chainforge.core.graph import DAG
 from chainforge.core.human_in_loop import HumanInTheLoop, ApprovalRequest, ApprovalDecision
 from chainforge.core.state import AgentState, StateTracker, StateTransition
+from chainforge.core.files import FileLoader, FileContent, load_file, load_image
 
 __all__ = [
     "LLM", "LLMResponse",
@@ -20,4 +21,6 @@ __all__ = [
     "Middleware",
     "HumanInTheLoop", "ApprovalRequest", "ApprovalDecision",
     "AgentState", "StateTracker", "StateTransition",
+    "FileLoader", "FileContent",
+    "load_file", "load_image",
 ]

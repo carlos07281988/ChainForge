@@ -121,3 +121,70 @@ def calculate(expression: str) -> str:
 def echo(text: str) -> str:
     """Return the input text as-is. Useful for testing."""
     return text
+
+
+# ── Code Sandbox Tools ─────────────────────────────────────────────────────
+
+_sandbox_instance = None
+
+
+def _get_sandbox(timeout: int = 30):
+    """Get or create a lazy subprocess sandbox."""
+    global _sandbox_instance
+    if _sandbox_instance is None:
+        from chainforge.sandbox.subprocess import SubprocessSandbox
+        _sandbox_instance = SubprocessSandbox(timeout=timeout)
+    return _sandbox_instance
+
+
+@tool
+async def execute_python(code: str, timeout: int = 30) -> str:
+    """Execute Python code in a sandboxed subprocess and return the output.
+
+    Use this for data analysis, calculation, file processing, and any task
+    that benefits from running actual code. The environment is isolated from
+    the host system.
+
+    Args:
+        code: Python source code to execute.
+        timeout: Maximum execution time in seconds (default 30).
+
+    Returns:
+        stdout and stderr from the execution.
+    """
+    sandbox = _get_sandbox(timeout=timeout)
+    result = await sandbox.execute(code, "python")
+    output_parts = []
+    if result.stdout:
+        output_parts.append(result.stdout)
+    if result.stderr:
+        output_parts.append(f"[STDERR]\n{result.stderr}")
+    if result.exit_code != 0:
+        output_parts.insert(0, f"[Exit code: {result.exit_code}]")
+    return "\n".join(output_parts)
+
+
+@tool
+async def execute_bash(command: str, timeout: int = 30) -> str:
+    """Execute a shell command in a sandboxed subprocess and return the output.
+
+    Use for file operations, system tasks, and running CLI tools.
+    The environment is isolated from the host system.
+
+    Args:
+        command: Shell command to execute.
+        timeout: Maximum execution time in seconds (default 30).
+
+    Returns:
+        stdout and stderr from the execution.
+    """
+    sandbox = _get_sandbox(timeout=timeout)
+    result = await sandbox.execute(command, "bash")
+    output_parts = []
+    if result.stdout:
+        output_parts.append(result.stdout)
+    if result.stderr:
+        output_parts.append(f"[STDERR]\n{result.stderr}")
+    if result.exit_code != 0:
+        output_parts.insert(0, f"[Exit code: {result.exit_code}]")
+    return "\n".join(output_parts)

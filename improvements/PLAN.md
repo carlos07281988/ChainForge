@@ -1,4 +1,18 @@
-# Improvement Plan — ChainForge v0.1.0
+See [ROADMAP.md](./ROADMAP.md) for the full feature roadmap and strategic priorities.
+
+# Phase 2 Feature Plans
+
+Three design documents for the next implementation phase:
+
+| Priority | Feature | Design Doc | Status |
+|----------|---------|------------|--------|
+| P0 | Code Sandbox + Multi-modal | [`SANDBOX.md`](./SANDBOX.md) | 🛠 Implementing |
+| P0 | Memory 2.0 (Vector Memory) | [`MEMORY.md`](./MEMORY.md) | 🛠 Implementing |
+| P0 | Agent Config Declaration | [`AGENT_CONFIG.md`](./AGENT_CONFIG.md) | 🛠 Implementing |
+
+---
+
+# Bug Fixes — ChainForge v0.1.0
 
 ## Priority: 🔴 Critical (Fix Now)
 

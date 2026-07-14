@@ -38,6 +38,7 @@ def main():
     sv.add_argument("--host", default="0.0.0.0", help="Bind host")
     sv.add_argument("--port", type=int, default=8000, help="Bind port")
     sv.add_argument("--reload", action="store_true", help="Auto-reload on code changes")
+    sv.add_argument("--config", default=None, help="Path to agent config file (YAML/JSON)")
     sv.add_argument("--agent", action="append", dest="agent_specs",
                     help="Register an agent: name=ClassName:param=val,...")
     sv.add_argument("--a2a", action="store_true", help="Enable A2A (Agent-to-Agent) protocol endpoints")
@@ -50,6 +51,11 @@ def main():
     ev.add_argument("--suite", default=None, help="Eval suite JSON file or inline JSON")
     ev.add_argument("--format", default="text", choices=["text", "json", "markdown", "html"], help="Report format")
     ev.add_argument("--output", default=None, help="Save report to file")
+
+    # chainforge config
+    cfg = sub.add_parser("config", help="Validate and show agent config")
+    cfg.add_argument("path", help="Path to config file (YAML/JSON)")
+    cfg.add_argument("--show", action="store_true", help="Show resolved config")
 
     # chainforge run (quick CLI run)
     r = sub.add_parser("run", help="Run an agent directly (requires registered agent)")
@@ -66,6 +72,8 @@ def main():
         _handle_skill(args)
     elif args.command == "serve":
         _handle_serve(args)
+    elif args.command == "config":
+        _handle_config(args)
     elif args.command == "run":
         _handle_run(args)
     elif args.command == "eval":
@@ -124,6 +132,16 @@ def _handle_skill(args):
 def _handle_serve(args):
     """Start the HTTP server with optionally registered agents."""
     from chainforge.server import register_agent, run_server
+
+    if args.config:
+        from chainforge.config.loader import load_agent_config
+        from chainforge.config.builder import build_agent_from_config
+        config = load_agent_config(args.config)
+        agent = build_agent_from_config(config)
+        register_agent(config.name, agent, config.system_prompt or "")
+        print(f"  Registered agent '{config.name}' from config: {args.config}")
+        # Build tools list from config
+        from chainforge.tools import builtin as builtin_tools
 
     if args.agent_specs:
         for spec in args.agent_specs:
@@ -247,6 +265,33 @@ def _handle_run(args):
         print()
 
     asyncio.run(_run())
+
+
+def _handle_config(args):
+    """Validate and show agent config."""
+    from chainforge.config.loader import load_agent_config
+    from chainforge.config.builder import build_agent_from_config
+    
+    try:
+        config = load_agent_config(args.path)
+        print(f"✅ Config valid: {config.name}")
+        print(f"   LLM: {config.llm.provider}/{config.llm.model}")
+        print(f"   Tools: {[t.name for t in config.tools]}")
+        if config.memory:
+            print(f"   Memory: {config.memory.type}/{config.memory.backend}")
+        print(f"   Max iterations: {config.max_iterations}")
+        
+        if args.show:
+            import json
+            print(f"\nResolved config:\n{json.dumps(config.model_dump(mode='json'), indent=2, ensure_ascii=False)}")
+        
+        # Try building the agent
+        agent = build_agent_from_config(config)
+        print(f"✅ Agent built successfully: {type(agent).__name__}")
+    except Exception as e:
+        print(f"❌ Config error: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 # ── scaffold / quickstart / init ─────────────────────────────────────────────
