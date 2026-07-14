@@ -95,6 +95,34 @@ class TestRecursiveCharacterTextSplitter:
         chunks = splitter.split_text("hello world foo bar")
         assert len(chunks) >= 1
 
+    def test_split_with_separator(self):
+        splitter = RecursiveCharacterTextSplitter(chunk_size=50, chunk_overlap=10)
+        chunks = splitter.split_text("Hello world. " * 20)
+        assert len(chunks) >= 3
+        assert all(isinstance(c, str) and len(c) > 0 for c in chunks)
+
+    def test_split_text_no_separator(self):
+        splitter = RecursiveCharacterTextSplitter(chunk_size=20, chunk_overlap=5)
+        chunks = splitter.split_text("x" * 100)
+        assert len(chunks) >= 4
+        assert all(isinstance(c, str) for c in chunks)
+
+    def test_split_documents_preserves_metadata(self):
+        splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=20)
+        from chainforge.rag import Document
+        docs = [Document(page_content="hello world " * 50, metadata={"source": "test"})]
+        chunks = splitter.split_documents(docs)
+        assert len(chunks) > 1
+        assert all(c.metadata.get("chunk") is not None for c in chunks)
+        assert all(c.metadata.get("source") == "test" for c in chunks)
+
+    def test_split_preserves_newlines(self):
+        splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+        text = "Line one\n\nLine two\n\nLine three\n\nLine four"
+        chunks = splitter.split_text(text)
+        assert len(chunks) >= 1
+        assert all(isinstance(c, str) for c in chunks)
+
     def test_split_documents(self):
         splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=20)
         docs = [Document(page_content="hello world", metadata={"source": "test"})]

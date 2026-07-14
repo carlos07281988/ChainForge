@@ -28,7 +28,7 @@ class RecursiveCharacterTextSplitter(BaseModel):
 
     def split_text(self, text: str) -> list[str]:
         """Split text into chunks."""
-        return self._split(text, self.separators)
+        return self._split(text, list(self.separators))
 
     def split_documents(self, documents: list[Document]) -> list[Document]:
         """Split documents into smaller chunks, preserving metadata."""
@@ -42,70 +42,60 @@ class RecursiveCharacterTextSplitter(BaseModel):
         return chunks
 
     def _split(self, text: str, separators: list[str]) -> list[str]:
-        """Recursively split text."""
-        final_chunks = []
-        separator = separators[-1] if separators else ""
-        _separators = separators[:]
+        """Split text into chunks using the available separators."""
+        if not text:
+            return []
 
-        # Get the appropriate separator
-        split_sep = _separators[-1] if _separators else ""
-        for s in _separators:
+        # Pick the first separator that appears in the text
+        sep = separators[0] if separators else ""
+        for s in separators:
             if s == "" or s in text:
-                split_sep = s
+                sep = s
                 break
 
-        if split_sep:
-            splits = text.split(split_sep)
-        else:
-            splits = [text]
+        # If empty separator, split into characters (last resort)
+        if sep == "":
+            # Simple chunk by chunk_size
+            return [text[i:i + self.chunk_size] for i in range(0, len(text), self.chunk_size - self.chunk_overlap)]
 
-        # Good enough splitting
-        good_splits = []
-        for s in splits:
-            if len(s) < self.chunk_size:
-                good_splits.append(s)
-            else:
-                if good_splits:
-                    merged = self._merge_splits(good_splits, split_sep)
-                    final_chunks.extend(merged)
-                    good_splits = []
-                if len(_separators) > 1:
-                    rest = self._split(s, _separators[1:])
-                    final_chunks.extend(rest)
-                else:
-                    final_chunks.append(s)
+        segments = text.split(sep)
+        result = []
+        current_chunk = []
+        current_len = 0
 
-        if good_splits:
-            merged = self._merge_splits(good_splits, split_sep)
-            final_chunks.extend(merged)
+        for seg in segments:
+            seg_len = len(seg) + (len(sep) if current_chunk else 0)
 
-        return final_chunks
+            # If this segment alone exceeds chunk_size, split it with next separator
+            if len(seg) >= self.chunk_size and len(separators) > 1:
+                if current_chunk:
+                    result.append(sep.join(current_chunk))
+                    current_chunk = []
+                    current_len = 0
+                result.extend(self._split(seg, separators[1:]))
+                continue
 
-    def _merge_splits(self, splits: list[str], separator: str) -> list[str]:
-        """Merge small splits into chunks of target size with overlap."""
-        docs = []
-        current = []
-        total = 0
-        for s in splits:
-            _len = len(s)
-            if total + _len >= self.chunk_size and current:
-                docs.append(separator.join(current))
-                # Keep overlap
-                overlap_texts = []
-                overlap_len = 0
-                for cs in reversed(current):
-                    if overlap_len + len(cs) < self.chunk_overlap:
-                        overlap_texts.insert(0, cs)
-                        overlap_len += len(cs)
+            if current_len + len(seg) + (len(sep) if current_chunk else 0) > self.chunk_size and current_chunk:
+                result.append(sep.join(current_chunk))
+                # Keep overlap: last few segments
+                overlap = []
+                ol = 0
+                for cs in reversed(current_chunk):
+                    if ol + len(cs) + (len(sep) if overlap else 0) <= self.chunk_overlap:
+                        overlap.insert(0, cs)
+                        ol += len(cs) + (len(sep) if len(overlap) > 1 else 0)
                     else:
                         break
-                current = overlap_texts
-                total = overlap_len
-            current.append(s)
-            total += _len
-        if current:
-            docs.append(separator.join(current))
-        return docs
+                current_chunk = overlap
+                current_len = ol
+
+            current_chunk.append(seg)
+            current_len += len(seg) + (len(sep) if len(current_chunk) > 1 else 0)
+
+        if current_chunk:
+            result.append(sep.join(current_chunk))
+
+        return result
 
 
 class TokenTextSplitter(BaseModel):

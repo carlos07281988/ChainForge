@@ -114,10 +114,19 @@ class Agent(BaseModel):
             return Message.tool_result(tc.id, tc.name, str(e), is_error=True)
 
     async def _execute_tool_calls(self, tool_calls: list[dict]) -> list[Message]:
-        tcs = [
-            ToolCall(id=td.get("id", ""), name=td["function"]["name"], args=td["function"].get("arguments", {}))
-            for td in tool_calls
-        ]
+        tcs = []
+        for td in tool_calls:
+            args = td["function"].get("arguments", {})
+            if isinstance(args, str):
+                try:
+                    args = json.loads(args)
+                except json.JSONDecodeError:
+                    args = {"_raw": args}
+            tcs.append(ToolCall(
+                id=td.get("id", ""),
+                name=td["function"]["name"],
+                args=args,
+            ))
         if self.parallel_tool_calls and len(tcs) > 1:
             log_data(logger, DEBUG, f"Executing {len(tcs)} tool calls in parallel",
                      data={"tools": [tc.name for tc in tcs]})
