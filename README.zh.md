@@ -914,6 +914,32 @@ mount_a2a(existing_app, agents={"assistant": agent})
 | `Artifact` | 产出物 — 任务执行过程中产生的结果 |
 | `Skill` | 技能描述 — Agent 对外宣称的能力 |
 
+### Architecture / 架构
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant A2A_Server
+    participant Agent
+    
+    Client->>A2A_Server: GET /agent-card
+    A2A_Server-->>Client: AgentCard (skills, capabilities)
+    
+    Client->>A2A_Server: "POST /task-send {id, message}"
+    A2A_Server->>Agent: execute_task()
+    A2A_Server-->>Client: "Task (state=submitted/working)"
+    
+    loop Poll
+        Client->>A2A_Server: "POST /task-get {id}"
+        A2A_Server-->>Client: "Task (state update)"
+    end
+    
+    Client->>A2A_Server: "POST /task-subscribe {id, message}"
+    A2A_Server->>Agent: execute_task()
+    A2A_Server-->>Client: "SSE: task_update / task_complete"
+```
+
+
 ---
 
 

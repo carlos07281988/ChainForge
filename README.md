@@ -1724,18 +1724,18 @@ sequenceDiagram
     Client->>A2A_Server: GET /agent-card
     A2A_Server-->>Client: AgentCard (skills, capabilities)
     
-    Client->>A2A_Server: POST /task-send {id, message}
+    Client->>A2A_Server: "POST /task-send {id, message}"
     A2A_Server->>Agent: execute_task()
-    A2A_Server-->>Client: Task (state=submitted/working)
+    A2A_Server-->>Client: "Task (state=submitted/working)"
     
     loop Poll
-        Client->>A2A_Server: POST /task-get {id}
-        A2A_Server-->>Client: Task (state update)
+        Client->>A2A_Server: "POST /task-get {id}"
+        A2A_Server-->>Client: "Task (state update)"
     end
     
-    Client->>A2A_Server: POST /task-subscribe {id, message}
+    Client->>A2A_Server: "POST /task-subscribe {id, message}"
     A2A_Server->>Agent: execute_task()
-    A2A_Server-->>Client: SSE: task_update / task_complete
+    A2A_Server-->>Client: "SSE: task_update / task_complete"
 ```
 
 
