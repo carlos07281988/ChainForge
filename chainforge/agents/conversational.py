@@ -12,7 +12,7 @@ from collections.abc import AsyncIterator
 from logging import INFO
 from typing import Any
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, PrivateAttr
 
 from chainforge.core.agent import Agent
 from chainforge.core.llm import LLM
@@ -51,6 +51,9 @@ class ConversationalAgent(BaseModel):
     max_turns_before_summary: int = Field(default=6, description="Turns before compressing history")
     max_iterations: int = Field(default=8, description="Max iterations per turn")
     temperature: float | None = Field(default=None)
+
+    _buffer: Any = PrivateAttr()
+    _summary: Any = PrivateAttr()
 
     def model_post_init(self, __context):
         self._buffer = BufferMemory(max_messages=self.max_turns_before_summary * 2)

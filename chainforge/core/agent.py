@@ -193,7 +193,10 @@ class Agent(BaseModel):
                     pass
 
             response = await self.llm.generate(messages, tools=tool_specs, **kwargs)
-            
+
+            # ── Callbacks: on_llm_end ───────────────────────────────
+            await self._llm_end_callbacks(response, ctx)
+
             # ── Reasoning: after_llm hook ──────────────────────────────
             for _strategy in self.reasoning:
                 try:
@@ -274,12 +277,45 @@ class Agent(BaseModel):
             yield StreamEvent(type=EventType.done, content=response.content)
             for e in self._emit_state(tracker, AgentState.done, iteration=iteration):
                 yield e
+            await self._agent_end_callbacks(response.content or "", ctx)
             log_data(logger, INFO, f"Agent finished after {iteration + 1} iterations",
                      data={"iterations": iteration + 1, "response_length": len(response.content or "")})
             return
 
         log_data(logger, WARNING, f"Agent exceeded max_iterations={self.max_iterations}")
         raise MaxIterationsError(f"Agent exceeded {self.max_iterations} iterations")
+
+    async def _agent_start_callbacks(self, prompt: str, ctx: dict[str, Any] | None) -> None:
+        """Fire on_agent_start callbacks."""
+        for _cb in self.callbacks:
+            try:
+                await _cb.on_agent_start(prompt, ctx)
+            except Exception:
+                pass
+
+    async def _agent_end_callbacks(self, output: str, ctx: dict[str, Any] | None) -> None:
+        """Fire on_agent_end callbacks."""
+        for _cb in self.callbacks:
+            try:
+                await _cb.on_agent_end(output, ctx)
+            except Exception:
+                pass
+
+    async def _llm_end_callbacks(self, response: LLMResponse, ctx: dict[str, Any] | None) -> None:
+        """Fire on_llm_end callbacks."""
+        for _cb in self.callbacks:
+            try:
+                await _cb.on_llm_end(response, ctx)
+            except Exception:
+                pass
+
+    async def _error_callbacks(self, error: Exception, ctx: dict[str, Any] | None) -> None:
+        """Fire on_error callbacks."""
+        for _cb in self.callbacks:
+            try:
+                await _cb.on_error(error, ctx)
+            except Exception:
+                pass
 
     async def run(
         self,
@@ -310,10 +346,18 @@ class Agent(BaseModel):
                        "response_model": response_model.__name__ if response_model else None})
 
         tracker = StateTracker()
+        prompt_str = prompt if isinstance(prompt, str) else prompt[-1].content or ""
+
+        # Fire on_agent_start
+        await self._agent_start_callbacks(prompt_str, ctx)
 
         async def _handler(msgs: list[Message], c: dict[str, Any]) -> AsyncIterator[StreamEvent]:
-            async for event in self._run_loop(msgs, c, tracker=tracker):
-                yield event
+            try:
+                async for event in self._run_loop(msgs, c, tracker=tracker):
+                    yield event
+            except Exception as exc:
+                await self._error_callbacks(exc, c)
+                raise
 
         if self.middlewares:
             chain = MiddlewareChain(self.middlewares)

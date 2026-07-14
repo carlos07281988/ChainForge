@@ -17,9 +17,10 @@ Correct:
 Incorrect (tracing sees pre-approval events):
     middlewares=[tracing_middleware, hil.middleware()]
 """
-
 from __future__ import annotations
 
+import asyncio
+import json
 from collections.abc import AsyncIterator
 from enum import Enum
 from typing import Any
@@ -83,25 +84,28 @@ class HumanInTheLoop:
         self._input_callback = callback
 
     async def _default_input_handler(self, request: ApprovalRequest) -> HumanInput:
-        """Default handler: prompt via console."""
-        print(f"\n🔔 Approval needed: {request.tool_name}({request.arguments})")
-        print(f"   Context: {request.context or 'N/A'}")
-        response = input("   Approve? (y/n/modify): ").strip().lower()
+        """Default handler: prompt via console (runs input() in executor to avoid blocking)."""
+        def _sync_input() -> HumanInput:
+            print(f"\n🔔 Approval needed: {request.tool_name}({request.arguments})")
+            print(f"   Context: {request.context or 'N/A'}")
+            response = input("   Approve? (y/n/modify): ").strip().lower()
 
-        if response == "y":
-            return HumanInput(decision=ApprovalDecision.approved)
-        elif response == "modify":
-            new_args_str = input("   New arguments (JSON): ").strip()
-            import json
-            try:
-                new_args = json.loads(new_args_str)
-            except json.JSONDecodeError:
-                print("   Invalid JSON, rejecting.")
-                return HumanInput(decision=ApprovalDecision.rejected, feedback="Invalid JSON")
-            return HumanInput(decision=ApprovalDecision.modified, modified_arguments=new_args)
-        else:
-            feedback = input("   Reason for rejection: ").strip()
-            return HumanInput(decision=ApprovalDecision.rejected, feedback=feedback)
+            if response == "y":
+                return HumanInput(decision=ApprovalDecision.approved)
+            elif response == "modify":
+                new_args_str = input("   New arguments (JSON): ").strip()
+                try:
+                    new_args = json.loads(new_args_str)
+                except json.JSONDecodeError:
+                    print("   Invalid JSON, rejecting.")
+                    return HumanInput(decision=ApprovalDecision.rejected, feedback="Invalid JSON")
+                return HumanInput(decision=ApprovalDecision.modified, modified_arguments=new_args)
+            else:
+                feedback = input("   Reason for rejection: ").strip()
+                return HumanInput(decision=ApprovalDecision.rejected, feedback=feedback)
+
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, _sync_input)
 
     async def request_approval(self, request: ApprovalRequest) -> HumanInput:
         """Request human approval for a tool call. Blocks until decision."""
