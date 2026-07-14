@@ -133,7 +133,66 @@
 | Cross-Agent Tracing | Distributed trace across A2A boundaries |
 | Agent Testing Suite | Mock LLM, simulation, regression testing |
 
-## Phase 4: LangChain Feature Parity (🛠 In Progress)
+## Phase 4: LangChain Feature Parity (✅ Complete)
+
+### Output Parsers (chainforge/parsers/)
+
+| State | Feature |
+|-------|---------|
+| ✅ | JSONOutputParser — extract JSON from LLM responses |
+| ✅ | PydanticOutputParser — parse into Pydantic models |
+| ✅ | Format instructions for LLM prompting |
+
+### Embedding Providers (chainforge/rag/embeddings/)
+
+| State | Feature |
+|-------|---------|
+| ✅ | OpenAIEmbedding — text-embedding-3-small |
+| ✅ | HuggingFaceEmbedding — sentence-transformers |
+| ✅ | GoogleEmbedding — Gemini embedding API |
+
+### Vector Store Backends (chainforge/rag/vectorstores/)
+
+| State | Feature |
+|-------|---------|
+| ✅ | ChromaVectorStore — ChromaDB integration |
+| ✅ | FAISSVectorStore — FAISS in-memory index |
+
+### Entity Memory (chainforge/memory/entity.py)
+
+| State | Feature |
+|-------|---------|
+| ✅ | Entity extraction from conversation |
+| ✅ | Entity tracking with mention counting |
+| ✅ | Context formatting for LLM |
+
+### Toolkits (chainforge/tools/toolkits.py)
+
+| State | Feature |
+|-------|---------|
+| ✅ | ToolKit base class |
+| ✅ | Calculator toolkit (add, multiply, sqrt, power) |
+| ✅ | File toolkit (read, write, list) |
+| ✅ | Web toolkit (fetch URL) |
+
+### Document Loaders (chainforge/rag/loaders/)
+
+| State | Feature |
+|-------|---------|
+| ✅ | DirectoryLoader — batch load from directory |
+| ✅ | HTMLLoader — HTML tag stripping |
+
+### Prompt Hub (chainforge/prompts/hub.py)
+
+| State | Feature |
+|-------|---------|
+| ✅ | Template registry (register, get, list, remove) |
+| ✅ | Save/load templates from directory |
+| ✅ | Variable introspection |
+
+---
+
+## Phase 5: Ecosystem (💡 Future)
 
 ### Prompt Templates
 

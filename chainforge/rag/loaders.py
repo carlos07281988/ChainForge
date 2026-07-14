@@ -109,3 +109,59 @@ class JSONLoader:
                     metadata[k] = item[k]
             documents.append(Document(page_content=content, metadata=metadata))
         return documents
+
+
+class DirectoryLoader:
+    """Load all files in a directory as documents."""
+
+    def __init__(self, path, glob_pattern="*", loader_map=None, recursive=False):
+        from pathlib import Path
+        self.path = Path(path)
+        self.glob_pattern = glob_pattern
+        self.loader_map = loader_map or {}
+        self.recursive = recursive
+
+    def load(self) -> list:
+        if not self.path.exists() or not self.path.is_dir():
+            raise FileNotFoundError(f"Directory not found: {self.path}")
+        from pathlib import Path as P
+        pattern = "**/*" if self.recursive else "*"
+        all_docs = []
+        for file_path in P(self.path).glob(pattern):
+            if file_path.is_file() and file_path.match(self.glob_pattern):
+                ext = file_path.suffix.lower()
+                loader_cls = self.loader_map.get(ext, TextLoader)
+                try:
+                    loader = loader_cls(str(file_path))
+                    docs = loader.load()
+                    all_docs.extend(docs)
+                except Exception as e:
+                    import logging
+                    logging.warning(f"Failed to load {file_path}: {e}")
+        return all_docs
+
+
+class HTMLLoader:
+    """Load HTML files, extracting text content."""
+
+    def __init__(self, path, extract_text=True):
+        from pathlib import Path
+        self.path = Path(path)
+        self.extract_text = extract_text
+
+    def load(self) -> list:
+        if not self.path.exists():
+            raise FileNotFoundError(f"File not found: {self.path}")
+        raw = self.path.read_text(encoding="utf-8")
+        content = raw
+        if self.extract_text:
+            import re
+            content = re.sub(r"<[^>]+>", " ", raw)
+            content = re.sub(r"\s+", " ", content).strip()
+        from chainforge.rag.documents import Document
+        return [
+            Document(
+                page_content=content,
+                metadata={"source": str(self.path), "file_type": "html"},
+            )
+        ]

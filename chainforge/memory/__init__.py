@@ -13,3 +13,7 @@ __all__ = [
     "VectorMemory",
     "MemoryManager",
 ]
+
+from chainforge.memory.entity import EntityMemory, Entity
+
+__all__.extend(["EntityMemory", "Entity"])

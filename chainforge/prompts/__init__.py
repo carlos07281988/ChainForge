@@ -21,10 +21,12 @@ Usage:
 
 from chainforge.prompts.template import PromptTemplate, FewShotPromptTemplate
 from chainforge.prompts.chat import ChatPromptTemplate, MessagePlaceholder
+from chainforge.prompts.hub import PromptHub
 
 __all__ = [
     "PromptTemplate",
     "FewShotPromptTemplate",
     "ChatPromptTemplate",
     "MessagePlaceholder",
+    "PromptHub",
 ]

@@ -3,7 +3,7 @@
 Usage:
     from chainforge.rag.loaders import TextLoader
     from chainforge.rag.splitters import RecursiveCharacterTextSplitter
-    from chainforge.rag.vectorstores import InMemoryVectorStore
+    from chainforge.rag.vectorstores import InMemoryVectorStore, ChromaVectorStore, FAISSVectorStore
     from chainforge.rag.retrievers import VectorStoreRetriever
     from chainforge.rag.chains import RetrievalQA
 
@@ -16,9 +16,9 @@ Usage:
 """
 
 from chainforge.rag.documents import Document
-from chainforge.rag.loaders import TextLoader, CSVLoader, JSONLoader
+from chainforge.rag.loaders import TextLoader, CSVLoader, JSONLoader, DirectoryLoader, HTMLLoader
 from chainforge.rag.splitters import RecursiveCharacterTextSplitter, TokenTextSplitter
-from chainforge.rag.vectorstores import InMemoryVectorStore
+from chainforge.rag.vectorstores import InMemoryVectorStore, ChromaVectorStore, FAISSVectorStore
 from chainforge.rag.retrievers import VectorStoreRetriever, MultiQueryRetriever
 from chainforge.rag.chains import RetrievalQA
 
@@ -27,9 +27,13 @@ __all__ = [
     "TextLoader",
     "CSVLoader",
     "JSONLoader",
+    "DirectoryLoader",
+    "HTMLLoader",
     "RecursiveCharacterTextSplitter",
     "TokenTextSplitter",
     "InMemoryVectorStore",
+    "ChromaVectorStore",
+    "FAISSVectorStore",
     "VectorStoreRetriever",
     "MultiQueryRetriever",
     "RetrievalQA",
