@@ -546,6 +546,8 @@ User Prompt
 - [x] **Agent evaluation & testing framework** — `chainforge eval` CLI, `EvalSuite`/`EvalRunner`/`EvalReport` API
 - [x] **Streaming agent state visualization** — real-time web dashboard with SSE agent state visualization
 - [x] **Graph-based agent visual editor** — interactive DAG editor with drag-and-drop, export, run
+- [x] **A2A protocol** — Agent-to-Agent (Google A2A) standardized agent communication
+  - AgentCard advertisement, task lifecycle management, SSE streaming
 
 ---
 
@@ -1534,6 +1536,93 @@ curl "http://localhost:8000/api/v1/dag/stream?dag=\
 
 
 ---
+
+
+---
+
+## A2A Protocol / Agent-to-Agent 协议
+
+ChainForge implements the [Google A2A protocol](https://github.com/google/A2A), enabling standardized communication between agents via HTTP JSON-RPC.
+
+### Usage / 使用
+
+```bash
+# Start server with A2A endpoints
+chainforge serve --a2a --port 8000
+```
+
+```python
+from chainforge.a2a import (
+    A2AClient, A2AAgentProxy,
+    A2ARouter, create_a2a_app, mount_a2a,
+)
+
+# Client: discover and call remote agents
+client = A2AClient()
+card = await client.get_agent_card("http://remote:8000/a2a")
+result = await client.send_task(
+    "http://remote:8000/a2a",
+    "task-1", "Weather in Beijing?",
+)
+
+# Proxy: treat remote agent as local
+proxy = A2AAgentProxy("http://remote:8000/a2a")
+output = await proxy.run("What's the weather?")
+
+# Server: expose agents with A2A
+app, router = create_a2a_app({"agent": my_agent})
+
+# Or mount into existing FastAPI app
+mount_a2a(existing_app, agents={"agent": my_agent})
+```
+
+### Protocol Endpoints / 协议端点
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/a2a/agent-card` | Get agent's advertised capabilities |
+| POST | `/a2a/task-send` | Send a task to the agent |
+| POST | `/a2a/task-get` | Query current task state |
+| POST | `/a2a/task-cancel` | Cancel a running task |
+| POST | `/a2a/task-subscribe` | SSE stream task updates |
+| POST | `/a2a/task-resubscribe` | Replay completed task history |
+
+### Core Models / 核心模型
+
+| Type | Description |
+|------|-------------|
+| `AgentCard` | Agent identity — name, capabilities, skills |
+| `Task` | Work unit with state machine lifecycle |
+| `TaskState` | `submitted → working → completed / failed / canceled` |
+| `Message` | Communication payload — role + parts (text/file/data) |
+| `Artifact` | Output produced during task execution |
+| `Skill` | Advertised capability with metadata |
+
+### Architecture / 架构
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant A2A_Server
+    participant Agent
+    
+    Client->>A2A_Server: GET /agent-card
+    A2A_Server-->>Client: AgentCard (skills, capabilities)
+    
+    Client->>A2A_Server: POST /task-send {id, message}
+    A2A_Server->>Agent: execute_task()
+    A2A_Server-->>Client: Task (state=submitted/working)
+    
+    loop Poll
+        Client->>A2A_Server: POST /task-get {id}
+        A2A_Server-->>Client: Task (state update)
+    end
+    
+    Client->>A2A_Server: POST /task-subscribe {id, message}
+    A2A_Server->>Agent: execute_task()
+    A2A_Server-->>Client: SSE: task_update / task_complete
+```
+
 
 ## License / 许可
 

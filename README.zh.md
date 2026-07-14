@@ -726,6 +726,82 @@ async for event in stream:
 ```
 
 ---
+---
+
+## 🤝 Agent-to-Agent (A2A) 协议
+
+ChainForge 实现了 [Google A2A 协议](https://github.com/google/A2A)，让 Agent 之间可以通过标准化协议直接通信。
+
+### A2A 端点
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/a2a/agent-card` | 获取 Agent 的能力介绍 (AgentCard) |
+| POST | `/a2a/task-send` | 发送任务给 Agent |
+| POST | `/a2a/task-get` | 查询任务状态 |
+| POST | `/a2a/task-cancel` | 取消任务 |
+| POST | `/a2a/task-subscribe` | SSE 流式订阅任务执行 |
+| POST | `/a2a/task-resubscribe` | 重放已完成任务的历史 |
+
+### 快速开始
+
+```bash
+# 启动带 A2A 支持的服务器
+chainforge serve --a2a --port 8000
+```
+
+```python
+from chainforge.a2a import A2AClient
+
+client = A2AClient()
+
+# 发现远端 Agent 能力
+card = await client.get_agent_card("http://localhost:8000/a2a")
+print(card.name)        # WeatherAgent
+print(card.skills)      # [weather_tool, ...]
+
+# 发送任务
+result = await client.send_task(
+    "http://localhost:8000/a2a",
+    "task-1", "Weather in Beijing?",
+)
+print(result.task.status.state)  # submitted | working | completed
+
+# 或者封装成本地代理
+from chainforge.a2a import A2AAgentProxy
+
+proxy = A2AAgentProxy("http://localhost:8000/a2a")
+output = await proxy.run("What's the weather?")
+print(output)
+```
+
+### 编程式挂载
+
+```python
+from chainforge.a2a.server import create_a2a_app
+from chainforge import Agent
+from chainforge.providers import OpenAIProvider
+
+agent = Agent(llm=OpenAIProvider())
+app, router = create_a2a_app({"assistant": agent})
+
+# 或挂载到现有 FastAPI 应用
+from chainforge.a2a.integration import mount_a2a
+mount_a2a(existing_app, agents={"assistant": agent})
+```
+
+### 核心模型
+
+| 类型 | 说明 |
+|------|------|
+| `AgentCard` | Agent 的名片 — 名称、能力、技能列表 |
+| `Task` | 任务单元 — 状态机 lifecycle |
+| `TaskState` | `submitted → working → completed / failed / canceled` |
+| `Message` | 消息 — role + parts（文本/文件/数据） |
+| `Artifact` | 产出物 — 任务执行过程中产生的结果 |
+| `Skill` | 技能描述 — Agent 对外宣称的能力 |
+
+---
 
 
 ## 🗺 路线图
@@ -741,6 +817,7 @@ async for event in stream:
 - ✅ Human-in-the-loop
 - ✅ 结构化输出 / response_model
 - ✅ MCP 客户端
+- ✅ **A2A 协议** — Google Agent-to-Agent 标准协议
 - ✅ CLI 脚手架 + 评估命令
 - ✅ Agent 评估框架（EvalSuite / EvalRunner / EvalReport）
 - ✅ 流式 Agent 状态可视化（Web 控制台）

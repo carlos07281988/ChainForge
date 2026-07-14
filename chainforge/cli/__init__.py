@@ -40,6 +40,8 @@ def main():
     sv.add_argument("--reload", action="store_true", help="Auto-reload on code changes")
     sv.add_argument("--agent", action="append", dest="agent_specs",
                     help="Register an agent: name=ClassName:param=val,...")
+    sv.add_argument("--a2a", action="store_true", help="Enable A2A (Agent-to-Agent) protocol endpoints")
+    sv.add_argument("--a2a-prefix", default="/a2a", help="URL prefix for A2A endpoints (default: /a2a)")
 
     # chainforge eval
     ev = sub.add_parser("eval", help="Run evaluation tests")
@@ -126,6 +128,23 @@ def _handle_serve(args):
     if args.agent_specs:
         for spec in args.agent_specs:
             _parse_and_register(spec)
+
+    if args.a2a:
+        from chainforge.server import _agent_registry as registry
+        from chainforge.a2a.integration import mount_a2a
+        agents_to_mount = {}
+        if hasattr(registry, "items"):
+            for _aid, _entry in registry.items():
+                if isinstance(_entry, dict) and "agent" in _entry:
+                    agents_to_mount[_aid] = _entry["agent"]
+                else:
+                    agents_to_mount[_aid] = _entry
+        mount_a2a(
+            run_server.__globals__.get("app") or __import__("chainforge.server", fromlist=["app"]).app,
+            agents=agents_to_mount,
+            base_url=f"http://{args.host}:{args.port}",
+            prefix=args.a2a_prefix,
+        )
 
     run_server(host=args.host, port=args.port, reload=args.reload)
 

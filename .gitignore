@@ -6,6 +6,7 @@ dist/
 build/
 *.egg
 .venv/
+.venv_test*/
 venv/
 env/
 
