@@ -1182,6 +1182,121 @@ asyncio.run(main())
 
 | "Automate a data pipeline" | **ToolAgent** | Tool orchestration |
 
+
+
+## Reasoning Strategies / 推理策略
+
+Reasoning Strategies are a **framework-level abstraction** that lets you inject structured thinking patterns into any Agent's execution loop — without modifying the Agent itself.
+
+Unlike the pre-built agent patterns (ReAct, ChainOfThought, etc.) in `chainforge/agents/`, reasoning strategies are **composable hooks** that can be mixed and matched on any Agent.
+
+### Architecture / 架构
+
+Each strategy implements one or more hooks called at different points in the Agent loop:
+
+| Hook | When Called | Return | Use Case |
+|------|------------|--------|----------|
+| `before_llm` | Before each LLM call | (messages, context) | Inject instructions, add context |
+| `after_llm` | After each LLM response | (response, messages, context) | Self-critique, verify output |
+| `on_tool_result` | After a tool executes | (result, messages, context) | Validate tool output |
+| `should_stop` | End of each iteration | bool | Early stopping based on quality |
+
+### Built-in Strategies / 内置策略
+
+#### ChainOfThought — Step-by-Step Reasoning
+
+Injects a "think step by step" instruction before each LLM call.
+
+```python
+from chainforge.reasoning import ChainOfThought
+
+agent = Agent(llm=llm, reasoning=[ChainOfThought()])
+# The LLM will be prompted to reason step by step before answering
+```
+
+Customizable prompt:
+
+```python
+cot = ChainOfThought(prompt="Let me work through this carefully before answering.")
+```
+
+#### ReasoningSteps — Explicit Sub-Step Planning
+
+Breaks down the user's request into numbered steps before execution.
+
+```python
+from chainforge.reasoning import ReasoningSteps
+
+agent = Agent(llm=llm, reasoning=[ReasoningSteps(max_steps=5)])
+# On first iteration, asks LLM to plan steps. Executes them one by one,
+# stops after max_steps iterations.
+```
+
+#### SelfReflection — Self-Critique and Improvement
+
+After generating a response, asks the LLM to review its own answer and produce a refined version.
+
+```python
+from chainforge.reasoning import SelfReflection
+
+agent = Agent(llm=llm, reasoning=[SelfReflection()])
+# Flow: LLM responds -> reflection prompt -> LLM revises -> final answer
+```
+
+#### Verification — Double-Check Before Final
+
+Prompts the LLM to verify its answer for factual accuracy, logical consistency, and completeness before finalizing.
+
+```python
+from chainforge.reasoning import Verification
+
+agent = Agent(llm=llm, reasoning=[Verification()])
+# Flow: LLM responds -> verification prompt -> LLM corrects -> final answer
+```
+
+### Combining Strategies / 组合使用
+
+Strategies compose naturally. They run in order for each hook:
+
+```python
+agent = Agent(llm=llm, reasoning=[
+    ChainOfThought(),     # 1. Think step by step
+    SelfReflection(),     # 2. Self-critique output
+    Verification(),       # 3. Double-check final
+])
+```
+
+### Custom Strategy / 自定义策略
+
+Subclass `ReasoningStrategy` and override the hooks you need:
+
+```python
+from chainforge.reasoning import ReasoningStrategy
+
+class FactCheckStrategy(ReasoningStrategy):
+    async def after_llm(self, response, messages, context):
+        if not response.content:
+            return response, messages, context
+        messages.append(Message.system(
+            "Fact-check the above response. List any inaccuracies."
+        ))
+        response.content = None
+        return response, messages, context
+
+agent = Agent(llm=llm, reasoning=[FactCheckStrategy()])
+```
+
+### Why Strategies, Not Patterns? / 策略 vs 模式
+
+| Aspect | Agent Patterns (agents/) | Reasoning Strategies (reasoning/) |
+|--------|------------------------|----------------------------------|
+| Approach | Pre-built Agent subclasses | Composable hooks on any Agent |
+| Flexibility | Fixed behavior, choose one | Mix and match, stack multiple |
+| Reuse | Low, self-contained | High, small and focused |
+| Integration | Agent is replaced | Agent is enhanced |
+
+In short: **patterns are recipes, strategies are ingredients.**
+
 ## Agent Linking / 代理链接
 
 ChainForge provides three mechanisms for connecting agents: **AgentTool** (agent as callable), **AgentChain** (sequential composition), and **AgentHub** (registry + discovery).

@@ -492,6 +492,119 @@ ChainForge 内置 10 种 Agent 模式，覆盖不同场景：
 
 ---
 
+
+
+## 🧠 推理策略
+
+推理策略是 ChainForge 的**框架级抽象**，让你可以在任何 Agent 的执行循环中注入结构化思维模式，而无需修改 Agent 本身。
+
+与 `chainforge/agents/` 中预置的 Agent 模式（ReAct、ChainOfThought 等）不同，推理策略是**可组合的钩子**，可以在任何 Agent 上混搭使用。
+
+### 架构
+
+每个策略实现一个或多个钩子，在 Agent 循环的不同阶段被调用：
+
+| 钩子 | 调用时机 | 返回值 | 用途 |
+|------|---------|--------|------|
+| `before_llm` | 每次 LLM 调用前 | (messages, context) | 注入指令、添加上下文 |
+| `after_llm` | 每次 LLM 响应后 | (response, messages, context) | 自我审视、验证输出 |
+| `on_tool_result` | 工具执行后 | (result, messages, context) | 验证工具结果 |
+| `should_stop` | 每次迭代结束 | bool | 基于质量提前停止 |
+
+### 内置策略
+
+#### ChainOfThought — 逐步推理
+
+在每次 LLM 调用前注入"逐步思考"指令。
+
+```python
+from chainforge.reasoning import ChainOfThought
+
+agent = Agent(llm=llm, reasoning=[ChainOfThought()])
+# LLM 在回答前会被提示逐步推理
+```
+
+支持自定义提示词：
+```python
+cot = ChainOfThought(prompt="仔细思考后再回答。")
+```
+
+#### ReasoningSteps — 显式子步骤规划
+
+将用户请求分解为编号步骤再执行。
+
+```python
+from chainforge.reasoning import ReasoningSteps
+
+agent = Agent(llm=llm, reasoning=[ReasoningSteps(max_steps=5)])
+# 首次迭代要求 LLM 规划步骤，逐步骤执行，达到上限后停止
+```
+
+#### SelfReflection — 自我审视与改进
+
+生成回答后，让 LLM 审视自己的输出并改进。
+
+```python
+from chainforge.reasoning import SelfReflection
+
+agent = Agent(llm=llm, reasoning=[SelfReflection()])
+# LLM 响应 -> 反思提示 -> LLM 修订 -> 最终答案
+```
+
+#### Verification — 双重验证
+
+在最终确认前，让 LLM 验证其答案的准确性、逻辑一致性。
+
+```python
+from chainforge.reasoning import Verification
+
+agent = Agent(llm=llm, reasoning=[Verification()])
+# LLM 响应 -> 验证提示 -> LLM 纠正 -> 最终答案
+```
+
+### 组合使用
+
+策略可以自然组合，按顺序在每个钩子处执行：
+
+```python
+agent = Agent(llm=llm, reasoning=[
+    ChainOfThought(),     # 1. 逐步思考
+    SelfReflection(),     # 2. 自我审视
+    Verification(),       # 3. 双重验证
+])
+```
+
+### 自定义策略
+
+继承 `ReasoningStrategy` 并覆写需要的钩子：
+
+```python
+from chainforge.reasoning import ReasoningStrategy
+
+class FactCheckStrategy(ReasoningStrategy):
+    async def after_llm(self, response, messages, context):
+        if not response.content:
+            return response, messages, context
+        messages.append(Message.system(
+            "事实核查上述回复，列出任何不准确之处。"
+        ))
+        response.content = None
+        return response, messages, context
+
+agent = Agent(llm=llm, reasoning=[FactCheckStrategy()])
+```
+
+### 策略 vs 模式
+
+| 维度 | Agent 模式 (agents/) | 推理策略 (reasoning/) |
+|------|---------------------|---------------------|
+| 方式 | 预置的 Agent 子类 | 在任何 Agent 上组合钩子 |
+| 灵活性 | 固定行为，选一种 | 混搭，叠加多种 |
+| 复用性 | 低，各自独立 | 高，小而专注 |
+| 集成 | 替换 Agent | 增强 Agent |
+
+简而言之：**模式是菜谱，策略是调料。**
+
 ## 🔗 代理链接
 
 三种方式连接和组合 Agent：
