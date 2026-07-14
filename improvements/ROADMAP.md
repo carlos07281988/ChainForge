@@ -192,6 +192,19 @@
 
 ---
 
+### Reasoning Strategies (chainforge/reasoning/)
+
+| State | Feature |
+|-------|---------|
+| ✅ | ReasoningStrategy protocol — composable hooks into Agent loop |
+| ✅ | ChainOfThought — step-by-step thinking injection |
+| ✅ | ReasoningSteps — explicit sub-step planning |
+| ✅ | SelfReflection — self-critique and improvement |
+| ✅ | Verification — double-check before final answer |
+| ✅ | Agent integration — before_llm/after_llm/on_tool_result/should_stop |
+
+---
+
 ## Phase 5: Ecosystem (💡 Future)
 
 ### Prompt Templates
@@ -222,6 +235,19 @@
 | 🛠 | InMemoryCache implementation |
 | 🛠 | Middleware integration |
 | 📋 | Redis / persistent cache backends |
+
+---
+
+### Reasoning Strategies (chainforge/reasoning/)
+
+| State | Feature |
+|-------|---------|
+| ✅ | ReasoningStrategy protocol — composable hooks into Agent loop |
+| ✅ | ChainOfThought — step-by-step thinking injection |
+| ✅ | ReasoningSteps — explicit sub-step planning |
+| ✅ | SelfReflection — self-critique and improvement |
+| ✅ | Verification — double-check before final answer |
+| ✅ | Agent integration — before_llm/after_llm/on_tool_result/should_stop |
 
 ---
 

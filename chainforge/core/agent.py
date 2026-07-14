@@ -50,6 +50,7 @@ class Agent(BaseModel):
     temperature: float | None = Field(default=None, description="LLM temperature")
     middlewares: list | None = Field(default=None, description="Middleware list")
     parallel_tool_calls: bool = Field(default=True, description="Execute independent tool calls in parallel")
+    reasoning: list = Field(default_factory=list, description="Reasoning strategies")
 
     def _build_system_prompt(self) -> str | None:
         """Compose the full system prompt from user prompt + skill blocks."""
@@ -167,7 +168,21 @@ class Agent(BaseModel):
             if self.temperature is not None:
                 kwargs["temperature"] = self.temperature
 
+            # ── Reasoning: before_llm hook ──────────────────────────────
+            for _strategy in self.reasoning:
+                try:
+                    messages, ctx = await _strategy.before_llm(messages, ctx)
+                except Exception:
+                    pass
+
             response = await self.llm.generate(messages, tools=tool_specs, **kwargs)
+            
+            # ── Reasoning: after_llm hook ──────────────────────────────
+            for _strategy in self.reasoning:
+                try:
+                    response, messages, ctx = await _strategy.after_llm(response, messages, ctx)
+                except Exception:
+                    pass
             saw_tool_calls = bool(response.tool_calls)
 
             log_data(logger, DEBUG, f"Iteration {iteration + 1}: tool_calls={len(response.tool_calls) if response.tool_calls else 0}",
@@ -190,11 +205,29 @@ class Agent(BaseModel):
                     yield e
                 for msg in result_msgs:
                     messages.append(msg)
+                    # ── Reasoning: on_tool_result hook ────────────────
+                    for _strategy in self.reasoning:
+                        try:
+                            msg, messages, ctx = await _strategy.on_tool_result(msg, messages, ctx)
+                        except Exception:
+                            pass
                     yield StreamEvent(type=EventType.tool_result, data={
                         "name": msg.name or "", "content": msg.content or "",
                         "is_error": msg.metadata.get("is_error", False),
                     })
                 continue
+
+            # ── Reasoning: should_stop hook ────────────────────────────
+            _should_stop = False
+            for _strategy in self.reasoning:
+                try:
+                    if await _strategy.should_stop(messages, ctx):
+                        _should_stop = True
+                        break
+                except Exception:
+                    pass
+            if _should_stop:
+                break
 
             for e in self._emit_state(tracker, AgentState.responding, iteration=iteration):
                 yield e
