@@ -75,7 +75,17 @@
 
 ## Phase 3: Advanced (📋 Planned)
 
-| Feature | Description |
+### Context Management
+
+| State | Feature |
+|-------|---------|
+| ✅ | SlidingWindowStrategy — token-aware conversation truncation |
+| ✅ | CompressorStrategy — LLM-based context summarization |
+| ✅ | TokenBudget — per-message-type token allocation |
+| ✅ | Token estimation utilities |
+| 📋 | Selective strategy — keep semantically relevant history |
+
+### | Description |
 |---------|-------------|
 | Guardrails | Input/output content safety, injection detection, tool permissions |
 | Context Management | Context caching, sliding window, compression |
