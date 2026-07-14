@@ -133,7 +133,40 @@
 | Cross-Agent Tracing | Distributed trace across A2A boundaries |
 | Agent Testing Suite | Mock LLM, simulation, regression testing |
 
-## Phase 4: Ecosystem (💡 Future)
+## Phase 4: LangChain Feature Parity (🛠 In Progress)
+
+### Prompt Templates
+
+| State | Feature |
+|-------|---------|
+| 🛠 | PromptTemplate — variable injection, from_file, composition |
+| 🛠 | ChatPromptTemplate — system/user/assistant message templates |
+| 🛠 | FewShotPromptTemplate — example-based prompting |
+| 📋 | Template registry and versioning |
+
+### RAG Pipeline
+
+| State | Feature |
+|-------|---------|
+| 🛠 | Document loaders (Text, CSV, JSON, PDF, HTML) |
+| 🛠 | Text splitters (recursive character, token-based, semantic) |
+| 🛠 | Embedding providers (OpenAI, local) |
+| 🛠 | Vector store abstraction (Chroma, FAISS, in-memory) |
+| 🛠 | Retrievers (vector similarity, multi-query, ensemble) |
+| 🛠 | RetrievalQA chain |
+
+### LLM Cache
+
+| State | Feature |
+|-------|---------|
+| 🛠 | Cache interface (get, set, clear, TTL) |
+| 🛠 | InMemoryCache implementation |
+| 🛠 | Middleware integration |
+| 📋 | Redis / persistent cache backends |
+
+---
+
+## Phase 5: Ecosystem (💡 Future)
 
 | Feature | Description |
 |---------|-------------|
