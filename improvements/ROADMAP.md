@@ -75,6 +75,16 @@
 
 ## Phase 3: Advanced (📋 Planned)
 
+### Agent Testing Suite
+
+| State | Feature |
+|-------|---------|
+| ✅ | MockLLM — predefined responses, tool call simulation |
+| ✅ | mock_agent() — create Agent + MockLLM for testing |
+| ✅ | Assertion helpers (assert_called, assert_last_prompt_contains) |
+| 📋 | Simulation environments (timeout, error scenarios) |
+| 📋 | Regression diff testing |
+
 ### Context Management
 
 | State | Feature |
