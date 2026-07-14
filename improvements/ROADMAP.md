@@ -75,6 +75,35 @@
 
 ## Phase 3: Advanced (📋 Planned)
 
+### Agent Inspector
+
+| State | Feature |
+|-------|---------|
+| ✅ | AgentInspector — collects agent execution events |
+| ✅ | REST API + SSE for querying agent state |
+| ✅ | Middleware integration for auto-recording |
+| 📋 | Dashboard UI with state visualization |
+
+### Fleet Management
+
+| State | Feature |
+|-------|---------|
+| ✅ | Worker — wraps agent for concurrent execution |
+| ✅ | WorkerPool — register, run, unregister agents |
+| ✅ | TaskQueue — priority heap scheduling |
+| 📋 | Auto-scaling worker pool |
+| 📋 | Health checks and worker recovery |
+
+### Cross-Agent Tracing
+
+| State | Feature |
+|-------|---------|
+| ✅ | TraceContext — W3C trace context implementation |
+| ✅ | inject_headers / extract_headers for A2A |
+| ✅ | Child span creation for distributed traces |
+| 📋 | Integration with A2A Router |
+| 📋 | Trace visualization in dashboard |
+
 ### Agent Testing Suite
 
 | State | Feature |
