@@ -192,6 +192,16 @@
 
 ---
 
+### Agent Callback System (chainforge/callbacks/)
+
+| State | Feature |
+|-------|---------|
+| ✅ | Callback protocol — one-way observability hooks |
+| ✅ | LoggingCallback — structured event logging |
+| ✅ | MetricsCallback — timing, counters, tool tracking |
+| ✅ | Agent integration — 7 hook points in run loop |
+| ✅ | Error resilience — exceptions never break agent |
+
 ### Reasoning Strategies (chainforge/reasoning/)
 
 | State | Feature |

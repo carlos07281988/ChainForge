@@ -51,6 +51,7 @@ class Agent(BaseModel):
     middlewares: list | None = Field(default=None, description="Middleware list")
     parallel_tool_calls: bool = Field(default=True, description="Execute independent tool calls in parallel")
     reasoning: list = Field(default_factory=list, description="Reasoning strategies")
+    callbacks: list = Field(default_factory=list, description="Lifecycle callbacks")
 
     def _build_system_prompt(self) -> str | None:
         """Compose the full system prompt from user prompt + skill blocks."""
@@ -168,6 +169,13 @@ class Agent(BaseModel):
             if self.temperature is not None:
                 kwargs["temperature"] = self.temperature
 
+            # ── Callbacks: on_llm_start ──────────────────────────────
+            for _cb in self.callbacks:
+                try:
+                    await _cb.on_llm_start(messages, ctx)
+                except Exception:
+                    pass
+
             # ── Reasoning: before_llm hook ──────────────────────────────
             for _strategy in self.reasoning:
                 try:
@@ -200,11 +208,34 @@ class Agent(BaseModel):
                         "args": tc_data["function"].get("arguments", {}),
                         "id": tc_data.get("id", ""),
                     })
+                # ── Callbacks: on_tool_start ────────────────────────────
+                for tc_data in response.tool_calls:
+                    for _cb in self.callbacks:
+                        try:
+                            await _cb.on_tool_start(
+                                tc_data.get("function", {}).get("name", "unknown"),
+                                tc_data.get("function", {}).get("arguments", {}),
+                                ctx,
+                            )
+                        except Exception:
+                            pass
+
                 result_msgs = await self._execute_tool_calls(response.tool_calls)
                 for e in self._emit_state(tracker, AgentState.observing, iteration=iteration):
                     yield e
                 for msg in result_msgs:
                     messages.append(msg)
+                    # ── Callbacks: on_tool_end ─────────────────────────
+                    for _cb in self.callbacks:
+                        try:
+                            await _cb.on_tool_end(
+                                msg.name or "",
+                                msg.content or "",
+                                ctx,
+                            )
+                        except Exception:
+                            pass
+
                     # ── Reasoning: on_tool_result hook ────────────────
                     for _strategy in self.reasoning:
                         try:
