@@ -1624,6 +1624,161 @@ sequenceDiagram
 ```
 
 
+
+
+## Code Sandbox / 代码沙箱
+
+ChainForge provides isolated code execution environments for agents — safe Python and shell execution without host system exposure.
+
+### Usage / 使用
+
+```python
+from chainforge.sandbox import SubprocessSandbox
+
+sandbox = SubprocessSandbox(timeout=30)
+result = await sandbox.execute("print('hello world')", "python")
+print(result.stdout)   # hello world
+print(result.exit_code)  # 0
+
+# Or via built-in agent tools
+from chainforge.tools.builtin import execute_python, execute_bash
+# Agent automatically picks them up:
+# agent = Agent(llm=llm, tools=[execute_python, execute_bash])
+```
+
+### Sandbox Implementations / 实现
+
+| Implementation | Isolation | When to Use |
+|---|---|---|
+| `SubprocessSandbox` | Process-level | Development, testing |
+| `DockerSandbox` | Container-level | Production *(planned)* |
+
+### Multi-modal File Loading / 多模态文件加载
+
+```python
+from chainforge.core.files import FileLoader, load_file, load_image
+
+loader = FileLoader()
+fc = loader.load("chart.png")
+print(fc.is_image)  # True
+print(fc.mime_type)  # image/png
+print(load_image("photo.jpg"))  # data:image/jpeg;base64,...
+
+csv_data = loader.load_csv("data.csv")  # list of dicts
+json_data = loader.load_json("config.json")
+```
+
+
+## Memory 2.0 (Vector Memory) / 向量记忆
+
+Beyond sliding-window buffer memory, ChainForge now supports **semantic retrieval memory** with vector embeddings.
+
+### Three-Level Memory / 三层记忆
+
+| Level | Type | Purpose |
+|-------|------|---------|
+| **Working** | `BufferMemory` | Recent context (full fidelity, sliding window) |
+| **Episodic** | `VectorMemory` | Past sessions (semantic similarity retrieval) |
+| **Semantic** | `VectorMemory` | Facts, preferences, knowledge |
+
+### Usage / 使用
+
+```python
+from chainforge.memory import VectorMemory, MemoryManager, IdentityEmbedding
+
+# Standalone vector memory
+mem = VectorMemory()
+await mem.add("User prefers dark mode", {"type": "preference"})
+await mem.add("User knows Python 3.12", {"type": "knowledge"})
+results = await mem.query("What language?")
+for r in results:
+    print(r["text"], r["score"])
+
+# Memory manager (all three levels)
+from chainforge.memory.buffer import BufferMemory
+manager = MemoryManager(
+    working=BufferMemory(max_messages=20),
+    episodic=VectorMemory(),
+    semantic=VectorMemory(),
+)
+await manager.store("User likes async Python", {"role": "user"})
+context = await manager.get_context("What does the user like?")
+```
+
+### Embedding Providers / 嵌入支持
+
+| Provider | Type | API Key Needed |
+|----------|------|----------------|
+| `IdentityEmbedding` | Hash-based (dev/test) | No |
+| OpenAI | `text-embedding-3-small` | Yes *(planned)* |
+
+
+## Agent Config Declaration / 声明式 Agent 配置
+
+Define agents declaratively with YAML or JSON — no Python code required.
+
+### Example / 示例
+
+```yaml
+# agent.yaml
+name: research-assistant
+llm:
+  provider: openai
+  model: gpt-4o
+  temperature: 0.3
+tools:
+  - name: calculate
+    type: builtin
+  - name: execute_python
+    type: builtin
+memory:
+  type: vector
+system_prompt: "You are a research assistant."
+```
+
+```bash
+# Validate and show config
+chainforge config agent.yaml --show
+
+# Start server with config
+chainforge serve --config agent.yaml --port 8000
+```
+
+### Usage / 使用
+
+```python
+from chainforge.config.loader import load_agent_config
+from chainforge.config.builder import build_agent_from_config
+
+# Load from file (supports ${ENV_VAR} injection)
+config = load_agent_config("agent.yaml")
+agent = build_agent_from_config(config)
+
+# Or from dict
+config = load_agent_config_from_dict({
+    "llm": {"provider": "openai", "model": "gpt-4o"},
+    "tools": [{"name": "calculate", "type": "builtin"}],
+})
+agent = build_agent_from_config(config)
+
+async for event in await agent.run("What is 2 + 2?"):
+    if event.type == "text":
+        print(event.content, end="")
+```
+
+### Config Schema / 配置结构
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | string | `"agent"` | Agent name |
+| `llm.provider` | string | required | `openai`, `anthropic`, `google`, `azure`, `bedrock` |
+| `llm.model` | string | `"gpt-4o"` | Model name |
+| `tools[].name` | string | — | Tool name |
+| `tools[].type` | string | `"builtin"` | `builtin`, `mcp`, `skill`, `python` |
+| `memory.type` | string | — | `buffer`, `summary`, `vector` |
+| `system_prompt` | string | — | System instructions |
+| `max_iterations` | int | `10` | Max tool-use iterations |
+
 ## License / 许可
 
 Apache 2.0

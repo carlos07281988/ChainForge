@@ -18,6 +18,9 @@ from chainforge.core.human_in_loop import HumanInTheLoop, ApprovalRequest, Appro
 from chainforge.core.state import AgentState, StateTracker, StateTransition
 from chainforge.logging import configure_logging, get_logger, log_data
 from chainforge import a2a as a2a
+from chainforge import sandbox as sandbox
+from chainforge import config as config
+from chainforge.core.files import FileLoader, FileContent, load_file, load_image
 
 __all__ = [
     "__version__",
@@ -33,4 +36,8 @@ __all__ = [
     "AgentState", "StateTracker", "StateTransition",
     "configure_logging", "get_logger", "log_data",
     "a2a",
+    "sandbox",
+    "config",
+    "FileLoader", "FileContent",
+    "load_file", "load_image",
 ]

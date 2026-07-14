@@ -830,6 +830,130 @@ mount_a2a(existing_app, agents={"assistant": agent})
 
 ---
 
+
+
+## 🖥 代码沙箱
+
+ChainForge 提供安全的代码执行沙箱，让 Agent 可以运行 Python 和 Shell 命令而不影响宿主机。
+
+### 使用
+
+```python
+from chainforge.sandbox import SubprocessSandbox
+
+sandbox = SubprocessSandbox(timeout=30)
+result = await sandbox.execute("print('hello world')", "python")
+print(result.stdout)   # hello world
+print(result.exit_code)  # 0
+
+# 或通过内置工具
+from chainforge.tools.builtin import execute_python, execute_bash
+```
+
+### 沙箱实现
+
+| 实现 | 隔离级别 | 适用场景 |
+|------|---------|---------|
+| `SubprocessSandbox` | 进程级 | 开发测试 |
+| `DockerSandbox` | 容器级 | 生产环境 *(计划中)* |
+
+### 多模态文件加载
+
+```python
+from chainforge.core.files import FileLoader, load_file, load_image
+
+loader = FileLoader()
+fc = loader.load("chart.png")
+print(fc.is_image)  # True
+
+csv_data = loader.load_csv("data.csv")  # list[dict]
+json_data = loader.load_json("config.json")
+```
+
+
+## 🧠 向量记忆
+
+除了滑动窗口缓冲记忆，ChainForge 现在支持基于向量嵌入的语义检索记忆。
+
+### 三层记忆架构
+
+| 层级 | 类型 | 作用 |
+|------|------|------|
+| **工作记忆** | `BufferMemory` | 最近上下文，完整保真 |
+| **情景记忆** | `VectorMemory` | 历史会话，语义检索 |
+| **语义记忆** | `VectorMemory` | 知识、偏好、事实 |
+
+### 使用
+
+```python
+from chainforge.memory import VectorMemory, MemoryManager
+
+# 向量记忆
+mem = VectorMemory()
+await mem.add("用户喜欢 Python")
+results = await mem.query("用户用什么语言？")
+# results[0]["text"]  → "用户喜欢 Python"
+
+# 记忆管理器
+from chainforge.memory.buffer import BufferMemory
+manager = MemoryManager(
+    working=BufferMemory(max_messages=20),
+    episodic=VectorMemory(),
+)
+await manager.store("用户喜欢异步编程", {"role": "user"})
+context = await manager.get_context("用户的偏好？")
+```
+
+
+## 📋 声明式 Agent 配置
+
+用 YAML 或 JSON 声明式定义 Agent，无需写 Python 代码。
+
+### 示例
+
+```yaml
+# agent.yaml
+name: 研究助手
+llm:
+  provider: openai
+  model: gpt-4o
+  temperature: 0.3
+tools:
+  - name: calculate
+    type: builtin
+memory:
+  type: vector
+system_prompt: "你是一个研究助手。"
+```
+
+```bash
+# 验证配置
+chainforge config agent.yaml --show
+
+# 用配置启动服务
+chainforge serve --config agent.yaml --port 8000
+```
+
+### 使用
+
+```python
+from chainforge.config.loader import load_agent_config
+from chainforge.config.builder import build_agent_from_config
+
+config = load_agent_config("agent.yaml")
+agent = build_agent_from_config(config)
+```
+
+### 配置结构
+
+| 字段 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `llm.provider` | string | 必填 | `openai`, `anthropic`, `google` 等 |
+| `llm.model` | string | `"gpt-4o"` | 模型名 |
+| `tools[].type` | string | `"builtin"` | 工具来源 |
+| `memory.type` | string | — | `buffer`, `summary`, `vector` |
+| `system_prompt` | string | — | 系统提示词 |
+
 ## 📄 许可
 
 Apache 2.0
