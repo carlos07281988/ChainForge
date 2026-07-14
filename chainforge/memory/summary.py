@@ -35,8 +35,17 @@ class SummaryMemory(BaseModel):
         for m in messages:
             self.recent_messages.append(m)
 
-        # Trim recent buffer
-        if len(self.recent_messages) > self.max_recent:
+        # Auto-summarize when buffer is more than 2x capacity
+        if len(self.recent_messages) > self.max_recent * 2:
+            old = self.recent_messages[:-self.max_recent]
+            self.recent_messages = self.recent_messages[-self.max_recent:]
+            old_text = "\n".join(
+                f"{m.role}: {m.content}" for m in old if m.content
+            )
+            if old_text:
+                prefix = f"[{len(old)} older messages auto-summarized]"
+                self.summary = f"{self.summary}\n{prefix}" if self.summary else prefix
+        elif len(self.recent_messages) > self.max_recent:
             self.recent_messages = self.recent_messages[-self.max_recent :]
 
     async def compress(self, llm: "LLM") -> str:

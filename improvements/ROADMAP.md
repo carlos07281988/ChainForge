@@ -192,6 +192,22 @@
 
 ---
 
+### Conversation Serialization (chainforge/core/conversation.py)
+
+| State | Feature |
+|-------|---------|
+| ✅ | Conversation class — manage message history |
+| ✅ | JSON save/load with metadata |
+| ✅ | Integration with agent.run() |
+| ✅ | Auto-capture assistant responses |
+
+### Bug Fixes
+
+| State | Fix |
+|-------|-----|
+| ✅ | SummaryMemory auto-compress without LLM |
+| 📋 | Bedrock streaming tool call accumulation (PLAN.md #2) |
+
 ### Agent Callback System (chainforge/callbacks/)
 
 | State | Feature |
