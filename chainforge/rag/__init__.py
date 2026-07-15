@@ -14,9 +14,9 @@
 """RAG Pipeline — document loading, splitting, embedding, retrieval, QA."""
 
 from chainforge.rag.documents import Document
-from chainforge.rag.loaders import TextLoader, CSVLoader, JSONLoader, DirectoryLoader, HTMLLoader
+from chainforge.rag.loaders import TextLoader, CSVLoader, JSONLoader, DirectoryLoader, HTMLLoader, PDFLoader, NotionLoader, GitHubLoader
 from chainforge.rag.splitters import RecursiveCharacterTextSplitter, TokenTextSplitter
-from chainforge.rag.vectorstores import InMemoryVectorStore, ChromaVectorStore, FAISSVectorStore
+from chainforge.rag.vectorstores import InMemoryVectorStore, ChromaVectorStore, FAISSVectorStore, PineconeVectorStore, QdrantVectorStore
 from chainforge.rag.retrievers import VectorStoreRetriever, MultiQueryRetriever
 from chainforge.rag.chains import RetrievalQA, SelfRAG, CorrectiveRAG
 
@@ -26,5 +26,7 @@ __all__ = [
     "RecursiveCharacterTextSplitter", "TokenTextSplitter",
     "InMemoryVectorStore", "ChromaVectorStore", "FAISSVectorStore",
     "VectorStoreRetriever", "MultiQueryRetriever",
+    "PineconeVectorStore", "QdrantVectorStore",
+    "PDFLoader", "NotionLoader", "GitHubLoader",
     "RetrievalQA", "SelfRAG", "CorrectiveRAG",
 ]

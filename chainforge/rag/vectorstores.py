@@ -232,3 +232,153 @@ class FAISSVectorStore:
     @property
     def count(self) -> int:
         return len(self._documents)
+
+
+# ── Pinecone Vector Store ────────────────────────────────────────────────
+
+
+class PineconeVectorStore:
+    """Pinecone vector store backend.
+
+    Requires the ``pinecone`` package and PINECONE_API_KEY environment variable.
+
+    Args:
+        index_name: Pinecone index name.
+        embedding_fn: Embedding function for document/query encoding.
+        namespace: Optional namespace for partitioning.
+    """
+
+    def __init__(
+        self,
+        index_name: str = "chainforge",
+        embedding_fn: EmbeddingFunction | None = None,
+        namespace: str | None = None,
+    ):
+        self.index_name = index_name
+        self._embedding_fn = embedding_fn or IdentityEmbedding(dim=384)
+        self.namespace = namespace
+        self._index = None
+
+    async def _ensure_index(self):
+        if self._index is not None:
+            return
+        import os
+        import pinecone
+        pc = pinecone.Pinecone(api_key=os.environ.get("PINECONE_API_KEY", ""))
+        if self.index_name not in pc.list_indexes().names():
+            pc.create_index(name=self.index_name, dimension=self._embedding_fn.dim, metric="cosine")
+        self._index = pc.Index(self.index_name)
+
+    async def add_documents(self, documents: list[Document], embeddings: list[list[float]] | None = None) -> list[str]:
+        await self._ensure_index()
+        texts = [d.page_content for d in documents]
+        if embeddings is None:
+            embeddings = await self._embedding_fn.embed(texts)
+        ids = [str(uuid.uuid4()) for _ in documents]
+        vectors = []
+        for i, doc in enumerate(documents):
+            vectors.append({
+                "id": ids[i],
+                "values": embeddings[i],
+                "metadata": {"text": doc.page_content[:2000], **doc.metadata},
+            })
+        self._index.upsert(vectors=vectors, namespace=self.namespace or "")
+        return ids
+
+    async def similarity_search(self, query: str, k: int = 4) -> list[Document]:
+        await self._ensure_index()
+        query_emb = (await self._embedding_fn.embed([query]))[0]
+        return await self.similarity_search_by_vector(query_emb, k=k)
+
+    async def similarity_search_by_vector(self, embedding: list[float], k: int = 4) -> list[Document]:
+        await self._ensure_index()
+        result = self._index.query(vector=embedding, top_k=k, include_metadata=True, namespace=self.namespace or "")
+        docs = []
+        for match in result.matches:
+            text = match.metadata.pop("text", "") if match.metadata else ""
+            meta = dict(match.metadata) if match.metadata else {}
+            meta["score"] = match.score or 0.0
+            docs.append(Document(page_content=text, metadata=meta))
+        return docs
+
+
+# ── Qdrant Vector Store ──────────────────────────────────────────────────
+
+
+class QdrantVectorStore:
+    """Qdrant vector store backend.
+
+    Requires the ``qdrant-client`` package.
+
+    Args:
+        collection_name: Qdrant collection name.
+        embedding_fn: Embedding function for document/query encoding.
+        url: Qdrant server URL (default: http://localhost:6333).
+        api_key: Qdrant API key.
+    """
+
+    def __init__(
+        self,
+        collection_name: str = "chainforge",
+        embedding_fn: EmbeddingFunction | None = None,
+        url: str = "http://localhost:6333",
+        api_key: str | None = None,
+    ):
+        self.collection_name = collection_name
+        self._embedding_fn = embedding_fn or IdentityEmbedding(dim=384)
+        self.url = url
+        self.api_key = api_key
+        self._client = None
+
+    async def _ensure_collection(self):
+        from qdrant_client import QdrantClient
+        from qdrant_client.http import models
+        if self._client is not None:
+            return
+        self._client = QdrantClient(url=self.url, api_key=self.api_key)
+        collections = self._client.get_collections().collections
+        exists = any(c.name == self.collection_name for c in collections)
+        if not exists:
+            self._client.create_collection(
+                collection_name=self.collection_name,
+                vectors_config=models.VectorParams(size=self._embedding_fn.dim, distance=models.Distance.COSINE),
+            )
+
+    async def add_documents(self, documents: list[Document], embeddings: list[list[float]] | None = None) -> list[str]:
+        from qdrant_client.http import models
+        await self._ensure_collection()
+        texts = [d.page_content for d in documents]
+        if embeddings is None:
+            embeddings = await self._embedding_fn.embed(texts)
+        ids = [str(uuid.uuid4()) for _ in documents]
+        points = []
+        for i, doc in enumerate(documents):
+            points.append(models.PointStruct(
+                id=ids[i],
+                vector=embeddings[i],
+                payload={"text": doc.page_content, **doc.metadata},
+            ))
+        self._client.upsert(collection_name=self.collection_name, points=points)
+        return ids
+
+    async def similarity_search(self, query: str, k: int = 4) -> list[Document]:
+        await self._ensure_collection()
+        query_emb = (await self._embedding_fn.embed([query]))[0]
+        return await self.similarity_search_by_vector(query_emb, k=k)
+
+    async def similarity_search_by_vector(self, embedding: list[float], k: int = 4) -> list[Document]:
+        from qdrant_client.http import models
+        await self._ensure_collection()
+        result = self._client.search(
+            collection_name=self.collection_name,
+            query_vector=embedding,
+            limit=k,
+        )
+        docs = []
+        for scored_point in result:
+            payload = dict(scored_point.payload) if scored_point.payload else {}
+            text = payload.pop("text", "")
+            meta = payload
+            meta["score"] = scored_point.score or 0.0
+            docs.append(Document(page_content=text, metadata=meta))
+        return docs

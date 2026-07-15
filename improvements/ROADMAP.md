@@ -420,24 +420,24 @@
 | State | Feature |
 |-------|---------|
 | ✅ | SubprocessSandbox — process-level isolation |
-| 📋 | DockerSandbox — container-level isolation |
+| ✅ | DockerSandbox — container-level isolation |
 | 💡 | E2B sandbox integration |
 
 ### State Streaming + Debugger
 
 | State | Feature |
 |-------|---------|
-| 📋 | Full state snapshot streaming (complete state dict per step) |
-| 📋 | Step debugger — pause, inspect, resume agent execution |
+| ✅ | Full state snapshot streaming (complete state dict per step) |
+| ✅ | Step debugger — pause, inspect, resume agent execution |
 | 💡 | LangGraph Studio-style visual debug UI |
 
 ### Benchmark Integration
 
 | State | Feature |
 |-------|---------|
-| 📋 | BFCL (Berkeley Function Calling Leaderboard) test cases |
-| 📋 | GAIA / ToolBench benchmark suites |
-| 📋 | Automated benchmark runner |
+| ✅ | BFCL (Berkeley Function Calling Leaderboard) test cases |
+| ✅ | GAIA / ToolBench benchmark suites |
+| ✅ | Automated benchmark runner |
 
 ### Vector Store Expansion
 
@@ -479,4 +479,64 @@
 3. **BFCL benchmark** — 可信的工具调用评估
 4. **Vector store breadth** — Pinecone/Milvus/Qdrant 适配
 5. **Document loader breadth** — 扩充 RAG 数据源
+
+
+## Phase 9: Frontier Agent Capabilities & Ecosystem Breadth (📋 Planned)
+
+### Frontier: Constrained Decoding
+
+| State | Feature |
+|-------|---------|
+| 📋 | Outlines / lm-format-enforcer integration — token-level constrained structured output |
+| 📋 | JSON mode fallback — automatic retry with grammar constraints |
+
+### Frontier: MemGPT-style Auto Memory
+
+| State | Feature |
+|-------|---------|
+| 📋 | Automatic memory archival — move old context to long-term storage |
+| 📋 | Retrieval-triggered recall — auto-query memory when relevant |
+| 📋 | Conflict resolution — handle contradictory stored facts |
+| 📋 | Forgetting curve — deprioritize old/unused memories |
+
+### Frontier: Runtime Tool Discovery
+
+| State | Feature |
+|-------|---------|
+| 📋 | Dynamic tool registry — agents discover tools at runtime |
+| 📋 | Tool capability query — agents inspect tool capabilities before calling |
+| 📋 | Auto-connect MCP servers — discover + register tools without restart |
+
+### Ecosystem: Vector Store Breadth
+
+| State | Feature |
+|-------|---------|
+| ✅ | Chroma, FAISS, SQLite, InMemory vector stores |
+| 📋 | PineconeVectorStore — Pinecone cloud vector DB |
+| 📋 | QdrantVectorStore — Qdrant vector search engine |
+
+### Ecosystem: Document Loader Breadth
+
+| State | Feature |
+|-------|---------|
+| ✅ | Text, CSV, JSON, HTML, Directory loaders |
+| 📋 | PDFLoader — PDF parsing with text extraction |
+| 📋 | NotionLoader — Notion pages and databases |
+| 📋 | GitHubLoader — GitHub repos, issues, PRs |
+
+### Ecosystem: Visual Debugger
+
+| State | Feature |
+|-------|---------|
+| ✅ | StepDebugger — CLI-based pause/inspect/step |
+| 💡 | Web debugger — LangGraph Studio-style visual step-through in Dashboard |
+
+### Priority for Phase 9
+
+1. **Constrained Decoding** — 结构化输出可靠性从 ~90% 提升至 99%+
+2. **MemGPT-style Auto Memory** — 长对话记忆保真度的根本解决方案
+3. **Runtime Tool Discovery** — 动态工具发现的架构级能力
+4. **Vector Store Breadth** — Pinecone + Qdrant 覆盖主流生产场景
+5. **Document Loader Breadth** — PDF + Notion + GitHub 扩充 RAG 数据源
+6. **Visual Debugger** — Web UI 调试界面
 

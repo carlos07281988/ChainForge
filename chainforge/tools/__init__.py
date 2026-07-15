@@ -21,6 +21,9 @@ from chainforge.tools.toolkits import ToolKit, calculator_toolkit, file_toolkit,
 
 __all__.extend(["ToolKit", "calculator_toolkit", "file_toolkit", "web_toolkit"])
 
+from chainforge.tools.discovery import RuntimeToolRegistry, ToolRegistration
 from chainforge.tools.openapi import OpenAPIToolkit
 
-__all__.extend(["OpenAPIToolkit"])
+__all__.extend(["RuntimeToolRegistry",
+    "ToolRegistration",
+    "OpenAPIToolkit"])
