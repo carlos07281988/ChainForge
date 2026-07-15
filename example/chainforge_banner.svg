@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e1a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#111827;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a0e1a;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Forge glow gradient -->
+    <radialGradient id="forgeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.15" />
+      <stop offset="50%" style="stop-color:#d97706;stop-opacity:0.08" />
+      <stop offset="100%" style="stop-color:#000000;stop-opacity:0" />
+    </radialGradient>
+
+    <!-- Chain link gradient -->
+    <linearGradient id="chainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Text gradient -->
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Anvil gradient -->
+    <linearGradient id="anvilGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#475569" />
+      <stop offset="100%" style="stop-color:#1e293b" />
+    </linearGradient>
+
+    <!-- Glow filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Subtle glow -->
+    <filter id="subtleGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="15" />
+    </filter>
+
+    <!-- Grid pattern for tech feel -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="400" fill="url(#bg)" />
+  <rect width="1200" height="400" fill="url(#grid)" />
+
+  <!-- Forge glow center -->
+  <ellipse cx="430" cy="200" rx="350" ry="180" fill="url(#forgeGlow)" />
+
+  <!-- Bottom accent line -->
+  <line x1="0" y1="398" x2="1200" y2="398" stroke="url(#chainGrad)" stroke-width="2" opacity="0.6"/>
+
+  <!-- ===== ANVIL ===== -->
+  <g transform="translate(140, 155)">
+    <!-- Anvil base -->
+    <path d="M 0 80 L 10 90 L 90 90 L 100 80 Z" fill="url(#anvilGrad)" stroke="#64748b" stroke-width="1"/>
+    <!-- Anvil body -->
+    <path d="M 15 30 L 15 80 L 85 80 L 85 30 Z" fill="url(#anvilGrad)" stroke="#64748b" stroke-width="1"/>
+    <!-- Anvil top -->
+    <path d="M 5 20 L 15 30 L 85 30 L 95 20 Z" fill="#334155" stroke="#64748b" stroke-width="1"/>
+    <!-- Anvil horn -->
+    <path d="M 5 20 Q -20 10 -30 -10 Q -20 -5 -5 5 L 15 20 Z" fill="#475569" stroke="#64748b" stroke-width="1"/>
+    <!-- Metal glowing on anvil -->
+    <ellipse cx="50" cy="25" rx="20" ry="5" fill="#f97316" opacity="0.6">
+      <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite"/>
+    </ellipse>
+  </g>
+
+  <!-- ===== HAMMER ===== -->
+  <g transform="translate(100, 120) rotate(-15)">
+    <!-- Handle -->
+    <rect x="23" y="10" width="6" height="55" rx="2" fill="#78350f"/>
+    <rect x="24" y="10" width="2" height="55" fill="#92400e"/>
+    <!-- Head -->
+    <path d="M 6 10 L 46 10 L 52 0 L 52 35 L 46 25 L 6 25 Z" fill="#334155" stroke="#475569" stroke-width="1"/>
+    <path d="M 8 12 L 44 12 L 48 4 L 48 22 L 44 23 L 8 23 Z" fill="#475569"/>
+    <!-- Hammer face glow -->
+    <rect x="6" y="12" width="4" height="11" rx="1" fill="#f97316" opacity="0.4"/>
+  </g>
+
+  <!-- ===== SPARKS ===== -->
+  <g filter="url(#glow)">
+    <!-- Spark 1 -->
+    <circle cx="310" cy="180" r="2" fill="#fbbf24" opacity="0">
+      <animate attributeName="opacity" values="0;1;0" dur="1.5s" begin="0s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="310;340;370" dur="1.5s" begin="0s" repeatCount="indefinite"/>
+      <animate attributeName="cy" values="180;160;140" dur="1.5s" begin="0s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Spark 2 -->
+    <circle cx="320" cy="190" r="1.5" fill="#fbbf24" opacity="0">
+      <animate attributeName="opacity" values="0;1;0" dur="1.2s" begin="0.3s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="320;350;380" dur="1.2s" begin="0.3s" repeatCount="indefinite"/>
+      <animate attributeName="cy" values="190;170;130" dur="1.2s" begin="0.3s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Spark 3 -->
+    <circle cx="315" cy="175" r="1" fill="#f97316" opacity="0">
+      <animate attributeName="opacity" values="0;1;0" dur="1.8s" begin="0.6s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="315;355;395" dur="1.8s" begin="0.6s" repeatCount="indefinite"/>
+      <animate attributeName="cy" values="175;150;110" dur="1.8s" begin="0.6s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Spark 4 -->
+    <circle cx="305" cy="185" r="1.8" fill="#f59e0b" opacity="0">
+      <animate attributeName="opacity" values="0;1;0" dur="1.4s" begin="0.9s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="305;330;360" dur="1.4s" begin="0.9s" repeatCount="indefinite"/>
+      <animate attributeName="cy" values="185;155;125" dur="1.4s" begin="0.9s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- ===== CHAIN LINKS ===== -->
+  <g stroke="url(#chainGrad)" stroke-width="3" fill="none" opacity="0.7">
+    <!-- Chain line 1 -->
+    <ellipse cx="500" cy="165" rx="18" ry="30"/>
+    <ellipse cx="540" cy="165" rx="18" ry="30" transform="rotate(-20, 540, 165)"/>
+    <ellipse cx="585" cy="175" rx="18" ry="30" transform="rotate(-40, 585, 175)"/>
+    <ellipse cx="630" cy="195" rx="18" ry="30" transform="rotate(-20, 630, 195)"/>
+    <ellipse cx="670" cy="205" rx="18" ry="30"/>
+    <ellipse cx="710" cy="205" rx="18" ry="30" transform="rotate(20, 710, 205)"/>
+    <ellipse cx="750" cy="195" rx="18" ry="30" transform="rotate(40, 750, 195)"/>
+    <ellipse cx="790" cy="175" rx="18" ry="30" transform="rotate(20, 790, 175)"/>
+    <ellipse cx="830" cy="165" rx="18" ry="30"/>
+
+    <!-- Chain line 2 -->
+    <ellipse cx="520" cy="235" rx="18" ry="30"/>
+    <ellipse cx="560" cy="235" rx="18" ry="30" transform="rotate(-20, 560, 235)"/>
+    <ellipse cx="605" cy="245" rx="18" ry="30" transform="rotate(-40, 605, 245)"/>
+    <ellipse cx="650" cy="265" rx="18" ry="30" transform="rotate(-20, 650, 265)"/>
+    <ellipse cx="690" cy="275" rx="18" ry="30"/>
+    <ellipse cx="730" cy="275" rx="18" ry="30" transform="rotate(20, 730, 275)"/>
+    <ellipse cx="770" cy="265" rx="18" ry="30" transform="rotate(40, 770, 265)"/>
+    <ellipse cx="810" cy="245" rx="18" ry="30" transform="rotate(20, 810, 245)"/>
+    <ellipse cx="850" cy="235" rx="18" ry="30"/>
+  </g>
+
+  <!-- ===== CHAINFORGE TEXT ===== -->
+  <g filter="url(#glow)">
+    <!-- "Chain" in warm gold -->
+    <text x="440" y="150" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="72" font-weight="900" fill="url(#textGrad)" letter-spacing="4">
+      Chain
+    </text>
+    <!-- "Forge" in orange -->
+    <text x="440" y="226" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="72" font-weight="900" fill="#f97316" letter-spacing="4">
+      Forge
+    </text>
+  </g>
+
+  <!-- Tagline -->
+  <text x="440" y="270" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="18" fill="#94a3b8" letter-spacing="6" opacity="0.8">
+    CRAFT YOUR LLM CHAINS
+  </text>
+  <text x="440" y="295" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" fill="#64748b" letter-spacing="3" opacity="0.6">
+    PROTOCOL-BASED · STREAMING-FIRST · ASYNC-NATIVE
+  </text>
+
+  <!-- ===== RIGHT SIDE DECORATION ===== -->
+  <!-- Vertical code-like lines -->
+  <g opacity="0.08" stroke="#f59e0b" stroke-width="1">
+    <line x1="1020" y1="60" x2="1020" y2="130"/>
+    <line x1="1040" y1="60" x2="1040" y2="150"/>
+    <line x1="1060" y1="60" x2="1060" y2="140"/>
+    <line x1="1080" y1="60" x2="1080" y2="120"/>
+    <line x1="1020" y1="280" x2="1020" y2="350"/>
+    <line x1="1040" y1="260" x2="1040" y2="340"/>
+    <line x1="1060" y1="270" x2="1060" y2="350"/>
+    <line x1="1080" y1="260" x2="1080" y2="330"/>
+  </g>
+
+  <!-- Small decorative dots -->
+  <g fill="#f59e0b" opacity="0.15">
+    <circle cx="1020" cy="60" r="2"/>
+    <circle cx="1040" cy="60" r="2"/>
+    <circle cx="1060" cy="60" r="2"/>
+    <circle cx="1080" cy="60" r="2"/>
+    <circle cx="1020" cy="350" r="2"/>
+    <circle cx="1040" cy="340" r="2"/>
+    <circle cx="1060" cy="350" r="2"/>
+    <circle cx="1080" cy="330" r="2"/>
+  </g>
+
+  <!-- Bottom version/info -->
+  <text x="600" y="375" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="11" fill="#475569" text-anchor="middle" letter-spacing="2">
+    python ≥ 3.11 · pydantic + stdlib · apache 2.0
+  </text>
+</svg>

@@ -1,38 +1,10 @@
-<div align="center">
-
-```
-        ________  __________   _____  _   ___________   _____  ___________
-       / ____/ / / / ____/ /  / __ \/ | / / ____/   | / __ \/ ____/ ___/
-      / /   / /_/ / /_  / /  / / / /  |/ / / __/ /| |/ / / / / __/ __ \
-     / /___/ __  / __/ / /___/ /_/ / /|  / /_/ / ___ / /_/ / /_/ / /_/ /
-     \____/_/ /_/_/   /_____/\____/_/ |_/\____/_/  |_\____/\____/_____/
-
-```
-
-</div>
-
-# ChainForge
-
-**锻造链** — *Craft your LLM call chains, tool chains, and processing chains.*
-
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)]()
-[![License](https://img.shields.io/badge/license-Apache%202.0-green)]()
-[![Tests](https://img.shields.io/badge/tests-201%20passed-brightgreen)]()
-[![Dependencies](https://img.shields.io/badge/dependencies-2-red)]()
-
-> **ChainForge is what LangChain should have been if it were designed today.**  
-> Minimal. Streaming-first. Type-safe. Async-native. Built for the post-LangChain era.
-
-```bash
-pip install chainforge
-```
-
-**Core Principles:** `protocol-based` · `streaming-first` · `async-native` · `type-safe` · `zero-overhead-abstractions`
-
-<p align="right">
-  <a href="README.md">🇬🇧 English</a> · <a href="README.zh.md">🇨🇳 中文</a>
+<p align="center">
+  <img src="example/chainforge_banner.svg" alt="ChainForge Banner" width="800">
 </p>
 
+<p align="center">
+  <a href="README.md">🇬🇧 English</a> · <a href="README.zh.md">🇨🇳 中文</a>
+</p>
 
 ---
 

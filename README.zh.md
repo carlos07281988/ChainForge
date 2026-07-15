@@ -1,27 +1,10 @@
-<div align="center">
+<p align="center">
+  <img src="example/chainforge_banner.svg" alt="ChainForge Banner" width="800">
+</p>
 
-```
-        ________  __________   _____  _   ___________   _____  ___________
-       / ____/ / / / ____/ /  / __ \/ | / / ____/   | / __ \/ ____/ ___/
-      / /   / /_/ / /_  / /  / / / /  |/ / / __/ /| |/ / / / / __/ __ \
-     / /___/ __  / __/ / /___/ /_/ / /|  / /_/ / ___ / /_/ / /_/ / /_/ /
-     \____/_/ /_/_/   /_____/\____/_/ |_/\____/_/  |_\____/\____/_____/
-
-```
-
-</div>
-
-# ChainForge — 锻造链
-
-**把你的 LLM 调用链、工具链、处理链"锻造"出来。**
-
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)]()
-[![License](https://img.shields.io/badge/license-Apache%202.0-green)]()
-[![Tests](https://img.shields.io/badge/tests-201%20passed-brightgreen)]()
-[![Dependencies](https://img.shields.io/badge/dependencies-2-red)]()
-
-> **ChainForge 是 LangChain 如果今天重新设计应有的样子。**  
-> 极简 · 流式优先 · 类型安全 · 异步原生 · 零开销抽象
+<p align="center">
+  <a href="README.md">🇬🇧 English</a> · <a href="README.zh.md">🇨🇳 中文</a>
+</p>
 
 ---
 
