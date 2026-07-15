@@ -13,10 +13,14 @@
 # limitations under the License.
 """Built-in tools and the @tool decorator."""
 
-from chainforge.core.tool import tool, Tool, FunctionTool, ToolSpec
+from chainforge.core.tool import tool, Tool, FunctionTool, ToolSpec, BaseTool
 
-__all__ = ["tool", "Tool", "FunctionTool", "ToolSpec"]
+__all__ = ["tool", "Tool", "FunctionTool", "ToolSpec", "BaseTool"]
 
 from chainforge.tools.toolkits import ToolKit, calculator_toolkit, file_toolkit, web_toolkit
 
 __all__.extend(["ToolKit", "calculator_toolkit", "file_toolkit", "web_toolkit"])
+
+from chainforge.tools.openapi import OpenAPIToolkit
+
+__all__.extend(["OpenAPIToolkit"])

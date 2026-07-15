@@ -38,6 +38,18 @@ class OpenAIProvider(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     model: str = Field(default="gpt-4o")
+
+    @property
+    def capabilities(self) -> set[str]:
+        from chainforge.core.llm import ProviderCapability
+        caps = {
+            ProviderCapability.CHAT, ProviderCapability.STREAMING,
+            ProviderCapability.TOOL_CALLING, ProviderCapability.FUNCTION_CALLING,
+            ProviderCapability.PARALLEL_TOOL_CALLS, ProviderCapability.STRUCTURED_OUTPUT,
+        }
+        if any(v in self.model.lower() for v in ["vision", "gpt-4o", "gpt-4-turbo", "gpt-4.5"]):
+            caps.add(ProviderCapability.VISION)
+        return caps
     api_key: str | None = Field(default=None)
     base_url: str | None = Field(default=None)
 

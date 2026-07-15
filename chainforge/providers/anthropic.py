@@ -38,6 +38,16 @@ class AnthropicProvider(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     model: str = Field(default="claude-sonnet-4-20250514")
+
+    @property
+    def capabilities(self) -> set[str]:
+        from chainforge.core.llm import ProviderCapability
+        caps = {
+            ProviderCapability.CHAT, ProviderCapability.STREAMING,
+            ProviderCapability.TOOL_CALLING, ProviderCapability.FUNCTION_CALLING,
+            ProviderCapability.STRUCTURED_OUTPUT, ProviderCapability.VISION,
+        }
+        return caps
     api_key: str | None = Field(default=None)
     max_tokens: int = Field(default=4096)
 

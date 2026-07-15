@@ -17,6 +17,7 @@ from chainforge.memory.embedding import EmbeddingFunction, IdentityEmbedding, co
 from chainforge.memory.vector import VectorMemory, SQLiteVectorMemory, MemoryEntry
 from chainforge.memory.manager import MemoryManager
 from chainforge.memory.entity import EntityMemory, Entity, Relation
+from chainforge.memory.knowledge_graph import KnowledgeGraphMemory
 from chainforge.memory.utils import trim_messages, summarize_messages, count_tokens, total_message_tokens
 
 __all__ = [
@@ -32,6 +33,7 @@ __all__ = [
     "EntityMemory",
     "Entity",
     "Relation",
+    "KnowledgeGraphMemory",
     "trim_messages",
     "summarize_messages",
     "count_tokens",

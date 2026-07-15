@@ -16,23 +16,16 @@
 Provides:
   - A local JSON-based registry of MCP server configurations
   - Built-in list of well-known MCP servers
+  - Auto-discovery via environment variables and config files
   - Search, add, remove, install operations
   - Path: ~/.chainforge/mcp_servers.json
-
-Usage:
-    from chainforge.mcp.registry import MCPRegistry
-
-    registry = MCPRegistry()
-    registry.add_builtin("filesystem")
-    servers = registry.list()
-    print([s.name for s in servers])
 """
 
 from __future__ import annotations
 
 import json
+import os
 import shutil
-import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +34,10 @@ from pydantic import BaseModel, Field
 from chainforge.logging import get_logger
 
 logger = get_logger("mcp.registry")
+
+# Key used for auto-discovery via environment
+MCP_SERVERS_ENV_VAR = "CHAINFORGE_MCP_SERVERS"
+MCP_CONFIG_FILE = ".chainforge-mcp.json"
 
 
 class MCPServerInfo(BaseModel):
@@ -128,16 +125,111 @@ BUILTIN_SERVERS: dict[str, dict[str, Any]] = {
 
 
 def get_builtin_names() -> list[str]:
-    """Return list of built-in MCP server names."""
     return list(BUILTIN_SERVERS.keys())
 
 
 def get_builtin(name: str) -> MCPServerInfo | None:
-    """Get a built-in MCP server definition by name."""
     data = BUILTIN_SERVERS.get(name)
     if data:
         return MCPServerInfo(**data)
     return None
+
+
+# ── Auto-discovery ────────────────────────────────────────────────────────────
+
+
+def discover_servers(
+    paths: list[str | Path] | None = None,
+) -> list[MCPServerInfo]:
+    """Discover MCP servers from environment variables and config files.
+
+    Scans, in order:
+    1. CHAINFORGE_MCP_SERVERS env var (JSON string or file path)
+    2. .chainforge-mcp.json in current directory
+    3. ~/.chainforge/mcp_servers.json
+    4. Additional paths provided via argument
+
+    Returns:
+        List of discovered MCPServerInfo objects.
+    """
+    discovered: dict[str, MCPServerInfo] = {}
+
+    # 1. Environment variable
+    env_val = os.environ.get(MCP_SERVERS_ENV_VAR)
+    if env_val:
+        try:
+            # Could be a JSON string or a file path
+            if env_val.endswith(".json") and os.path.isfile(env_val):
+                data = json.loads(Path(env_val).read_text())
+            else:
+                data = json.loads(env_val)
+
+            servers = _parse_server_list(data)
+            for s in servers:
+                discovered[s.name] = s
+            logger.info(f"Discovered {len(servers)} MCP servers from ${MCP_SERVERS_ENV_VAR}")
+        except (json.JSONDecodeError, Exception) as e:
+            logger.warning(f"Failed to parse ${MCP_SERVERS_ENV_VAR}: {e}")
+
+    # 2. Local config file
+    config_file = Path.cwd() / MCP_CONFIG_FILE
+    if config_file.exists():
+        try:
+            data = json.loads(config_file.read_text())
+            servers = _parse_server_list(data)
+            for s in servers:
+                discovered[s.name] = s
+            logger.info(f"Discovered {len(servers)} MCP servers from {config_file}")
+        except (json.JSONDecodeError, Exception) as e:
+            logger.warning(f"Failed to parse {config_file}: {e}")
+
+    # 3. Default registry path
+    default_registry = Path.home() / ".chainforge" / "mcp_servers.json"
+    if default_registry.exists():
+        try:
+            data = json.loads(default_registry.read_text())
+            servers = _parse_server_list(data)
+            for s in servers:
+                discovered[s.name] = s
+            logger.info(f"Discovered {len(servers)} MCP servers from {default_registry}")
+        except (json.JSONDecodeError, Exception) as e:
+            logger.warning(f"Failed to parse {default_registry}: {e}")
+
+    # 4. Additional paths
+    if paths:
+        for p in paths:
+            path = Path(p)
+            if path.exists():
+                try:
+                    data = json.loads(path.read_text())
+                    servers = _parse_server_list(data)
+                    for s in servers:
+                        discovered[s.name] = s
+                except (json.JSONDecodeError, Exception) as e:
+                    logger.warning(f"Failed to parse {path}: {e}")
+
+    return list(discovered.values())
+
+
+def _parse_server_list(data: Any) -> list[MCPServerInfo]:
+    """Parse JSON data into a list of MCPServerInfo objects.
+
+    Accepts both a list of server configs and a dict keyed by server name.
+    """
+    servers: list[MCPServerInfo] = []
+    if isinstance(data, list):
+        for item in data:
+            if isinstance(item, dict) and "name" in item:
+                server = MCPServerInfo(**item)
+                server.installed = _check_command_available(server.command)
+                servers.append(server)
+    elif isinstance(data, dict):
+        for name, item in data.items():
+            if isinstance(item, dict):
+                server = MCPServerInfo(name=name, **item)
+                server.installed = _check_command_available(server.command)
+                servers.append(server)
+    return servers
 
 
 # ── Registry ─────────────────────────────────────────────────────────────────
@@ -150,18 +242,16 @@ class MCPRegistry:
 
     Args:
         path: Custom path for the registry file.
-              Defaults to ~/.chainforge/mcp_servers.json.
     """
 
     def __init__(self, path: str | Path | None = None):
         self.path = Path(path) if path else Path.home() / ".chainforge" / "mcp_servers.json"
         self._servers: dict[str, MCPServerInfo] = {}
         self._load()
-
-    # ── Persistence ────────────────────────────────────────────────────────
+        # Auto-discover and merge on init
+        self._auto_discover()
 
     def _load(self) -> None:
-        """Load registry from disk."""
         if self.path.exists():
             try:
                 data = json.loads(self.path.read_text())
@@ -171,69 +261,48 @@ class MCPRegistry:
             except (json.JSONDecodeError, KeyError) as e:
                 logger.warning(f"Failed to load MCP registry: {e}")
 
+    def _auto_discover(self) -> None:
+        """Auto-discover servers and merge with registry."""
+        discovered = discover_servers()
+        for server in discovered:
+            if server.name not in self._servers:
+                self._servers[server.name] = server
+
     def save(self) -> None:
-        """Save registry to disk."""
         self.path.parent.mkdir(parents=True, exist_ok=True)
         data = [s.model_dump(mode="json") for s in self._servers.values()]
         self.path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
-        logger.debug(f"MCP registry saved ({len(data)} servers)")
-
-    # ── Query ──────────────────────────────────────────────────────────────
 
     def list(self) -> list[MCPServerInfo]:
-        """List all registered MCP servers."""
         return list(self._servers.values())
 
     def get(self, name: str) -> MCPServerInfo | None:
-        """Get a server by name."""
         return self._servers.get(name)
 
     def search(self, query: str) -> list[MCPServerInfo]:
-        """Search servers by name, description, or tags."""
         q = query.lower()
-        results = []
-        for server in self._servers.values():
-            if (q in server.name.lower()
-                    or q in server.description.lower()
-                    or any(q in tag.lower() for tag in server.tags)):
-                results.append(server)
-        return results
-
-    # ── Management ─────────────────────────────────────────────────────────
+        return [
+            s for s in self._servers.values()
+            if q in s.name.lower() or q in s.description.lower() or any(q in tag.lower() for tag in s.tags)
+        ]
 
     def add(self, server: MCPServerInfo) -> None:
-        """Add a server to the registry."""
         self._servers[server.name] = server
         self.save()
         logger.info(f"Added MCP server: {server.name}")
 
     def remove(self, name: str) -> bool:
-        """Remove a server from the registry.
-
-        Returns:
-            True if removed, False if not found.
-        """
         if name in self._servers:
             del self._servers[name]
             self.save()
-            logger.info(f"Removed MCP server: {name}")
             return True
         return False
 
     def add_builtin(self, name: str) -> MCPServerInfo | None:
-        """Add a built-in MCP server to the registry.
-
-        Args:
-            name: Built-in server name.
-
-        Returns:
-            The server info if found, None otherwise.
-        """
         data = BUILTIN_SERVERS.get(name)
         if data is None:
             logger.warning(f"Unknown built-in MCP server: {name}")
             return None
-
         server = MCPServerInfo(**data)
         server.installed = _check_command_available(server.command)
         self.add(server)
@@ -248,25 +317,9 @@ class MCPRegistry:
         transport: str = "stdio",
         tags: list[str] | None = None,
     ) -> MCPServerInfo:
-        """Add a custom MCP server.
-
-        Args:
-            name: Server name.
-            command: Shell command to start the server.
-            description: Human-readable description.
-            transport: "stdio" or "sse".
-            tags: Search tags.
-
-        Returns:
-            The created server info.
-        """
         server = MCPServerInfo(
-            name=name,
-            description=description,
-            command=command,
-            transport=transport,
-            source="custom",
-            tags=tags or [],
+            name=name, description=description, command=command,
+            transport=transport, source="custom", tags=tags or [],
             installed=_check_command_available(command),
         )
         self.add(server)
@@ -285,10 +338,6 @@ class MCPRegistry:
 
 
 def _check_command_available(command: str) -> bool:
-    """Check if an MCP server command is available on the system.
-
-    Extracts the first word (npx, uvx, etc.) and checks if it exists.
-    """
     if not command:
         return False
     first_word = command.split()[0]

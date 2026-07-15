@@ -51,6 +51,14 @@ class OllamaProvider(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     model: str = Field(default="llama3.2")
+
+    @property
+    def capabilities(self) -> set[str]:
+        from chainforge.core.llm import ProviderCapability
+        caps = {ProviderCapability.CHAT, ProviderCapability.STREAMING, ProviderCapability.TOOL_CALLING}
+        if self.supports_vision:
+            caps.add(ProviderCapability.VISION)
+        return caps
     base_url: str = Field(default="http://localhost:11434/v1")
     api_key: str = Field(default="ollama", description="Ollama uses a placeholder API key")
     supports_vision: bool = Field(default=False, description="Set True for LLaVA / bakllava models")

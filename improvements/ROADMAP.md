@@ -50,7 +50,7 @@
 | 🛠 | Subprocess sandbox (safe Python code execution) |
 | 📋 | Docker sandbox (full isolation) |
 | 📋 | Built-in `@tool` for code execution |
-| 📋 | Multi-modal Message parts (image, file, audio) |
+| ✅ | Multi-modal Message parts (image, file, audio) |
 | 📋 | File loader utilities |
 | 📋 | Image input in providers |
 
@@ -242,6 +242,68 @@
 
 ---
 
+
+
+## Phase 7: Remaining Gaps (📋 Planned, from Gap Analysis 2026-07)
+
+### Agent-Run Loop Migration
+
+| State | Feature |
+|-------|---------|
+| ✅ | CyclicGraph execution engine |
+| 📋 | Migrate Agent._run_loop to CyclicGraph execution (replace hand-written state machine) |
+| 💡 | Full visual agent flow graph in dashboard |
+
+### LLM Response Extensions
+
+| State | Feature |
+|-------|---------|
+| 📋 | LLMResponse.reasoning_content — thinking model support (DeepSeek-R1, o-series) |
+| 📋 | LLMResponse.cost — aggregated cost tracking from token usage |
+| 📋 | Provider capability declaration (supports_vision, supports_tools, supports_streaming, etc.) |
+
+### Tool System Evolution
+
+| State | Feature |
+|-------|---------|
+| 📋 | Structured tool artifacts (non-string returns via response_schema) |
+| 📋 | BaseTool class with _run / _arun lifecycle methods |
+| 📋 | OpenAPIToolkit — spec-to-tool auto-generation |
+| 💡 | Streaming tool execution support |
+
+### Evaluation Depth
+
+| State | Feature |
+|-------|---------|
+| ✅ | LLMJudgeEval — LLM-as-judge scoring |
+| ✅ | PairwiseEval — A/B comparison |
+| 📋 | Adversarial testing (prompt injection, jailbreak scenarios) |
+| 📋 | Regression test suite with auto-detection |
+
+### Agentic RAG
+
+| State | Feature |
+|-------|---------|
+| 📋 | Self-RAG — agent decides when to retrieve |
+| 📋 | Corrective RAG — agent evaluates and fixes retrieval quality |
+| 💡 | Adaptive RAG — agent chooses retrieval strategy per query |
+
+### Computer Use / Advanced Tools
+
+| State | Feature |
+|-------|---------|
+| 📋 | PlaywrightTool — browser automation for agents |
+| 📋 | Deep MCP integration — auto-discover and connect MCP servers |
+| 💡 | Knowledge Graph Memory (Neo4j-style entity-relation store) |
+| 💡 | Cron/scheduled agent execution |
+
+### Priority for Phase 7
+
+1. **Agent._run_loop -> CyclicGraph** — 架构级整合，释放 CyclicGraph 全部价值
+2. **LLMResponse.reasoning_content + cost + Provider capability** — 跟上模型演进
+3. **Structured tool artifacts + BaseTool + OpenAPIToolkit** — Tool 组合性核心缺口
+4. **Adversarial testing + Agentic RAG** — 安全与检索增强
+5. **Computer Use + Deep MCP + Knowledge Graph + Cron** — 前沿能力
 ## How to prioritize
 
 1. **Sandbox + Multi-modal** — 2025 Agent 的基本能力，缺了就感觉不完整
@@ -255,20 +317,20 @@
 | State | Feature |
 |-------|---------|
 | ✅ | DAG — acyclic graph execution with topological sort |
-| 📋 | CyclicGraph — support cycles for agent loops, reflection, retry |
-| 📋 | Conditional edges — state-driven routing (routing_fn pattern) |
-| 📋 | Node types — agent / tool / router / conditional / entry / exit |
+| ✅ | CyclicGraph — support cycles for agent loops, reflection, retry |
+| ✅ | Conditional edges — state-driven routing (routing_fn pattern) |
+| ✅ | Node types — agent / tool / router / conditional / entry / exit |
 | 💡 | Migrate Agent._run_loop to CyclicGraph execution |
 
 ### State Persistence / Checkpointing
 
 | State | Feature |
 |-------|---------|
-| 📋 | Checkpointer protocol (save, load, list_threads, list_checkpoints) |
-| 📋 | InMemoryCheckpointer implementation |
-| 📋 | SQLiteCheckpointer implementation |
-| 📋 | thread_id based session isolation |
-| 📋 | Agent.run() thread_id parameter |
+| ✅ | Checkpointer protocol (save, load, list_threads, list_checkpoints) |
+| ✅ | InMemoryCheckpointer implementation |
+| ✅ | SQLiteCheckpointer implementation |
+| ✅ | thread_id based session isolation |
+| ✅ | Agent.run() thread_id parameter |
 
 ### Multi-Agent Topology Expansion
 
@@ -277,18 +339,18 @@
 | ✅ | Swarm (parallel/sequential/conference) |
 | ✅ | Supervisor (flat delegation) |
 | ✅ | AgentChain (linear sequence) |
-| 📋 | Network topology — agent-to-agent direct messaging |
-| 📋 | Hierarchical teams — recursive supervisor nesting |
-| 📋 | Debate — multi-agent argumentation for consensus |
+| ✅ | Network topology — agent-to-agent direct messaging |
+| ✅ | Hierarchical teams — recursive supervisor nesting |
+| ✅ | Debate — multi-agent argumentation for consensus |
 
 ### Memory Depth
 
 | State | Feature |
 |-------|---------|
-| 📋 | Auto-summarize — MemoryManager.summarize() with LLM |
-| 📋 | SQLite-backed VectorMemory — cross-session persistence |
-| 📋 | EntityMemory graph — neighbor/relation tracking |
-| 📋 | trim_messages / summarize_messages utility functions |
+| ✅ | Auto-summarize — MemoryManager.summarize() with LLM |
+| ✅ | SQLite-backed VectorMemory — cross-session persistence |
+| ✅ | EntityMemory graph — neighbor/relation tracking |
+| ✅ | trim_messages / summarize_messages utility functions |
 | 💡 | Knowledge Graph Memory (Neo4j-style) |
 
 ### Tool System Evolution
@@ -305,8 +367,8 @@
 | State | Feature |
 |-------|---------|
 | ✅ | 5 cloud providers (OpenAI, Anthropic, Google, Azure, Bedrock) |
-| 📋 | OllamaProvider — local inference |
-| 📋 | Multi-modal Message parts (image, file, audio) |
+| ✅ | OllamaProvider — local inference |
+| ✅ | Multi-modal Message parts (image, file, audio) |
 | 📋 | LLMResponse.reasoning_content — thinking model support |
 | 📋 | LLMResponse.cost — aggregated cost tracking |
 | 📋 | Provider capability declaration (supports_vision, etc.) |
@@ -317,8 +379,8 @@
 | State | Feature |
 |-------|---------|
 | ✅ | EvalCase/EvalSuite/EvalRunner/EvalReport framework |
-| 📋 | LLMJudgeEval — LLM-as-judge scoring |
-| 📋 | PairwiseEval — A/B comparison with Elo rating |
+| ✅ | LLMJudgeEval — LLM-as-judge scoring |
+| ✅ | PairwiseEval — A/B comparison with Elo rating |
 | 📋 | Adversarial testing (prompt injection, jailbreak scenarios) |
 
 ### Production Deployment
@@ -326,10 +388,10 @@
 | State | Feature |
 |-------|---------|
 | ✅ | FastAPI REST + SSE server |
-| 📋 | Thread/session management API |
-| 📋 | Webhook callback on agent completion |
-| 📋 | API key authentication |
-| 📋 | Usage quota / rate limiting per user |
+| ✅ | Thread/session management API |
+| ✅ | Webhook callback on agent completion |
+| ✅ | API key authentication |
+| ✅ | Usage quota / rate limiting per user |
 | 💡 | Cron/scheduled agent execution |
 
 ### Forward-looking Features
