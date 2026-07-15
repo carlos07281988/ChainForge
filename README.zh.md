@@ -282,12 +282,12 @@ chainforge/
 │   ├── agent.py         # Agent 执行循环 (LLM ↔ Tools ↔ LLM...)
 │   ├── llm.py           # LLM 协议 + LLMResponse
 │   ├── tool.py          # Tool 协议 + FunctionTool + @tool 装饰器
-│   ├── message.py       # Message, ToolCall, ToolResult, Role 枚举
+│   ├── message.py       # Message, ToolCall, ToolResult, Role, ContentPart（多模态支持）
 │   ├── stream.py        # StreamEvent (7 种类型) + Stream 包装器
 │   ├── pipeline.py      # 线性步骤组合 (>>)
-│   ├── graph.py         # DAG 图执行引擎
+│   ├── graph.py         # DAG + CyclicGraph（条件边、循环）图执行引擎
 │   ├── middleware.py    # 中间件链 — 可组合的 Agent 钩子
-│   ├── state.py         # Agent 状态机 (StateTracker)
+│   ├── state.py         # Agent 状态机 + Checkpointer 协议 (InMemory/SQLite 持久化)
 │   ├── structured_output.py  # Pydantic response_model 解析
 │   ├── human_in_loop.py # 人为审批/中断钩子
 │   ├── utils.py         # 核心工具 (run_sync)
@@ -299,7 +299,8 @@ chainforge/
 │   ├── anthropic.py     # Anthropic — 流式、工具调用、Token 统计
 │   ├── google.py        # Google Gemini — 流式、工具调用
 │   ├── azure.py         # Azure OpenAI — 流式、工具调用
-│   └── bedrock.py       # AWS Bedrock — Claude, Llama, Mistral, Titan
+│   ├── bedrock.py       # AWS Bedrock — Claude, Llama, Mistral, Titan
+│   └── ollama.py        # OllamaProvider — local inference
 │
 ├── agents/              # 10 种 Agent 模式
 │   ├── __init__.py
@@ -329,6 +330,10 @@ chainforge/
 ├── memory/              # 对话记忆
 │   ├── __init__.py
 │   ├── buffer.py        # 滑动窗口缓冲区
+│   ├── vector.py        # VectorMemory + SQLiteVectorMemory（向量记忆）
+│   ├── entity.py        # EntityMemory（实体提取 + 关系图）
+│   ├── manager.py       # MemoryManager（协调工作/情景/语义三级记忆）
+│   ├── utils.py         # trim_messages, summarize_messages 工具函数
 │   └── summary.py       # 运行摘要压缩
 │
 ├── middleware/           # 中间件实现
@@ -342,8 +347,10 @@ chainforge/
 │
 ├── orchestration/       # 多 Agent 编排
 │   ├── __init__.py
-│   ├── supervisor.py    # 规划 → 委派 → 综合
-│   └── swarm.py         # 并行 / 顺序 / 会议模式
+│   ├── supervisor.py    # 规划 → 委派 → 综合（支持嵌套层级）
+│   ├── swarm.py         # 并行 / 顺序 / 会议模式
+│   ├── network.py       # AgentNetwork — 对等通信（发布/订阅）
+│   └── debate.py        # Debate — 多 Agent 辩论达成共识
 │
 ├── eval/                # 评估与测试框架
 │   ├── __init__.py
@@ -351,7 +358,9 @@ chainforge/
 │   ├── metrics.py       # MetricsCollector — 时间、Token、成本、成功率
 │   ├── suite.py         # EvalSuite — 集合 + JSON 加载/保存
 │   ├── runner.py        # EvalRunner — 对 Agent 执行测试套件
-│   └── report.py        # EvalReport — JSON / Markdown / HTML / Text
+│   ├── report.py        # EvalReport — JSON / Markdown / HTML / Text
+│   └── judge.py         # LLMJudgeEval + PairwiseEval（LLM 作为评委）
+│   └── judge.py         # LLMJudgeEval + PairwiseEval (LLM-as-judge)
 │
 ├── tracing/             # 可观测性
 │   ├── __init__.py
@@ -956,6 +965,14 @@ sequenceDiagram
 - ✅ Human-in-the-loop
 - ✅ 结构化输出 / response_model
 - ✅ MCP 客户端
+- ✅ **CyclicGraph** — 支持循环和条件边的图执行引擎
+- ✅ **Checkpointer** — InMemory + SQLite 状态持久化
+- ✅ **多 Agent 拓扑** — AgentNetwork、Debate、层级 Supervisor
+- ✅ **Memory 2.0** — SQLiteVectorMemory、EntityMemory 关系图、trim/summarize
+- ✅ **OllamaProvider** — 本地推理
+- ✅ **多模态消息** — 图片/文件/音频 ContentPart
+- ✅ **LLM-as-Judge 评估** — LLMJudgeEval + PairwiseEval
+- ✅ **生产部署增强** — API key 认证、线程管理、Webhook、用量追踪
 - ✅ **A2A 协议** — Google Agent-to-Agent 标准协议
 - ✅ CLI 脚手架 + 评估命令
 - ✅ Agent 评估框架（EvalSuite / EvalRunner / EvalReport）

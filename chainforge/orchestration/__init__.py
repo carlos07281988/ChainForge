@@ -11,9 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Multi-agent orchestration — coordinate multiple agents to solve complex tasks."""
+"""Multi-agent orchestration — coordinate multiple agents to solve complex tasks.
 
-from chainforge.orchestration.swarm import Swarm
+Provides:
+  - Swarm: parallel/sequential/conference execution
+  - Supervisor: hierarchical delegation
+  - AgentNetwork: peer-to-peer messaging
+  - Debate: structured argumentation
+"""
+
+from chainforge.orchestration.swarm import Swarm, SwarmMode
 from chainforge.orchestration.supervisor import Supervisor
+from chainforge.orchestration.network import AgentNetwork
+from chainforge.orchestration.debate import Debate, DebateAgent
 
-__all__ = ["Swarm", "Supervisor"]
+__all__ = [
+    "Swarm", "SwarmMode",
+    "Supervisor",
+    "AgentNetwork",
+    "Debate", "DebateAgent",
+]

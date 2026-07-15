@@ -23,6 +23,7 @@ import logging
 from chainforge.logging import get_logger, log_data
 from chainforge.memory.buffer import BufferMemory
 from chainforge.memory.vector import VectorMemory
+from chainforge.memory.utils import summarize_messages, trim_messages
 
 logger = get_logger("memory.manager")
 
@@ -51,6 +52,7 @@ class MemoryManager(BaseModel):
     episodic: VectorMemory | None = Field(default=None, description="Past session memory")
     semantic: VectorMemory | None = Field(default=None, description="Knowledge / preferences")
     auto_summarize: bool = Field(default=True, description="Auto-summarize when storing")
+    llm: Any = Field(default=None, description="LLM for summarization (required if auto_summarize=True)")
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -67,16 +69,21 @@ class MemoryManager(BaseModel):
             text: Text content to store.
             metadata: Optional metadata (role, session, type, etc.).
             memory_level: "working", "episodic", "semantic", or "auto".
-                          "auto" stores in working always, and in episodic/semantic
-                          based on metadata hints.
         """
         # Always store in working memory
-        from chainforge.core.message import Message
-        role = (metadata or {}).get("role", "user") or "user"
         from chainforge.core.message import Message as CfMessage
+        role = (metadata or {}).get("role", "user") or "user"
         self.working.messages.append(CfMessage(role=role, content=text))
         if len(self.working.messages) > self.working.max_messages:
-            self.working.messages = self.working.messages[-self.working.max_messages:]
+            if self.auto_summarize and self.llm is not None:
+                # Auto-summarize old messages
+                self.working.messages = await summarize_messages(
+                    self.working.messages,
+                    self.llm,
+                    max_messages=self.working.max_messages // 2,
+                )
+            else:
+                self.working.messages = self.working.messages[-self.working.max_messages:]
 
         # Store in episodic memory
         if self.episodic and (memory_level in ("auto", "episodic")):
@@ -101,13 +108,19 @@ class MemoryManager(BaseModel):
         # Working memory (recent conversation)
         recent = self.working.get_history()
         if recent:
-            parts.append(f"[Recent Conversation]\n{recent}")
+            texts = []
+            for m in recent:
+                if m.content:
+                    texts.append(f"[{m.role.value}] {m.content[:200]}")
+            parts.append(f"[Recent Conversation]\n" + "\n".join(texts[-10:]))
 
         # Episodic memory (semantically related past sessions)
         if self.episodic:
             episodic_results = await self.episodic.query(query, k=k, min_score=0.3)
             if episodic_results:
-                entries = "\n".join(f"  - [{r['timestamp'][:10]}] {r['text'][:200]}" for r in episodic_results)
+                entries = "\n".join(
+                    f"  - [{r['timestamp'][:10]}] {r['text'][:200]}" for r in episodic_results
+                )
                 parts.append(f"[Related Past Sessions]\n{entries}")
 
         # Semantic memory (knowledge / preferences)
@@ -120,10 +133,7 @@ class MemoryManager(BaseModel):
         return "\n\n".join(parts)
 
     async def remember(self, text: str) -> None:
-        """Store a fact or preference in semantic memory.
-
-        Shorthand for: manager.store(text, {"type": "preference"}, memory_level="semantic")
-        """
+        """Store a fact or preference in semantic memory."""
         await self.store(text, {"type": "preference", "role": "system"}, memory_level="semantic")
 
     async def clear(self) -> None:
@@ -137,7 +147,7 @@ class MemoryManager(BaseModel):
 
     def stats(self) -> dict[str, Any]:
         """Return memory usage statistics."""
-        stats = {
+        stats: dict[str, Any] = {
             "working": len(getattr(self.working, 'messages', [])),
         }
         if self.episodic:

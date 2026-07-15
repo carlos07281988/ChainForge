@@ -14,8 +14,10 @@
 from chainforge.memory.buffer import BufferMemory
 from chainforge.memory.summary import SummaryMemory
 from chainforge.memory.embedding import EmbeddingFunction, IdentityEmbedding, cosine_similarity
-from chainforge.memory.vector import VectorMemory
+from chainforge.memory.vector import VectorMemory, SQLiteVectorMemory, MemoryEntry
 from chainforge.memory.manager import MemoryManager
+from chainforge.memory.entity import EntityMemory, Entity, Relation
+from chainforge.memory.utils import trim_messages, summarize_messages, count_tokens, total_message_tokens
 
 __all__ = [
     "BufferMemory",
@@ -24,9 +26,14 @@ __all__ = [
     "IdentityEmbedding",
     "cosine_similarity",
     "VectorMemory",
+    "SQLiteVectorMemory",
+    "MemoryEntry",
     "MemoryManager",
+    "EntityMemory",
+    "Entity",
+    "Relation",
+    "trim_messages",
+    "summarize_messages",
+    "count_tokens",
+    "total_message_tokens",
 ]
-
-from chainforge.memory.entity import EntityMemory, Entity
-
-__all__.extend(["EntityMemory", "Entity"])

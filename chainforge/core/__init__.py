@@ -13,27 +13,27 @@
 # limitations under the License.
 from chainforge.core.llm import LLM, LLMResponse
 from chainforge.core.tool import Tool, tool
-from chainforge.core.message import Message, ToolCall, ToolResult, Role
+from chainforge.core.message import Message, ToolCall, ToolResult, Role, ContentPart, ContentPartType
 from chainforge.core.stream import StreamEvent, Stream
 from chainforge.core.agent import Agent
 from chainforge.core.pipeline import Pipeline
 from chainforge.core.middleware import Middleware
-from chainforge.core.graph import DAG
+from chainforge.core.graph import DAG, CyclicGraph, GraphNodeType, DAGNodeType, Node, Edge, ConditionalEdge
 from chainforge.core.human_in_loop import HumanInTheLoop, ApprovalRequest, ApprovalDecision
-from chainforge.core.state import AgentState, StateTracker, StateTransition
+from chainforge.core.state import AgentState, StateTracker, StateTransition, Checkpointer, InMemoryCheckpointer, SQLiteCheckpointer, ThreadInfo
 from chainforge.core.files import FileLoader, FileContent, load_file, load_image
 
 __all__ = [
     "LLM", "LLMResponse",
     "Tool", "tool",
-    "Message", "ToolCall", "ToolResult", "Role",
+    "Message", "ToolCall", "ToolResult", "Role", "ContentPart", "ContentPartType",
     "StreamEvent", "Stream",
     "Agent",
     "Pipeline",
-    "DAG",
+    "DAG", "CyclicGraph", "GraphNodeType", "DAGNodeType", "Node", "Edge", "ConditionalEdge",
     "Middleware",
     "HumanInTheLoop", "ApprovalRequest", "ApprovalDecision",
-    "AgentState", "StateTracker", "StateTransition",
+    "AgentState", "StateTracker", "StateTransition", "Checkpointer", "InMemoryCheckpointer", "SQLiteCheckpointer", "ThreadInfo",
     "FileLoader", "FileContent",
     "load_file", "load_image",
 ]

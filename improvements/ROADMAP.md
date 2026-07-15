@@ -1,3 +1,4 @@
+
 # ChainForge Roadmap
 
 > 路线图：当前状态、短期计划、长期愿景
@@ -30,7 +31,7 @@
 
 ## Phase 2: Production Ready 🛠 (Current)
 
-### 🔥 Guardrails (Input/Output Safety)
+### Guardrails (Input/Output Safety)
 
 | State | Feature |
 |-------|---------|
@@ -42,7 +43,7 @@
 | ✅ | QualityGuard — basic output quality checks |
 | ✅ | GuardrailMiddleware — integrate into Agent pipeline |
 
-### 🔥 Code Sandbox + Multi-modal
+### Code Sandbox + Multi-modal
 
 | State | Feature |
 |-------|---------|
@@ -53,17 +54,17 @@
 | 📋 | File loader utilities |
 | 📋 | Image input in providers |
 
-### 🔥 Memory 2.0 (Vector Memory)
+### Memory 2.0 (Vector Memory)
 
 | State | Feature |
 |-------|---------|
 | 🛠 | Embedding function protocol |
 | 🛠 | VectorMemory with semantic retrieval |
-| 📋 | Hierarchical memory (working → episodic → semantic) |
+| 📋 | Hierarchical memory (working -> episodic -> semantic) |
 | 📋 | Cross-session persistent memory |
 | 📋 | Memory manager coordinating multiple backends |
 
-### 🔥 Agent Config Declaration
+### Agent Config Declaration
 
 | State | Feature |
 |-------|---------|
@@ -124,7 +125,7 @@
 | ✅ | Token estimation utilities |
 | 📋 | Selective strategy — keep semantically relevant history |
 
-### | Description |
+| | Description |
 |---------|-------------|
 | Guardrails | Input/output content safety, injection detection, tool permissions |
 | Context Management | Context caching, sliding window, compression |
@@ -190,8 +191,6 @@
 | ✅ | Save/load templates from directory |
 | ✅ | Variable introspection |
 
----
-
 ### Conversation Serialization (chainforge/core/conversation.py)
 
 | State | Feature |
@@ -233,52 +232,6 @@
 
 ## Phase 5: Ecosystem (💡 Future)
 
-### Prompt Templates
-
-| State | Feature |
-|-------|---------|
-| 🛠 | PromptTemplate — variable injection, from_file, composition |
-| 🛠 | ChatPromptTemplate — system/user/assistant message templates |
-| 🛠 | FewShotPromptTemplate — example-based prompting |
-| 📋 | Template registry and versioning |
-
-### RAG Pipeline
-
-| State | Feature |
-|-------|---------|
-| 🛠 | Document loaders (Text, CSV, JSON, PDF, HTML) |
-| 🛠 | Text splitters (recursive character, token-based, semantic) |
-| 🛠 | Embedding providers (OpenAI, local) |
-| 🛠 | Vector store abstraction (Chroma, FAISS, in-memory) |
-| 🛠 | Retrievers (vector similarity, multi-query, ensemble) |
-| 🛠 | RetrievalQA chain |
-
-### LLM Cache
-
-| State | Feature |
-|-------|---------|
-| 🛠 | Cache interface (get, set, clear, TTL) |
-| 🛠 | InMemoryCache implementation |
-| 🛠 | Middleware integration |
-| 📋 | Redis / persistent cache backends |
-
----
-
-### Reasoning Strategies (chainforge/reasoning/)
-
-| State | Feature |
-|-------|---------|
-| ✅ | ReasoningStrategy protocol — composable hooks into Agent loop |
-| ✅ | ChainOfThought — step-by-step thinking injection |
-| ✅ | ReasoningSteps — explicit sub-step planning |
-| ✅ | SelfReflection — self-critique and improvement |
-| ✅ | Verification — double-check before final answer |
-| ✅ | Agent integration — before_llm/after_llm/on_tool_result/should_stop |
-
----
-
-## Phase 5: Ecosystem (💡 Future)
-
 | Feature | Description |
 |---------|-------------|
 | Agent Template Market | Community-contributed agent templates |
@@ -294,3 +247,106 @@
 1. **Sandbox + Multi-modal** — 2025 Agent 的基本能力，缺了就感觉不完整
 2. **Memory 2.0** — 语义记忆是复杂 Agent 的基础设施
 3. **Agent Config** — 让 Agent 能被声明和管理，走向更广泛用户
+
+## Phase 6: Architecture Deepening (📋 Planned, from Gap Analysis 2026-07)
+
+### Graph Execution Engine
+
+| State | Feature |
+|-------|---------|
+| ✅ | DAG — acyclic graph execution with topological sort |
+| 📋 | CyclicGraph — support cycles for agent loops, reflection, retry |
+| 📋 | Conditional edges — state-driven routing (routing_fn pattern) |
+| 📋 | Node types — agent / tool / router / conditional / entry / exit |
+| 💡 | Migrate Agent._run_loop to CyclicGraph execution |
+
+### State Persistence / Checkpointing
+
+| State | Feature |
+|-------|---------|
+| 📋 | Checkpointer protocol (save, load, list_threads, list_checkpoints) |
+| 📋 | InMemoryCheckpointer implementation |
+| 📋 | SQLiteCheckpointer implementation |
+| 📋 | thread_id based session isolation |
+| 📋 | Agent.run() thread_id parameter |
+
+### Multi-Agent Topology Expansion
+
+| State | Feature |
+|-------|---------|
+| ✅ | Swarm (parallel/sequential/conference) |
+| ✅ | Supervisor (flat delegation) |
+| ✅ | AgentChain (linear sequence) |
+| 📋 | Network topology — agent-to-agent direct messaging |
+| 📋 | Hierarchical teams — recursive supervisor nesting |
+| 📋 | Debate — multi-agent argumentation for consensus |
+
+### Memory Depth
+
+| State | Feature |
+|-------|---------|
+| 📋 | Auto-summarize — MemoryManager.summarize() with LLM |
+| 📋 | SQLite-backed VectorMemory — cross-session persistence |
+| 📋 | EntityMemory graph — neighbor/relation tracking |
+| 📋 | trim_messages / summarize_messages utility functions |
+| 💡 | Knowledge Graph Memory (Neo4j-style) |
+
+### Tool System Evolution
+
+| State | Feature |
+|-------|---------|
+| 📋 | Structured tool artifacts (non-string returns) |
+| 📋 | BaseTool class with _run / _arun lifecycle |
+| 📋 | OpenAPIToolkit — spec-to-tool auto-generation |
+| 💡 | Streaming tool execution support |
+
+### Provider & Multi-modal
+
+| State | Feature |
+|-------|---------|
+| ✅ | 5 cloud providers (OpenAI, Anthropic, Google, Azure, Bedrock) |
+| 📋 | OllamaProvider — local inference |
+| 📋 | Multi-modal Message parts (image, file, audio) |
+| 📋 | LLMResponse.reasoning_content — thinking model support |
+| 📋 | LLMResponse.cost — aggregated cost tracking |
+| 📋 | Provider capability declaration (supports_vision, etc.) |
+| 💡 | vLLM / LlamaCpp providers |
+
+### Evaluation Depth
+
+| State | Feature |
+|-------|---------|
+| ✅ | EvalCase/EvalSuite/EvalRunner/EvalReport framework |
+| 📋 | LLMJudgeEval — LLM-as-judge scoring |
+| 📋 | PairwiseEval — A/B comparison with Elo rating |
+| 📋 | Adversarial testing (prompt injection, jailbreak scenarios) |
+
+### Production Deployment
+
+| State | Feature |
+|-------|---------|
+| ✅ | FastAPI REST + SSE server |
+| 📋 | Thread/session management API |
+| 📋 | Webhook callback on agent completion |
+| 📋 | API key authentication |
+| 📋 | Usage quota / rate limiting per user |
+| 💡 | Cron/scheduled agent execution |
+
+### Forward-looking Features
+
+| State | Feature |
+|-------|---------|
+| ✅ | MCP client (basic) |
+| ✅ | A2A protocol (Agent-to-Agent) |
+| 💡 | Computer Use / Playwright Tool |
+| 💡 | Agentic RAG (Self-RAG / Corrective RAG / Adaptive RAG) |
+| 💡 | Deep MCP integration (dynamic tool discovery) |
+
+### Priority for Phase 6
+
+1. **CyclicGraph + Checkpointing** — 架构级缺失，影响所有 agent 流程
+2. **Network topology** — 多 agent 组合多样性
+3. **Memory 持久化 (SQLite VectorStore)** — 跨会话记忆保真度
+4. **OllamaProvider + Multi-modal Message** — 降低使用门槛
+5. **LLMJudgeEval** — 评估信度
+6. **Production deployment (auth, webhook, quota)** — 生产部署必备

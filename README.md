@@ -361,12 +361,12 @@ chainforge/
 │   ├── agent.py         # Agent execution loop (LLM ↔ Tools ↔ LLM...)
 │   ├── llm.py           # LLM Protocol + LLMResponse
 │   ├── tool.py          # Tool Protocol + FunctionTool + @tool decorator
-│   ├── message.py       # Message, ToolCall, ToolResult, Role enum
+│   ├── message.py       # Message, ToolCall, ToolResult, Role, ContentPart (multi-modal)
 │   ├── stream.py        # StreamEvent (7 types) + Stream wrapper
 │   ├── pipeline.py      # Sequential step composition with >>
-│   ├── graph.py         # DAG graph execution engine
+│   ├── graph.py         # DAG + CyclicGraph (conditional edges, cycles) execution
 │   ├── middleware.py    # Middleware chain — composable agent hooks
-│   ├── state.py         # Agent state machine (StateTracker)
+│   ├── state.py         # State machine + Checkpointer protocol (InMemory/SQLite)
 │   ├── structured_output.py  # Pydantic response_model parsing
 │   ├── human_in_loop.py # Human approval/interrupt hooks
 │   ├── utils.py         # Core utilities (run_sync)
@@ -378,7 +378,8 @@ chainforge/
 │   ├── anthropic.py     # Anthropic — streaming, tool calls, token usage
 │   ├── google.py        # Google Gemini — streaming, tool calls
 │   ├── azure.py         # Azure OpenAI — streaming, tool calls
-│   └── bedrock.py       # AWS Bedrock — Claude, Llama, Mistral, Titan
+│   ├── bedrock.py       # AWS Bedrock — Claude, Llama, Mistral, Titan
+│   └── ollama.py        # OllamaProvider — local inference
 │
 ├── agents/              # 10 agent patterns
 │   ├── __init__.py
@@ -408,6 +409,10 @@ chainforge/
 ├── memory/              # Conversation memory
 │   ├── __init__.py
 │   ├── buffer.py        # Sliding-window buffer
+│   ├── vector.py        # VectorMemory + SQLiteVectorMemory
+│   ├── entity.py        # EntityMemory with graph relationships
+│   ├── manager.py       # MemoryManager — coordinates working/episodic/semantic
+│   ├── utils.py         # trim_messages, summarize_messages, count_tokens
 │   └── summary.py       # Running-summary compression
 │
 ├── middleware/           # Middleware implementations
@@ -430,7 +435,8 @@ chainforge/
 │   ├── metrics.py       # MetricsCollector — time, tokens, cost, success
 │   ├── suite.py         # EvalSuite — collection + JSON load/save
 │   ├── runner.py        # EvalRunner — execute suites against agents
-│   └── report.py        # EvalReport — JSON / Markdown / HTML / Text
+│   ├── report.py        # EvalReport — JSON / Markdown / HTML / Text
+│   └── judge.py         # LLMJudgeEval + PairwiseEval (LLM-as-judge)
 │
 ├── tracing/             # Observability
 │   ├── __init__.py
@@ -539,6 +545,14 @@ User Prompt
 - [x] Rate limiting / retry / timeout middleware
 - [x] Human-in-the-loop
 - [x] Parallel tool execution
+- [x] **CyclicGraph** — cycle-supporting graph with conditional edges
+- [x] **Checkpointer** — InMemory + SQLite state persistence
+- [x] **Multi-agent topologies** — AgentNetwork, Debate, Hierarchical Supervisor
+- [x] **Memory 2.0** — SQLiteVectorMemory, EntityMemory graph, trim/summarize
+- [x] **OllamaProvider** — Local LLM inference via Ollama API
+- [x] **Multi-modal messages** — Image/file/audio ContentPart support
+- [x] **LLM-as-Judge evaluation** — LLMJudgeEval + PairwiseEval
+- [x] **Production server** — API key auth, thread management, webhooks, usage tracking
 - [x] **Streaming agent state** — explicit state machine (StateTracker) with iteration/depth metadata
 - [x] **Langfuse integration** — `langfuse_tracing_middleware`
 - [x] **Bedrock provider** — AWS Bedrock (Claude, Llama, etc.)

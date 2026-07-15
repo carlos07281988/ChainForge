@@ -22,6 +22,7 @@ _LAZY_REGISTRY: dict[str, str] = {
     "GoogleProvider": "chainforge.providers.google",
     "AzureProvider": "chainforge.providers.azure",
     "BedrockProvider": "chainforge.providers.bedrock",
+    "OllamaProvider": "chainforge.providers.ollama",
 }
 
 
