@@ -579,3 +579,80 @@
 1. **Trace Viewer (Monitoring UI)** — 生产运维的最短板
 2. **Model Router** — 直接降成本 50-80%
 3. **GraphRAG Pipeline** — 知识图谱检索的下一阶段
+
+
+## Phase 11: Agent Frontier — Revolutionary Features (🛠 In Progress)
+
+### P0: CyclicGraph with Conditional Routing
+
+| State | Feature |
+|-------|---------|
+| ✅ | DAG execution engine (topological sort, branch/join) |
+| ✅ | CyclicGraph with cycle support, conditional edges |
+| 🛠 | **Checkpoint integration** — persist execution state across pause/resume |
+| 🛠 | **Multi-round execution** — max_iterations with configurable terminal detection |
+| 📋 | **Thread session management** — thread_id based conversation isolation |
+
+### P0: Checkpoint System
+
+| State | Feature |
+|-------|---------|
+| ✅ | Checkpointer protocol (save/load/list/delete) |
+| ✅ | InMemoryCheckpointer — in-process checkpoint storage |
+| ✅ | SQLiteCheckpointer — persistent checkpoint storage |
+| 🛠 | **Agent.run() thread_id** — bind checkpointer to agent execution |
+| 🛠 | **Auto-checkpoint** — automatic checkpoint on state transitions |
+
+### P1: Time-Travel Debugger
+
+| State | Feature |
+|-------|---------|
+| 🛠 | StepDebugger with pause/resume/step/abort |
+| 🛠 | **Checkpoint replay** — rewind and replay from any checkpoint |
+| 🛠 | **Branch execution** — fork execution from a specific checkpoint |
+| 📋 | **State diff** — compare state between two checkpoints |
+| 📋 | **Web debugger** — visual step-through in Dashboard |
+
+### P2: Cross-Model Consensus Protocol
+
+| State | Feature |
+|-------|---------|
+| 🛠 | ConsensusAgent — run same query across multiple models |
+| 🛠 | **Vote strategies** — majority, confidence-weighted, detailed |
+| 📋 | **Fallback chain** — cascade through models until success |
+| 📋 | **Cost optimization** — cheapest model that meets quality threshold |
+
+### P2: Self-Evolving Agent
+
+| State | Feature |
+|-------|---------|
+| 🛠 | ExecutionMetricsRecorder — record tool usage, errors, patterns |
+| 🛠 | **Auto-optimize** — analyze execution and improve system prompt |
+| 📋 | **Tool selection** — learn which tools work best for which tasks |
+| 📋 | **Strategy adaptation** — evolve reasoning strategy over time |
+
+### P3: NL-as-Code Compiler
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Workflow parser** — natural language to DAG |
+| 📋 | **Type checking** — validate data flow between steps |
+| 📋 | **Compile to CyclicGraph** — executable output |
+
+### P3: Agent Swarm Intelligence
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Blackboard communication** — shared context layer |
+| 📋 | **Emergent behavior** — consensus-driven stopping |
+| 📋 | **Role specialization** — agents self-assign roles |
+
+### Priority for Phase 11
+
+1. **Time-Travel Debugger** — 极大地提升 Agent 开发效率，是 LangChain 没有的差异化功能
+2. **Cross-Model Consensus** — 多模型仲裁直接提升答案质量 20-30%
+3. **Self-Evolving Agent** — 自我进化的 Agent 是通往 AGI 的关键路径
+4. **Agent.run() thread_id** — 为所有高级功能提供会话基础设施
+5. **NL-as-Code Compiler** — 自然语言编程的桥梁
+6. **Swarm Intelligence** — 群体智能的涌现行为探索
+

@@ -1,31 +1,21 @@
-"""example/run_all.py — Run all verification examples and report results."""
+"""example/run_all.py — Run all verification examples."""
 import sys, subprocess, os
 
 EXAMPLES_DIR = os.path.dirname(os.path.abspath(__file__))
 VENV_PYTHON = os.path.join(os.path.dirname(EXAMPLES_DIR), ".venv", "bin", "python3")
 
-# List of examples in dependency order
 examples = [
-    "01_core_tool.py",
-    "02_core_message.py",
-    "03_core_stream.py",
-    "04_core_pipeline.py",
-    "05_core_dag.py",
-    "06_core_state.py",
-    "07_core_structured_output.py",
-    "08_core_middleware.py",
-    "09_testing_mock.py",
-    "10_parsers.py",
-    "11_memory_buffer.py",
-    "12_reasoning.py",
-    "13_guardrails.py",
-    "14_orchestration_swarm.py",
+    "01_core_tool.py", "02_core_message.py", "03_core_stream.py",
+    "04_core_pipeline.py", "05_core_dag.py", "06_core_state.py",
+    "07_core_structured_output.py", "08_core_middleware.py",
+    "09_testing_mock.py", "10_parsers.py", "11_memory_buffer.py",
+    "12_reasoning.py", "13_guardrails.py", "14_orchestration_swarm.py",
     "15_tracing.py",
+    "16_time_travel.py", "17_consensus.py", "18_self_evolving.py",
 ]
 
 total_passed = 0
 total_failed = 0
-total_tests = 0
 failures = []
 
 for ex in examples:
@@ -41,7 +31,6 @@ for ex in examples:
         print(f"  STDERR:\n{result.stderr}")
     if result.returncode != 0:
         failures.append(ex)
-    # Parse the results line
     for line in result.stdout.split('\n'):
         line = line.strip()
         if line.startswith('Results:'):
@@ -49,10 +38,8 @@ for ex in examples:
             for p in parts:
                 try:
                     val = int(p.split()[0])
-                    if 'passed' in p:
-                        total_passed += val
-                    if 'failed' in p:
-                        total_failed += val
+                    if 'passed' in p: total_passed += val
+                    if 'failed' in p: total_failed += val
                 except ValueError:
                     pass
 

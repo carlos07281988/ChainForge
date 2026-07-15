@@ -336,8 +336,18 @@ class Agent(BaseModel):
         *,
         context: dict[str, Any] | None = None,
         response_model: type[BaseModel] | None = None,
+        thread_id: str | None = None,
+        checkpointer: Any = None,
     ) -> Stream:
-        """Execute the agent with the given prompt."""
+        """Execute the agent with the given prompt.
+
+        Args:
+            prompt: User prompt or list of messages.
+            context: Optional context dict.
+            response_model: Optional Pydantic model for structured output.
+            thread_id: Optional thread ID for session/checkpoint persistence.
+            checkpointer: Optional Checkpointer for state checkpointing.
+        """
         if isinstance(prompt, str):
             mgs: list[Message] = []
             composed = self._build_system_prompt()
@@ -356,9 +366,17 @@ class Agent(BaseModel):
                        "has_system": self.system_prompt is not None,
                        "has_skills": len(self.skills) > 0,
                        "tools": len(self._all_tools()),
-                       "response_model": response_model.__name__ if response_model else None})
+                       "response_model": response_model.__name__ if response_model else None,
+                       "thread_id": thread_id})
 
         tracker = StateTracker()
+        if thread_id is not None and checkpointer is not None:
+            tracker.bind_checkpointer(checkpointer, thread_id)
+            tracker.update_snapshot({
+                "prompt": prompt if isinstance(prompt, str) else prompt[-1].content or "",
+                "thread_id": thread_id,
+                "timestamp": __import__("time").time(),
+            })
         prompt_str = prompt if isinstance(prompt, str) else prompt[-1].content or ""
 
         # Fire on_agent_start

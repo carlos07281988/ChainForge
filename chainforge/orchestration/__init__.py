@@ -31,3 +31,7 @@ __all__ = [
     "AgentNetwork",
     "Debate", "DebateAgent",
 ]
+
+from chainforge.orchestration.consensus import ConsensusAgent, ConsensusStrategy, ConsensusResult, ModelVote
+
+__all__.extend(["ConsensusAgent", "ConsensusStrategy", "ConsensusResult", "ModelVote"])

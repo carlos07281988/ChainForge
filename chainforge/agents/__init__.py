@@ -33,3 +33,7 @@ __all__ = [
     "ConversationalAgent", "RouterAgent",
     "AgentTool", "AgentChain", "ChainTool", "AgentHub",
 ]
+
+from chainforge.agents.self_evolving import SelfEvolvingAgent, ExecutionMetrics
+
+__all__.extend(["SelfEvolvingAgent", "ExecutionMetrics"])
