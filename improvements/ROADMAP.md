@@ -38,6 +38,20 @@
 3. **Performance Budget Contracts** — 3-5天, 基于现有 Middleware
 
 
+
+## Phase 16: Agent Live Debug Protocol — ALDP (🛠 Implementing)
+
+### ALDP: Agent Debug Protocol
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **Protocol types** — event/command message schemas (JSON over WebSocket) |
+| 🛠 | **WebSocket server** — standalone server with zero extra dependencies |
+| 🛠 | **Agent wrapper** — wrap Agent to emit ALDP events |
+| 📋 | **Step/pause/resume** — bidirectional control of agent execution |
+| 📋 | **Breakpoints** — pause on tool_call, state transition, LLM response |
+
+
 ## Legend
 
 | Icon | Meaning |
