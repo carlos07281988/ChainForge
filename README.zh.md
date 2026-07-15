@@ -343,6 +343,11 @@ chainforge/
 │   ├── network.py       # AgentNetwork — 对等通信（发布/订阅）
 │   └── debate.py        # Debate — 多 Agent 辩论达成共识
 │
+├── evolution/           # 自优化 Agent
+│   ├── dream.py          # 梦境模拟模式
+│   ├── tech_tree.py      # 科技树
+│   └── population.py     # 多代演化
+│
 ├── eval/                # 评估与测试框架
 │   ├── __init__.py
 │   ├── case.py          # EvalCase — 测试提示 + 预期行为

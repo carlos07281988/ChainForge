@@ -411,6 +411,11 @@ chainforge/
 │   ├── supervisor.py    # Planner → delegate → synthesize
 │   └── swarm.py         # Parallel / sequential / conference modes
 │
+├── evolution/           # Self-optimizing agents
+│   ├── dream.py          # Dream/Simulation Mode — predict before acting
+│   ├── tech_tree.py      # Technology Tree — usage-driven capability unlocks
+│   └── population.py     # AgentPopulation — multi-generational evolution
+│
 ├── eval/                # Evaluation & testing framework
 │   ├── __init__.py
 │   ├── case.py          # EvalCase — test prompts + expected behaviors
@@ -517,46 +522,56 @@ User Prompt
 
 ## Roadmap / 路线图
 
+### Phase 1-10: Foundation
+
 - [x] Core protocols and agent loop
-- [x] OpenAI / Anthropic / Google / Azure / Bedrock providers
-- [x] Tool system with `@tool` decorator
-- [x] Middleware chain
-- [x] Built-in tracing (ConsoleTracer, OpenTelemetry, Langfuse)
+- [x] OpenAI / Anthropic / Google / Azure / Bedrock / Ollama / DeepSeek providers
+- [x] Tool system with `@tool` decorator + BaseTool lifecycle
+- [x] Middleware chain (retry, rate_limit, timeout, tracing, logging, langfuse)
 - [x] Pipeline composition + DAG graph execution
-- [x] MCP client
-- [x] Conversation memory (buffer + summary)
-- [x] Multi-agent orchestration (Swarm / Supervisor)
-- [x] Structured output / response_model
-- [x] Rate limiting / retry / timeout middleware
-- [x] Human-in-the-loop
-- [x] Parallel tool execution
-- [x] **CyclicGraph** — cycle-supporting graph with conditional edges
-- [x] **Checkpointer** — InMemory + SQLite state persistence
-- [x] **Multi-agent topologies** — AgentNetwork, Debate, Hierarchical Supervisor
-- [x] **Memory 2.0** — SQLiteVectorMemory, EntityMemory graph, trim/summarize
-- [x] **OllamaProvider** — Local LLM inference via Ollama API
-- [x] **Multi-modal messages** — Image/file/audio ContentPart support
-- [x] **LLM-as-Judge evaluation** — LLMJudgeEval + PairwiseEval
-- [x] **Production server** — API key auth, thread management, webhooks, usage tracking
-- [x] **LLMResponse.reasoning_content + cost** — thinking model support + auto cost calculation
-- [x] **Provider capabilities** — capability declaration per provider (vision, tools, streaming)
-- [x] **BaseTool + structured artifacts** — lifecycle hooks + ToolSpec.response_schema
-- [x] **OpenAPIToolkit** — OpenAPI spec to ChainForge tools converter
-- [x] **Agentic RAG** — SelfRAG + CorrectiveRAG (retrieval quality evaluation)
-- [x] **KnowledgeGraphMemory** — entity-relation graph with neighborhood traversal
-- [x] **AgentScheduler** — cron-style scheduled agent execution
-- [x] **PlaywrightTool** — browser automation (navigate, click, fill, screenshot)
-- [x] **MCP auto-discovery** — environment variables + config files scanning
-- [x] **Adversarial testing** — 8 security/robustness eval cases
-- [x] **Streaming agent state** — explicit state machine (StateTracker) with iteration/depth metadata
-- [x] **Langfuse integration** — `langfuse_tracing_middleware`
-- [x] **Bedrock provider** — AWS Bedrock (Claude, Llama, etc.)
-- [x] **CLI scaffolding** — `chainforge init` / `quickstart`
-- [x] **Agent evaluation & testing framework** — `chainforge eval` CLI, `EvalSuite`/`EvalRunner`/`EvalReport` API
-- [x] **Streaming agent state visualization** — real-time web dashboard with SSE agent state visualization
-- [x] **Graph-based agent visual editor** — interactive DAG editor with drag-and-drop, export, run
-- [x] **A2A protocol** — Agent-to-Agent (Google A2A) standardized agent communication
-  - AgentCard advertisement, task lifecycle management, SSE streaming
+- [x] CyclicGraph with conditional edges + multi-round execution
+- [x] 10 agent patterns (ReAct, Reflection, ToT, CoT, SelfAsk, PlanExecute, ...)
+- [x] MCP client + auto-discovery + A2A protocol
+- [x] Memory (buffer, vector, knowledge graph, entity, summary)
+- [x] Multi-agent orchestration (Swarm, Supervisor, Debate, Network)
+- [x] Evaluation framework + BFCL benchmark
+- [x] Production server (auth, threads, webhooks, usage tracking)
+- [x] Provider capabilities + reasoning_content + cost tracking
+- [x] Guardrails (input/output/tool permissions)
+- [x] Human-in-the-loop + StepDebugger
+- [x] Code Sandbox (Subprocess + Docker)
+
+### Phase 11: Agent Frontier — First Wave
+
+- [x] **TimeTravelDebugger** — record, replay, branch agent execution with checkpoints
+- [x] **ConsensusAgent** — cross-model consensus (majority_vote, confidence_weighted, detailed, fallback_chain)
+- [x] **SelfEvolvingAgent** — record execution metrics, auto-optimize system prompt
+- [x] **Agent.run() thread_id** — session-level checkpoint persistence
+
+### Phase 12: Agent Frontier — Second Wave
+
+- [x] **ToolSynthesizer** — adaptive tool synthesis: LLM generates, tests, and registers tools at runtime
+- [x] **LiquidMemory** — time-series decay + frequency-boosted memory weights
+- [x] **PromptInjectionGuardrail** — 15+ injection pattern detection with configurable sensitivity
+
+### Phase 13: Execution Intelligence & Multimodal
+
+- [x] **Execution Provenance Graph** — causal link tracking + trace_decision() + explain()
+- [x] **Declarative Workflow DSL** — define CyclicGraph workflows as YAML/JSON
+- [x] **Multi-Modal Pipeline** — image_to_message() / file_to_message() with auto base64 encoding
+
+### Phase 14: Self-Optimizing Agents
+
+- [x] **Dream / Simulation Mode** — predict tool outcomes before executing, compare and learn
+- [x] **Technology Tree** — capability tree with usage-driven unlocks + event callbacks
+- [x] **Multi-Generational Evolution** — genetic algorithm: tournament selection, crossover, mutation
+
+### Coming Next
+
+- [ ] Visual Agent Debugger UI (LangGraph Studio equivalent)
+- [ ] Execution Provenance Graph visualization
+- [ ] NL to CyclicGraph compiler
+- [ ] Agent MoE (Mixture of Experts routing)
 
 ---
 
@@ -726,7 +741,7 @@ chainforge skill info <name> # Show skill details
 
 ## Agent Patterns / 代理模式
 
-ChainForge ships with **10 agent patterns** covering reasoning, multi-step execution, quality enhancement, conversation, and routing. Each pattern produces the standard `Stream` event type, so they work interchangeably with middleware, logging, and tracing.
+ChainForge ships with **11 agent patterns** covering reasoning, multi-step execution, quality enhancement, conversation, routing, and self-optimization. Each pattern produces the standard `Stream` event type, so they work interchangeably with middleware, logging, and tracing.
 
 ---
 
@@ -2601,6 +2616,271 @@ Available providers and their capabilities:
 | Anthropic | chat, streaming, tool_calling, function_calling, structured_output, vision |
 | Ollama | chat, streaming, tool_calling (optional: vision) |
 
+
+
+
+### TimeTravelDebugger — Record, Replay, Branch Agent Execution / 时间旅行调试器
+
+Record full execution snapshots, rewind, replay from any checkpoint, fork branches for comparison.
+
+```python
+from chainforge.core.time_travel import TimeTravelDebugger
+
+debugger = TimeTravelDebugger(agent, max_checkpoints=50)
+stream = await debugger.run("Analyze this data")
+
+# Later: trace why a decision was made
+provenance = debugger.provenance_graph()       # Full causal graph
+trace = debugger.trace_decision("42")          # Walk back through causes
+explanation = debugger.explain("42")           # Human-readable trace
+
+# Replay from checkpoint
+replay_stream = debugger.replay("ckp_3")
+branch_stream = debugger.branch("ckp_3")       # Fork execution path
+diff = debugger.diff("ckp_2", "ckp_5")        # Compare states
+```
+
+**Features:** `provenance_graph()`, `trace_decision()`, `explain()`, `replay()`, `branch()`, `diff()`, `summary()`
+
+---
+
+### ConsensusAgent — Cross-Model Consensus / 跨模型共识仲裁
+
+Run the same prompt across multiple models and resolve differences with configurable strategies.
+
+```python
+from chainforge.orchestration.consensus import ConsensusAgent, ConsensusStrategy
+
+agent = ConsensusAgent(
+    llm=OpenAIProvider(model="gpt-4o"),
+    models={
+        "gpt4o": OpenAIProvider(model="gpt-4o"),
+        "sonnet": AnthropicProvider(model="claude-sonnet-4-20250514"),
+        "gemini": GoogleProvider(model="gemini-2.0-flash"),
+    },
+    strategy=ConsensusStrategy.majority_vote,  # or confidence_weighted, detailed, fallback_chain
+    max_parallel=3,
+)
+stream = await agent.run("What is the capital of France?")
+```
+
+| Strategy | Behavior | Use Case |
+|----------|----------|----------|
+| `majority_vote` | Most common answer wins | General purpose |
+| `confidence_weighted` | Weighted by model confidence | Mixed quality models |
+| `detailed` | All responses preserved | Analysis / comparison |
+| `fallback_chain` | Try models sequentially until success | Reliability-first |
+
+---
+
+### SelfEvolvingAgent — Self-Optimizing Agent / 自进化代理
+
+Records execution metrics after each run and progressively improves system prompts, tool selection, and error avoidance.
+
+```python
+from chainforge.agents.self_evolving import SelfEvolvingAgent
+
+agent = SelfEvolvingAgent(
+    llm=OpenAIProvider(model="gpt-4o"),
+    tools=[search, calculate],
+    system_prompt="You are a helpful assistant.",
+    evolution_enabled=True,
+    min_runs_for_evolution=3,  # Start optimizing after 3 runs
+)
+
+# Each run records metrics and evolves the prompt
+stream = await agent.run("What is 2+2?")
+```
+
+**Internal metrics tracked:** tool calls, error rates, response length, success rate, tool name distribution.
+
+---
+
+### ToolSynthesizer — Adaptive Tool Synthesis / 自适应工具合成
+
+Agents write, test, and register new tools at runtime when existing tools don't fit the task.
+
+```python
+from chainforge.tools.synthesis import ToolSynthesizer
+
+synthesizer = ToolSynthesizer(llm=my_llm)
+new_tool = await synthesizer.synthesize(
+    "Calculate compound interest given principal, rate, and time",
+    tool_name="compound_interest",
+)
+
+# The synthesized tool is a FunctionTool — use it immediately
+agent = Agent(llm=llm, tools=[new_tool, search_tool])
+```
+
+**Flow:** LLM generates Python code → syntax validation → execution test → ToolSpec extraction → caching.
+
+---
+
+### LiquidMemory — Time-Series Decay Memory / 液态时序记忆
+
+Items have continuously decaying weights. Frequently accessed items get boosted — simulating human memory.
+
+```python
+from chainforge.memory.liquid import LiquidMemory
+
+mem = LiquidMemory(
+    decay_rate=0.05,       # Exponential decay rate per second
+    frequency_boost=1.5,   # Weight multiplier on each access
+    max_items=1000,
+    min_weight=0.05,       # Auto-prune below this
+)
+
+await mem.add("User prefers dark mode", tags=["preference"])
+await mem.add("Python 3.12 supports new syntax", tags=["knowledge"])
+
+# Query methods
+context = await mem.get_context(top_k=10)   # Weighted by decay + frequency
+results = await mem.query("Python", top_k=5) # Keyword match with weight
+tagged = await mem.get_by_tags(["preference"])
+stats = await mem.stats()
+```
+
+---
+
+### PromptInjectionGuardrail — Injection Detection / 提示注入检测
+
+Detects prompt injection and jailbreak attempts with 15+ pattern categories.
+
+```python
+from chainforge.guardrails.injection import PromptInjectionGuardrail
+
+guardrail = PromptInjectionGuardrail(sensitivity=0.7)  # 0.0-1.0
+result = await guardrail.check(user_input)
+
+if not result.passed:
+    print(f"Risk: {result.risk_score}, Action: {result.action}")
+    # result.category: 'instruction_override', 'role_play', 'prompt_leak', etc.
+```
+
+**Detection categories:** instruction override, role-play (DAN), system prompt leak, delimiter confusion, encoding abuse (base64), harmful requests, token injection.
+
+---
+
+### Declarative Workflow DSL — YAML/JSON to CyclicGraph / 声明式工作流
+
+Define agent workflows in YAML or JSON and compile them to executable CyclicGraphs.
+
+```python
+from chainforge.core.graph_dsl import parse_workflow_dict, parse_workflow_json, workflow_to_dict
+
+# From dict
+graph = parse_workflow_dict({
+    "name": "research_pipeline",
+    "nodes": [
+        {"id": "search", "type": "tool", "description": "Search web"},
+        {"id": "analyze", "type": "llm", "description": "Analyze results"},
+        {"id": "report", "type": "exit", "description": "Generate report"},
+    ],
+    "edges": [
+        {"source": "search", "target": "analyze"},
+        {"source": "analyze", "target": "report"},
+    ],
+})
+
+stream = graph.run("query")
+```
+
+**Node types:** `entry`, `exit`, `tool`, `llm`, `agent`, `step`, `router`, `conditional`, `merge`.
+
+---
+
+### Multi-Modal Pipeline — Image/File to Message / 多模态输入管道
+
+Load images and files directly into Messages for vision-capable LLM providers.
+
+```python
+from chainforge.core.multimodal import image_to_message, file_to_message
+
+# Load image as user message with base64 encoding
+msg = image_to_message("chart.png", "Analyze this chart")
+stream = await agent.run(msg)
+
+# Auto-detect file type
+msg = file_to_message("report.pdf", "Summarize this document")
+```
+
+**Supported types:** PNG, JPEG, GIF, WebP (images auto-encoded), plus text files.
+
+---
+
+### Dream / Simulation Mode — Predict Before Acting / 梦境模拟模式
+
+Before executing tool calls, agents predict the outcome, compare with actual results, and learn from discrepancies.
+
+```python
+from chainforge.evolution.dream import DreamConfig, DreamMode
+
+dream = DreamConfig(mode=DreamMode.light)  # off | light | medium | deep
+dream.record_prediction("search", {"q": "weather"}, "Sunny, 25C")
+dream.record_actual("search", {"q": "weather"}, "Sunny, 25C")
+
+accuracy = dream.accuracy()                      # Overall accuracy
+recent = dream.recent_accuracy(10)               # Last 10 predictions
+patterns = dream.low_confidence_patterns()       # Consistent failure patterns
+summary = dream.summary()                        # Full statistics
+```
+
+---
+
+### Technology Tree — Unlock Capabilities Through Usage / 科技树
+
+Inspired by Civilization games: agents unlock new capabilities by using tools and accumulating experience.
+
+```python
+from chainforge.evolution.tech_tree import TechTree, default_tech_tree
+
+tree = default_tech_tree()  # Pre-built tree with 7+ nodes
+
+# Or build custom tree
+tree = TechTree()
+tree.add_node("search", "Basic Search", "Search the web")
+tree.add_node("advanced_search", "Advanced Search",
+              requires=["search"], required_count=10, required_tool="search")
+
+# Usage triggers unlocks
+tree.record_usage("search")  # or tree.record_success("analysis")
+
+# Listen for unlock events
+tree.on_unlock(lambda node: print(f"Unlocked: {node.name}"))
+
+print(tree.plot())  # ASCII visualization
+```
+
+---
+
+### AgentPopulation — Multi-Generational Evolution / 多代演化
+
+Genetic algorithm framework that evolves optimal agent configurations across generations.
+
+```python
+from chainforge.evolution.population import AgentPopulation, IndividualGenome
+
+pop = AgentPopulation()
+pop.initialize(size=10)
+
+for generation in range(20):
+    # Evaluate each individual
+    scores = [(i, evaluate(individual)) for i, individual in enumerate(pop.individuals)]
+    pop.evolve(scores)  # tournament selection + crossover + mutation
+
+best = pop.best_individual
+print(f"Best fitness: {best.fitness}")
+print(f"Best config: temp={best.genome.temperature}, "
+      f"iterations={best.genome.max_iterations}")
+
+print(pop.summary())
+print(pop.fitness_history())
+```
+
+**Evolution operators:** tournament selection, uniform crossover, Gaussian mutation, elite preservation.
+
+---
 
 ## License / 许可
 
