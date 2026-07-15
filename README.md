@@ -468,6 +468,43 @@ chainforge/
 │   ├── __init__.py
 │   └── client.py        # MCPClient — dynamic tool discovery (stdio/SSE)
 │
+├── aldp/                # Agent Live Debug Protocol
+│   ├── __init__.py
+│   ├── protocol.py      # WebSocket message types (JSON)
+│   └── server.py        # Zero-dependency WebSocket server
+│
+├── guardrails/          # Guardrails system
+│   ├── __init__.py
+│   ├── base.py          # GuardrailResult, actions, severities
+│   ├── injection.py     # PromptInjectionGuardrail (15+ patterns)
+│   └── tool_permissions.py
+│
+├── testing/             # Testing utilities
+│   ├── __init__.py
+│   ├── mock_llm.py      # MockLLM for deterministic replay
+│   └── behavior.py      # Behavioral Testing Framework
+│
+├── config/              # Declarative agent config (YAML/JSON)
+│   ├── __init__.py
+│   ├── schema.py
+│   ├── loader.py
+│   └── builder.py
+│
+├── rag/                 # RAG pipeline
+├── reasoning/           # Reasoning strategies
+├── routing/             # SmartRouter model routing
+├── parsers/             # Output parsers
+├── cache/               # LLM response caching
+├── callbacks/           # Lifecycle callbacks
+├── context/             # Context management
+├── sandbox/             # Code sandbox
+├── deploy.py            # Agent-as-Microservice (@service)
+├── scheduler.py         # Cron-style scheduling
+├── server.py            # HTTP server
+├── client.py            # HTTP client
+├── logging.py           # Structured logging
+│
+├── cli/
 ├── cli/                 # CLI interface
 │   └── __init__.py      # init, quickstart, skill, serve, run, eval
 │
