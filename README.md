@@ -371,6 +371,7 @@ chainforge/
 │   ├── structured_output.py  # Pydantic response_model parsing
 │   ├── human_in_loop.py # Human approval/interrupt hooks
 │   ├── utils.py         # Core utilities (run_sync)
+│   ├── debugger.py      # StepDebugger — pause, inspect, step agent execution
 │   └── errors.py        # Typed errors (ProviderError, ToolExecutionError, ...)
 │
 ├── providers/           # LLM implementations
@@ -441,7 +442,8 @@ chainforge/
 │   ├── suite.py         # EvalSuite — collection + JSON load/save
 │   ├── runner.py        # EvalRunner — execute suites against agents
 │   ├── report.py        # EvalReport — JSON / Markdown / HTML / Text
-│   └── judge.py         # LLMJudgeEval + PairwiseEval (LLM-as-judge)
+│   ├── judge.py         # LLMJudgeEval + PairwiseEval (LLM-as-judge)
+│   └── benchmarks/      # BFCL benchmark (19 function-calling test cases)
 │
 ├── tracing/             # Observability
 │   ├── __init__.py
@@ -2151,6 +2153,114 @@ print(provider.capabilities)
 Supported pricing models: GPT-4o, GPT-4o-mini, Claude Sonnet, Claude Haiku, Gemini Flash/Pro.
 
 ---
+
+### DockerSandbox — Container-Level Code Isolation / Docker 沙箱
+
+Execute untrusted code in isolated Docker containers with full filesystem and network isolation:
+
+```python
+from chainforge.sandbox import DockerSandbox
+
+# Create a sandbox with container-level isolation
+sandbox = DockerSandbox(
+    image="python:3.11-slim",
+    timeout=30,
+    memory_limit="512m",
+    network_disabled=True,  # No internet access for safety
+)
+
+# Execute code and capture output
+result = await sandbox.execute("print('hello from container!')", "python")
+print(result.stdout)    # "hello from container!"
+print(result.exit_code)  # 0
+print(result.duration_s) # execution time
+
+# Multi-language support
+result = await sandbox.execute("console.log('hello from Node')", "node")
+result = await sandbox.execute('println!("hello from Rust")', "rust")
+```
+
+Supports Python, Bash, Shell, Node.js, Go, and Rust — each in its own Docker image:
+`python:3.11-slim`, `ubuntu:22.04`, `node:20-slim`, `golang:1.22`, `rust:1.77-slim`.
+
+Requires `pip install docker` and Docker running on the host.
+
+---
+
+### StepDebugger — Pause, Inspect, Resume Agent Execution / 步骤调试器
+
+Interactively debug agent execution — pause at tool calls, inspect state, step forward:
+
+```python
+from chainforge.core import StepDebugger
+from chainforge import Agent
+
+agent = Agent(llm=llm, tools=[...])
+
+# Wrap agent with debugger
+debug = StepDebugger(agent, breakpoints=["tool_call", "llm_response"])
+
+# Run and debug interactively
+async for event in await debug.run("What is the weather?"):
+    if debug.paused:
+        cmd = input("Debug> ")         # "step", "continue", "abort", "state"
+        if cmd == "step":
+            await debug.step()          # Execute next event
+        elif cmd == "continue":
+            await debug.resume()        # Run to next breakpoint
+        elif cmd == "state":
+            print(debug.state_preview()) # Show messages, state, iteration
+        elif cmd == "quit":
+            await debug.abort()         # Stop execution
+```
+
+Features:
+- Breakpoints on `tool_call`, `llm_response`, `state_change`, or any event type
+- `state_preview()` — snapshot of current messages, state, iteration
+- `step()` — single-step to next event, `resume()` — run to next breakpoint, `abort()` — terminate
+- Add/remove breakpoints at runtime with `add_breakpoint()` / `remove_breakpoint()`
+
+---
+
+### BFCL Benchmark — Tool Calling Evaluation / 函数调用基准测试
+
+Evaluate your agent's tool/function calling ability against the Berkeley Function Calling Leaderboard standard:
+
+```python
+from chainforge.eval.benchmarks import BFCLRunner, bfcl_cases
+
+cases = bfcl_cases()  # 19 standardized test cases
+runner = BFCLRunner(agent)
+result = await runner.run_all(cases)
+
+print(result.summary())
+# BFCL Benchmark Results
+# ========================================
+#   Total:    19
+#   Passed:   15
+#   Failed:   4
+#   Rate:     78.9%
+#
+#   By category:
+#     simple: 5/6 (83%)
+#     multiple: 2/3 (67%)
+#     parallel: 2/2 (100%)
+#     relevance: 3/4 (75%)
+#     harmless: 3/4 (75%)
+```
+
+5 categories — 19 test cases:
+
+| Category | Cases | Description |
+|----------|-------|-------------|
+| **simple** | 6 | Single function with correct arguments |
+| **multiple** | 3 | Select from multiple available functions |
+| **parallel** | 2 | Multiple independent function calls |
+| **relevance** | 4 | Choose the most relevant function |
+| **harmless** | 4 | Reject harmful/unsafe function requests |
+
+Each test case injects its own tool definitions and verifies tool name, arguments, and safety behavior.
+
 
 ### DeepSeek Provider — Reasoning Model Support / DeepSeek 推理模型
 
