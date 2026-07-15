@@ -19,6 +19,7 @@ from chainforge.rag.splitters import RecursiveCharacterTextSplitter, TokenTextSp
 from chainforge.rag.vectorstores import InMemoryVectorStore, ChromaVectorStore, FAISSVectorStore, PineconeVectorStore, QdrantVectorStore
 from chainforge.rag.retrievers import VectorStoreRetriever, MultiQueryRetriever
 from chainforge.rag.chains import RetrievalQA, SelfRAG, CorrectiveRAG
+from chainforge.rag.graphrag import GraphRAGPipeline
 
 __all__ = [
     "Document",
@@ -29,4 +30,5 @@ __all__ = [
     "PineconeVectorStore", "QdrantVectorStore",
     "PDFLoader", "NotionLoader", "GitHubLoader",
     "RetrievalQA", "SelfRAG", "CorrectiveRAG",
+    "GraphRAGPipeline",
 ]

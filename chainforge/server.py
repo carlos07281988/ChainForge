@@ -589,6 +589,46 @@ async def dashboard_dag_editor():
 
 # ── CLI entry point ────────────────────────────────────────────────────────
 
+# ── Trace Viewer API ────────────────────────────────────────────────────────
+
+_trace_store = None
+
+
+def _get_trace_store():
+    global _trace_store
+    if _trace_store is None:
+        from chainforge.tracing.store import TraceStore
+        _trace_store = TraceStore()
+    return _trace_store
+
+
+@app.get("/api/v1/traces")
+async def list_traces(limit: int = 20, offset: int = 0, agent_id: str | None = None):
+    """List agent execution traces."""
+    store = _get_trace_store()
+    return await store.list_traces(limit=limit, offset=offset, agent_id=agent_id)
+
+
+@app.get("/api/v1/traces/stats")
+async def trace_stats():
+    """Get aggregate trace statistics."""
+    store = _get_trace_store()
+    return await store.get_stats()
+
+
+@app.get("/api/v1/traces/{trace_id}")
+async def get_trace(trace_id: str):
+    """Get a single trace with all spans."""
+    store = _get_trace_store()
+    trace = await store.get_trace(trace_id)
+    if trace is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail=f"Trace '{trace_id}' not found")
+    return trace
+
+
+
+
 def run_server(host: str = "0.0.0.0", port: int = 8000, reload: bool = False):
     """Start the ChainForge HTTP server.
 

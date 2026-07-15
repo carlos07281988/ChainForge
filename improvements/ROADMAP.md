@@ -540,3 +540,42 @@
 5. **Document Loader Breadth** — PDF + Notion + GitHub 扩充 RAG 数据源
 6. **Visual Debugger** — Web UI 调试界面
 
+
+
+
+## Phase 10: Monitoring, Routing & GraphRAG (📋 Planned)
+
+### Monitoring / Trace Viewer
+
+| State | Feature |
+|-------|---------|
+| ✅ | Tracing infrastructure (ConsoleTracer, OpenTelemetry, Langfuse) |
+| 📋 | Trace storage — persist traces to SQLite for querying |
+| 📋 | Trace viewer API — query traces by agent_id, session, time range |
+| 📋 | Dashboard trace page — `/dashboard/traces` with timeline visualization |
+| 📋 | Cost aggregation — total cost per agent/session/time period |
+| 📋 | Feedback collection — rate agent responses from dashboard |
+
+### Model Router
+
+| State | Feature |
+|-------|---------|
+| 📋 | SmartRouter — classify task complexity and route to optimal model |
+| 📋 | Cost-optimized routing — use cheap model for simple tasks |
+| 📋 | Fallback routing — retry with better model on failure |
+| 📋 | Provider capability-aware routing — match task to model strengths |
+
+### GraphRAG Pipeline
+
+| State | Feature |
+|-------|---------|
+| ✅ | KnowledgeGraphMemory — entity-relation graph store |
+| 📋 | Community detection — Leiden/ Louvain clustering |
+| 📋 | Community summarization — LLM-generated summaries per community |
+| 📋 | GraphRAG query — retrieve by entity → community → summary |
+
+### Priority for Phase 10
+
+1. **Trace Viewer (Monitoring UI)** — 生产运维的最短板
+2. **Model Router** — 直接降成本 50-80%
+3. **GraphRAG Pipeline** — 知识图谱检索的下一阶段

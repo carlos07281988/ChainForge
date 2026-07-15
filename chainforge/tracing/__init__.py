@@ -13,9 +13,11 @@
 # limitations under the License.
 from chainforge.tracing.propagation import TraceContext, inject_headers, extract_headers
 from chainforge.tracing.tracer import Tracer, Trace, Span, ConsoleTracer, trace, tracing_middleware
+from chainforge.tracing.store import TraceStore
 
 __all__ = [
     "Tracer", "Trace", "Span", "ConsoleTracer",
     "trace", "tracing_middleware",
     "TraceContext", "inject_headers", "extract_headers",
+    "TraceStore",
 ]
