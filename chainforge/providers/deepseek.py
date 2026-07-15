@@ -11,16 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""DeepSeek provider — supports DeepSeek-V3 (chat) and DeepSeek-R1 (reasoner).
+"""DeepSeek provider — supports V3, V4, R1, Pro, Flash variants.
+
+Full model lineup:
+  - deepseek-chat          DeepSeek-V3 standard chat
+  - deepseek-chat-pro      Faster, higher quality V3 variant
+  - deepseek-chat-flash    Lightweight, low-cost V3 variant
+  - deepseek-reasoner      DeepSeek-R1 with reasoning_content
+  - deepseek-reasoner-pro  Higher quality R1 variant
+  - deepseek-reasoner-flash Lightweight R1 variant
+  - deepseek-v4            Next generation model
 
 Uses the OpenAI-compatible API at api.deepseek.com.
-Properly handles reasoning_content from the DeepSeek-R1 model.
+Properly handles reasoning_content from R1 / V4 reasoning models.
 
 Usage:
     from chainforge.providers import DeepSeekProvider
 
-    llm = DeepSeekProvider(model="deepseek-reasoner")  # R1 with reasoning
-    llm = DeepSeekProvider(model="deepseek-chat")       # V3 chat
+    llm = DeepSeekProvider(model="deepseek-reasoner")   # R1 with reasoning trace
+    llm = DeepSeekProvider(model="deepseek-chat")        # V3 chat
+    llm = DeepSeekProvider(model="deepseek-v4")          # Next gen
+    llm = DeepSeekProvider(model="deepseek-chat-flash")  # Budget
 """
 
 from __future__ import annotations
@@ -62,7 +73,7 @@ class DeepSeekProvider(BaseModel):
             ProviderCapability.CHAT, ProviderCapability.STREAMING,
             ProviderCapability.TOOL_CALLING, ProviderCapability.FUNCTION_CALLING,
         }
-        if "reasoner" in self.model.lower():
+        if "reasoner" in self.model.lower() or "v4" in self.model.lower():
             caps.add(ProviderCapability.REASONING)
         return caps
 

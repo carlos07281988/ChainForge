@@ -32,7 +32,12 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
     "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},
     "gpt-4-turbo": {"input": 0.01, "output": 0.03},
     "deepseek-chat": {"input": 0.00027, "output": 0.0011},
+    "deepseek-chat-flash": {"input": 0.0001, "output": 0.0004},
+    "deepseek-chat-pro": {"input": 0.00045, "output": 0.0018},
     "deepseek-reasoner": {"input": 0.00055, "output": 0.00219},
+    "deepseek-reasoner-flash": {"input": 0.0002, "output": 0.0008},
+    "deepseek-reasoner-pro": {"input": 0.0009, "output": 0.0035},
+    "deepseek-v4": {"input": 0.0005, "output": 0.002},
 
     "claude-sonnet-4-20250514": {"input": 0.003, "output": 0.015},
     "claude-haiku-3-5": {"input": 0.0008, "output": 0.004},

@@ -1383,8 +1383,13 @@ print(resp.content)           # Final answer
 
 | Model | Type | Cost (per 1K input) | Features |
 |-------|------|---------------------|----------|
-| `deepseek-chat` | V3 chat | $0.00027 | Tool calling, streaming |
-| `deepseek-reasoner` | R1 reasoning | $0.00055 | Reasoning trace, tool calling |
+| `deepseek-chat` | V3 standard | $0.00027 | Tool calling, streaming |
+| `deepseek-chat-flash` | V3 lightweight | $0.00010 | Budget-friendly |
+| `deepseek-chat-pro` | V3 high-quality | $0.00045 | Higher accuracy |
+| `deepseek-reasoner` | R1 reasoning | $0.00055 | Reasoning trace |
+| `deepseek-reasoner-flash` | R1 lightweight | $0.00020 | Budget reasoning |
+| `deepseek-reasoner-pro` | R1 high-quality | $0.00090 | Deep reasoning |
+| `deepseek-v4` | Next-gen reasoning | $0.00050 | Latest model, reasoning trace |
 
 
 ### MCP Auto-Discovery / MCP 自动发现
