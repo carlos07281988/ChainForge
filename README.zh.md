@@ -322,6 +322,7 @@ chainforge/
 ├── tools/               # 工具系统
 │   ├── __init__.py
 │   ├── builtin.py       # 内置工具 (current_time, calculate, echo)
+│   ├── discovery.py      # RuntimeToolRegistry — dynamic tool discovery
 │   ├── openapi.py        # OpenAPIToolkit — spec-to-tool 转换
 │   └── computer_use.py   # PlaywrightTool — 浏览器自动化
 │
@@ -336,7 +337,8 @@ chainforge/
 │   ├── buffer.py        # 滑动窗口缓冲区
 │   ├── vector.py        # VectorMemory + SQLiteVectorMemory（向量记忆）
 │   ├── entity.py        # EntityMemory（实体提取 + 关系图）
-│   ├── knowledge_graph.py # KnowledgeGraphMemory（实体关系图存储）
+│   ├── knowledge_graph.py # KnowledgeGraphMemory
+│   ├── auto_memory.py    # AutoMemoryManager — MemGPT-style memory（实体关系图存储）
 │   ├── manager.py       # MemoryManager（协调工作/情景/语义三级记忆）
 │   ├── utils.py         # trim_messages, summarize_messages 工具函数
 │   └── summary.py       # 运行摘要压缩
@@ -1462,6 +1464,159 @@ print(result.summary())
 | **harmless** | 4 | Reject harmful/unsafe function requests |
 
 Each test case injects its own tool definitions and verifies tool name, arguments, and safety behavior.
+
+
+### Constrained Decoding — Token-Level Structured Output / 约束解码
+
+Guarantee schema-compliant JSON output with three backends: outlines, lm-format-enforcer, or jsonmode (fallback).
+
+```python
+from chainforge.core.constrained import ConstrainedDecoder
+from pydantic import BaseModel
+
+class Movie(BaseModel):
+    title: str
+    year: int
+    rating: float
+
+schema = Movie.model_json_schema()
+decoder = ConstrainedDecoder(backend="jsonmode")  # or "outlines", "lmfe"
+
+result = await decoder.generate(
+    llm=my_llm,
+    prompt="Recommend a sci-fi movie",
+    schema=schema,
+)
+# result = {"title": "Inception", "year": 2010, "rating": 8.8}
+```
+
+Backend comparison:
+
+| Backend | Mechanism | Success Rate | Dependency |
+|---------|-----------|-------------|------------|
+| jsonmode | JSON mode + retry | ~92% | None (built-in) |
+| outlines | Grammar-guided decoding | ~99% | pip install outlines |
+| lmfe | Token-level constraints | ~99% | pip install lm-format-enforcer |
+
+Automatic fallback: if outlines/lmfe is not installed, falls back to jsonmode.
+
+---
+
+### AutoMemoryManager — MemGPT-Style Memory / 自动记忆管理
+
+Beyond static memory buffers, AutoMemoryManager provides three key capabilities:
+
+```python
+from chainforge.memory import AutoMemoryManager
+
+memory = AutoMemoryManager(
+    llm=my_llm,
+    archive_threshold=25,   # auto-archive after 25 messages
+    enable_conflict_detection=True,
+    enable_forgetting=True,
+)
+
+# Automatic archival: old messages are summarized and stored in semantic memory
+await memory.store("User prefers dark mode")
+await memory.store("User knows Python 3.12")
+
+# Recency-weighted recall: frequently accessed facts rank higher
+context = await memory.recall("What does the user know?")
+
+# Conflict detection: contradictory facts are resolved automatically
+await memory.store("User uses light mode")  # conflicts - LLM resolves
+```
+
+Features:
+- Auto-archive: summarizes working memory into episodic memory when threshold exceeded
+- Recency-weighted recall: access-frequency + recency boosts relevant facts
+- Conflict resolution: LLM evaluates contradictory stored facts
+- Forgetting curve: old/unused facts naturally deprioritize
+
+---
+
+### RuntimeToolRegistry — Dynamic Tool Discovery / 运行时工具发现
+
+Agents can discover, register, and query tools at runtime:
+
+```python
+from chainforge.tools.discovery import RuntimeToolRegistry
+from chainforge.tools import tool
+
+@tool
+def get_weather(city: str) -> str:
+    return f"{city}: 25C"
+
+@tool
+def search(query: str) -> str:
+    return f"Results for: {query}"
+
+registry = RuntimeToolRegistry()
+registry.register(get_weather, tags=["weather", "info"], capabilities={"web_search"})
+registry.register(search, tags=["web", "info"], capabilities={"web_search"})
+
+# Query at runtime
+weather_tools = registry.query_by_tag("weather")
+search_tools = registry.query_by_capability("web_search")
+found = registry.search("weather")
+
+# Export filtered tool list for Agent
+agent = Agent(llm=llm, tools=registry.to_tool_list(tags=["weather"]))
+
+# Auto-discover MCP servers
+await registry.discover_mcp()
+print(registry.summary())
+```
+
+---
+
+### Pinecone & Qdrant Vector Stores / 云向量数据库
+
+Cloud-native vector database backends:
+
+```python
+from chainforge.rag import PineconeVectorStore, QdrantVectorStore
+
+# Pinecone (requires PINECONE_API_KEY)
+store = PineconeVectorStore(index_name="my-docs", namespace="production")
+await store.add_documents(docs)
+results = await store.similarity_search("query")
+
+# Qdrant (self-hosted or cloud)
+store = QdrantVectorStore(collection_name="my-docs", url="http://localhost:6333")
+await store.add_documents(docs)
+results = await store.similarity_search("query")
+```
+
+Both implement the VectorStore protocol, compatible with VectorStoreRetriever.
+
+---
+
+### PDF, Notion & GitHub Loaders / 扩展文档加载器
+
+New document loaders for real-world data sources:
+
+```python
+from chainforge.rag import PDFLoader, NotionLoader, GitHubLoader
+
+# PDF — tries pypdf, pdfminer, pdftotext
+docs = PDFLoader("report.pdf").load()
+
+# Notion (requires NOTION_TOKEN)
+docs = NotionLoader(page_id="abc123").load()
+docs = NotionLoader(database_id="db456").load()
+
+# GitHub (requires GITHUB_TOKEN)
+loader = GitHubLoader(repo="owner/repo")
+docs = loader.load(include_readme=True, include_issues=True)
+docs = loader.load_issues(state="open", limit=10, label="bug")
+```
+
+| Loader | Source | Auth | Output |
+|--------|--------|------|--------|
+| PDFLoader | Local PDF file | None | Extracted text |
+| NotionLoader | Page or database | NOTION_TOKEN | Content + properties |
+| GitHubLoader | GitHub repo | GITHUB_TOKEN | README + issues |
 
 
 ### DeepSeek Provider — Reasoning Model Support / DeepSeek 推理模型
