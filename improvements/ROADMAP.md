@@ -741,3 +741,32 @@
 2. **Declarative Workflow DSL** — 让非程序员也能定义 Agent 工作流
 3. **Multi-Modal Pipeline** — 补齐多模态输入能力
 
+
+## Phase 14: Self-Optimizing Agents (🛠 Just Implemented)
+
+### Dream / Simulation Mode
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **DreamConfig** — light/medium/deep prediction levels, accuracy tracking |
+| 🛠 | **Compare & learn** — prediction vs actual discrepancy analysis |
+| 📋 | **Auto-retry** — re-predict when accuracy is low |
+
+### Technology Tree
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **TechTree** — capability tree with unlock conditions |
+| 🛠 | **Usage tracking** — tool use counting for unlock triggers |
+| 🛠 | **Listener callbacks** — on_unlock event hooks |
+| 📋 | **Visualization** — tree rendering and progress tracking |
+
+### Multi-Generational Evolution
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **AgentPopulation** — genetic algorithm framework |
+| 🛠 | **Tournament selection** — fitness-proportional parent selection |
+| 🛠 | **Crossover + mutation** — genome blending and random variation |
+| 🛠 | **Elite preservation** — keep top performers across generations |
+
