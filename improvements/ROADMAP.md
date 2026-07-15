@@ -3,6 +3,41 @@
 
 > 路线图：当前状态、短期计划、长期愿景
 
+
+## Phase 15: Agent Quality & Production Readiness (🛠 In Progress)
+
+### P1: Agent Behavioral Testing Framework
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **BehaviorTest** — define expected agent behavior as assertions |
+| 🛠 | **BehaviorTestRunner** — run tests with MockLLM deterministic replay |
+| 📋 | **CI integration** — pytest plugin for agent tests |
+| 📋 | **Regression detection** — compare behavior across agent versions |
+
+### P2: Performance Budget Contracts
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **PerformanceContract** — declare max cost, calls, latency, tools |
+| 🛠 | **Budget enforcement** — real-time monitoring of execution against budget |
+| 📋 | **Budget learning** — SelfEvolvingAgent learns optimal budgets |
+
+### P1: Agent-as-Microservice
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **@service decorator** — one-line agent deployment |
+| 🛠 | **Auto OpenAPI** — generate OpenAPI spec from agent config |
+| 📋 | **MCP auto-registration** — announce service via MCP |
+
+### Priority for Phase 15
+
+1. **Behavioral Testing Framework** — 5-7天, 利用现有 MockLLM + TimeTravelDebugger
+2. **Agent-as-Microservice** — 3-5天, 基于现有 server.py
+3. **Performance Budget Contracts** — 3-5天, 基于现有 Middleware
+
+
 ## Legend
 
 | Icon | Meaning |

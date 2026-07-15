@@ -39,3 +39,7 @@ __all__ = [
     "mock_tool_call_response",
     "mock_agent",
 ]
+
+from chainforge.testing.behavior import BehaviorTest, BehaviorTestRunner, ExpectedBehavior, BehaviorTestResult
+
+__all__.extend(["BehaviorTest", "BehaviorTestRunner", "ExpectedBehavior", "BehaviorTestResult"])

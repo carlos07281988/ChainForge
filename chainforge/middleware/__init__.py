@@ -29,3 +29,6 @@ __all__ = [
     "langfuse_tracing_middleware",
     "logging_middleware",
 ]
+from chainforge.middleware.budget import PerformanceContract, BudgetTracker, budget_middleware
+
+__all__.extend(["PerformanceContract", "BudgetTracker", "budget_middleware"])
