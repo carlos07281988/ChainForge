@@ -148,17 +148,23 @@ class OpenAIProvider(BaseModel):
             raise ProviderError(f"OpenAI API error: {e}") from e
 
         content_parts: list[str] = []
+        reasoning_parts: list[str] = []
         tool_call_deltas: dict[int, dict] = {}
         async for chunk in stream:
             delta = chunk.choices[0].delta if chunk.choices else None
             if delta is None:
                 if hasattr(chunk, "usage") and chunk.usage:
                     usage = {"prompt_tokens": chunk.usage.prompt_tokens, "completion_tokens": chunk.usage.completion_tokens, "total_tokens": chunk.usage.total_tokens}
-                    yield LLMResponse(content="".join(content_parts) if content_parts else None, tool_calls=None, usage=usage, model=chunk.model, finish_reason="stop")
+                    rc_final = "".join(reasoning_parts) if reasoning_parts else None
+                    yield LLMResponse(content="".join(content_parts) if content_parts else None, tool_calls=None, reasoning_content=rc_final, usage=usage, model=chunk.model, finish_reason="stop")
                 continue
             if delta.content:
                 yield delta.content
                 content_parts.append(delta.content)
+            # Capture reasoning_content (o-series models)
+            rc = getattr(delta, "reasoning_content", None)
+            if rc:
+                reasoning_parts.append(rc)
             if delta.tool_calls:
                 for tc in delta.tool_calls:
                     idx = tc.index
@@ -186,4 +192,5 @@ class OpenAIProvider(BaseModel):
                 log_data(logger, DEBUG, f"OpenAI stream done: finish={finish}", data={
                     "finish_reason": finish, "tool_calls": len(tc_list) if tc_list else 0,
                 })
-                yield LLMResponse(content="".join(content_parts) if content_parts else None, tool_calls=tc_list, model=chunk.model, finish_reason=finish)
+                rc_final = "".join(reasoning_parts) if reasoning_parts else None
+                yield LLMResponse(content="".join(content_parts) if content_parts else None, tool_calls=tc_list, reasoning_content=rc_final, model=chunk.model, finish_reason=finish)
