@@ -23,6 +23,9 @@ from chainforge.core.human_in_loop import HumanInTheLoop, ApprovalRequest, Appro
 from chainforge.core.constrained import ConstrainedDecoder
 from chainforge.core.debugger import StepDebugger
 from chainforge.core.state import AgentState, StateTracker, StateTransition, Checkpointer, InMemoryCheckpointer, SQLiteCheckpointer, ThreadInfo
+from chainforge.core.time_travel import TimeTravelDebugger, ExecutionCheckpoint
+from chainforge.core.graph_dsl import parse_workflow_dict, parse_workflow_yaml, parse_workflow_json, workflow_to_dict
+from chainforge.core.multimodal import image_to_message, file_to_message
 from chainforge.core.files import FileLoader, FileContent, load_file, load_image
 
 __all__ = [
@@ -38,6 +41,9 @@ __all__ = [
     "AgentState", "StateTracker", "StateTransition", "Checkpointer", "InMemoryCheckpointer", "SQLiteCheckpointer", "ThreadInfo",
     "StepDebugger",
     "ConstrainedDecoder",
+    "TimeTravelDebugger", "ExecutionCheckpoint",
+    "parse_workflow_dict", "parse_workflow_yaml", "parse_workflow_json", "workflow_to_dict",
+    "image_to_message", "file_to_message",
     "FileLoader", "FileContent",
     "load_file", "load_image",
 ]

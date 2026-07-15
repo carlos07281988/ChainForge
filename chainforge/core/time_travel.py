@@ -320,3 +320,91 @@ class TimeTravelDebugger:
         }
 
 
+
+    def provenance_graph(self) -> dict:
+        """Build a full provenance graph of the execution."""
+        events_list = [
+            {
+                "id": f"evt_{i}",
+                "type": ev.get("type"),
+                "content": ev.get("content"),
+                "data": ev.get("data", {}),
+                "caused_by": self._infer_cause(ev, i),
+                "led_to": [],
+            }
+            for i, ev in enumerate(self._events)
+        ]
+        evt_by_pos = {e["id"]: e for e in events_list}
+        for i, evt in enumerate(events_list):
+            cause_id = evt.get("caused_by")
+            if cause_id and cause_id in evt_by_pos:
+                evt_by_pos[cause_id]["led_to"].append(evt["id"])
+        return {"events": events_list, "total_events": len(events_list)}
+
+    def _infer_cause(self, event: dict, index: int) -> str | None:
+        """Infer what caused an event by looking back in the chain."""
+        evt_type = event.get("type", "")
+        if evt_type == "tool_call":
+            for i in range(index - 1, -1, -1):
+                if self._events[i].get("type") in ("text", "state"):
+                    return f"evt_{i}"
+            return f"evt_{max(0, index - 1)}"
+        if evt_type == "tool_result":
+            tool_name = event.get("data", {}).get("name", "")
+            for i in range(index - 1, -1, -1):
+                prev = self._events[i]
+                if prev.get("type") == "tool_call" and prev.get("data", {}).get("name") == tool_name:
+                    return f"evt_{i}"
+            return f"evt_{max(0, index - 1)}"
+        if evt_type == "text" and index > 0:
+            for i in range(index - 1, -1, -1):
+                pt = self._events[i].get("type")
+                if pt in ("tool_result", "tool_call", "text"):
+                    return f"evt_{i}"
+            return f"evt_{max(0, index - 1)}"
+        if index > 0:
+            return f"evt_{index - 1}"
+        return None
+
+    def trace_decision(self, target_content: str, max_depth: int = 10) -> list[dict]:
+        """Trace why a particular output occurred by walking the causal chain."""
+        matching = [(i, evt) for i, evt in enumerate(self._events)
+                    if target_content.lower() in (str(evt.get("content", "")) + str(evt.get("data", {}))).lower()]
+        if not matching:
+            return []
+        target_idx = matching[-1][0]
+        chain = []
+        current_idx = target_idx
+        visited = set()
+        for _ in range(max_depth):
+            if current_idx in visited or current_idx < 0:
+                break
+            visited.add(current_idx)
+            evt = self._events[current_idx]
+            chain.append({"position": current_idx, "type": evt.get("type"),
+                          "content": (evt.get("content") or "")[:200], "data": evt.get("data", {})})
+            cause_id = self._infer_cause(evt, current_idx)
+            if cause_id and cause_id.startswith("evt_"):
+                try:
+                    current_idx = int(cause_id.split("_")[1])
+                except (ValueError, IndexError):
+                    break
+            else:
+                current_idx -= 1
+        chain.reverse()
+        return chain
+
+    def explain(self, target_content: str) -> str:
+        """Generate a human-readable explanation of a decision."""
+        chain = self.trace_decision(target_content)
+        if not chain:
+            return f"No causal chain found for: {target_content}"
+        icons = {"text": "\U0001f4ac", "tool_call": "\U0001f527", "tool_result": "\U0001f4ce",
+                 "state": "\u26a1", "error": "\u274c", "done": "\u2705"}
+        lines = ["Execution Trace:", "=" * 30]
+        for i, step in enumerate(chain):
+            icon = icons.get(step["type"], "\u2022")
+            c = (step.get("content") or "")[:120]
+            lines.append(f"  {icon} Step {i+1}: [{step['type']}] {c}")
+        lines.append("=" * 30)
+        return "\n".join(lines)

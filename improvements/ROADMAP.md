@@ -707,3 +707,37 @@
 4. **Visual Debugger UI** — 追上 LangGraph Studio
 5. **Execution Provenance Graph** — 调试器升级
 
+
+
+## Phase 13: Execution Intelligence & Multimodal (🛠 In Progress)
+
+### P1: Execution Provenance Graph
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **Causal link tracking** — each StreamEvent records what caused it |
+| 🛠 | **Provenance query** — trace_decision() shows full causal chain |
+| 📋 | **Provenance visualization** — graph rendering of execution causality |
+
+### P2: Declarative Workflow DSL
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **YAML workflow parser** — define CyclicGraph as YAML |
+| 📋 | **JSON schema validation** — validate workflow at load time |
+| 📋 | **Workflow templates** — reusable workflow component library |
+
+### P3: Multi-Modal Pipeline
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **Image input via file path** — load_image() for vision models |
+| 📋 | **Audio input** — speech-to-text preprocessing |
+| 📋 | **Unified multimodal router** — auto-detect input type and route |
+
+### Priority for Phase 13
+
+1. **Execution Provenance Graph** — 把 TimeTravelDebugger 升级为因果推理引擎
+2. **Declarative Workflow DSL** — 让非程序员也能定义 Agent 工作流
+3. **Multi-Modal Pipeline** — 补齐多模态输入能力
+
