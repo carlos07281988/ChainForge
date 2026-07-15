@@ -76,7 +76,7 @@ class GraphRAGPipeline:
         Uses simple BFS-based connected components clustering.
         For larger graphs, consider Leiden/Louvain algorithms.
         """
-        entities = set(self._kg._entities.keys()) if hasattr(self._kg, "_entities") else set()
+        entities = set(self._kg.all_entities.keys()) if hasattr(self._kg, "_entities") else set()
         if not entities:
             self._communities = []
             return self._communities
@@ -84,7 +84,7 @@ class GraphRAGPipeline:
         # Build adjacency list
         adj: dict[str, set[str]] = {e: set() for e in entities}
         if hasattr(self._kg, "_relations"):
-            for subject, rels in self._kg._relations.items():
+            for subject, rels in self._kg.relation_graph[0].items():
                 for _p, obj, _props in rels:
                     if subject in adj:
                         adj[subject].add(obj)
@@ -149,11 +149,11 @@ class GraphRAGPipeline:
             subgraph_lines = []
             for entity in community["entities"]:
                 if hasattr(self._kg, "_relations"):
-                    for p, obj, _props in self._kg._relations.get(entity, []):
+                    for p, obj, _props in self._kg.relation_graph[0].get(entity, []):
                         if obj in community["entities"]:
                             subgraph_lines.append(f"{entity} --[{p}]--> {obj}")
                 if hasattr(self._kg, "_reverse_relations"):
-                    for subj, p, _props in self._kg._reverse_relations.get(entity, []):
+                    for subj, p, _props in self._kg.relation_graph[1].get(entity, []):
                         if subj in community["entities"]:
                             subgraph_lines.append(f"{subj} --[{p}]--> {entity}")
 
@@ -199,8 +199,8 @@ class GraphRAGPipeline:
                 if entity.lower() in query_lower:
                     score += 2
                 # Check if entity appears in entity attributes
-                if hasattr(self._kg, "_entities"):
-                    ent_data = self._kg._entities.get(entity, {})
+                if True:
+                    ent_data = self._kg.all_entities.get(entity, {})
                     for val in ent_data.values():
                         if isinstance(val, str) and query_lower in val.lower():
                             score += 1
@@ -232,7 +232,7 @@ class GraphRAGPipeline:
         """Return pipeline statistics."""
         return {
             "communities": len(self._communities),
-            "total_entities": len(self._kg._entities) if hasattr(self._kg, "_entities") else 0,
+            "total_entities": len(self._kg.all_entities) if hasattr(self._kg, "_entities") else 0,
             "avg_community_size": round(
                 sum(len(c["entities"]) for c in self._communities) / len(self._communities), 1
             ) if self._communities else 0,

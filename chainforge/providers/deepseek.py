@@ -110,6 +110,8 @@ class DeepSeekProvider(BaseModel):
             msg_dict = getattr(msg, "model_dump", lambda: {})()
             if isinstance(msg_dict, dict):
                 reasoning_content = msg_dict.get("reasoning_content")
+        if reasoning_content is None and hasattr(msg, "model_extra"):
+            reasoning_content = (msg.model_extra or {}).get("reasoning_content")
 
         # Parse tool calls
         tool_calls = None

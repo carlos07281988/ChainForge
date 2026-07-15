@@ -28,10 +28,35 @@ def run_sync(coro: Coroutine[None, None, T]) -> T:
     This is useful for synchronous wrappers around async methods,
     replacing the scattered ``import asyncio; asyncio.run(...)`` pattern.
 
+    Handles both cases: no running event loop (sync context) and
+    existing running event loop (async context).
+
     Args:
         coro: The coroutine to execute.
 
     Returns:
         The return value of the coroutine.
     """
+    try:
+        loop = asyncio.get_running_loop()
+        # Already in async context — schedule a task and wait
+        if loop.is_running():
+            import threading
+            result = []
+            error = []
+
+            async def _run():
+                try:
+                    result.append(await coro)
+                except Exception as e:
+                    error.append(e)
+
+            future = asyncio.run_coroutine_threadsafe(_run(), loop)
+            future.result()  # blocks until done
+            if error:
+                raise error[0]
+            return result[0]
+    except RuntimeError:
+        pass
+    # No event loop running — use asyncio.run()
     return asyncio.run(coro)

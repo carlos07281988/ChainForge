@@ -80,6 +80,7 @@ class StepDebugger:
         self._paused = False
         self._aborted = False
         self._pause_event: asyncio.Event = asyncio.Event()
+        self._pause_requested = False
         self._current_snapshot: dict[str, Any] = {}
         self._events_so_far: list[dict] = []
         self._step_mode = False
@@ -151,6 +152,7 @@ class StepDebugger:
 
                 if should_pause and not self._aborted:
                     self._paused = True
+                    self._pause_requested = True
                     self._pause_event.clear()
                     yield StreamEvent(
                         type=EventType.status,
@@ -161,7 +163,9 @@ class StepDebugger:
                         },
                     )
                     # Wait for resume/step/abort
-                    await self._pause_event.wait()
+                    if self._pause_requested:
+                        await self._pause_event.wait()
+                    self._pause_requested = False
                     self._paused = False
 
             yield StreamEvent(type=EventType.status, content="debug:done")

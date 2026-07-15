@@ -178,13 +178,13 @@ class SmartRouter:
                 return name, route.llm
         return self._select_cost_optimized(complexity, None)
 
-    def get_llm(self, prompt: str, needed_capabilities: set[str] | None = None) -> tuple[str, LLM]:
+    async def get_llm(self, prompt: str, needed_capabilities: set[str] | None = None) -> tuple[str, LLM]:
         """Classify and select the best LLM for a prompt.
 
         Returns:
             (route_name, llm_provider) tuple.
         """
-        complexity = asyncio_run(self.classify(prompt))
+        complexity = await self.classify(prompt)
         result = self.select_route(complexity, needed_capabilities)
         if result is None:
             raise ValueError(f"No route can handle complexity {complexity}")

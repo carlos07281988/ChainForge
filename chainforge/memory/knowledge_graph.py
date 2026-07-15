@@ -224,6 +224,19 @@ class KnowledgeGraphMemory:
 
         return "\n".join(parts)
 
+    @property
+    def all_entities(self) -> dict:
+        """Return all entities (public accessor for graph queries)."""
+        return dict(self._entities)
+
+    @property
+    def relation_graph(self) -> tuple:
+        """Return (relations, reverse_relations) tuple for graph traversal."""
+        return (
+            dict(self._relations),
+            dict(self._reverse_relations),
+        )
+
     def stats(self) -> dict[str, int]:
         return {
             "entities": len(self._entities),
