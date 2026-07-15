@@ -75,6 +75,22 @@ class OpenAIProvider(BaseModel):
     def _parse_response(self, raw: Any) -> LLMResponse:
         choice = raw.choices[0]
         msg = choice.message
+
+        # Extract reasoning_content (o-series models)
+        reasoning_content = getattr(msg, "reasoning_content", None)
+        if reasoning_content is None:
+            msg_dict = getattr(msg, "model_dump", lambda: {})()
+            if isinstance(msg_dict, dict):
+                reasoning_content = msg_dict.get("reasoning_content")
+
+        usage = None
+        if raw.usage:
+            usage = {
+                "prompt_tokens": raw.usage.prompt_tokens,
+                "completion_tokens": raw.usage.completion_tokens,
+                "total_tokens": raw.usage.total_tokens,
+            }
+
         tool_calls = None
         if msg.tool_calls:
             tool_calls = []
@@ -89,7 +105,7 @@ class OpenAIProvider(BaseModel):
         usage = None
         if raw.usage:
             usage = {"prompt_tokens": raw.usage.prompt_tokens, "completion_tokens": raw.usage.completion_tokens, "total_tokens": raw.usage.total_tokens}
-        return LLMResponse(content=msg.content, tool_calls=tool_calls, usage=usage, model=raw.model, finish_reason=choice.finish_reason)
+        return LLMResponse(content=msg.content, tool_calls=tool_calls, usage=usage, model=raw.model, finish_reason=choice.finish_reason, reasoning_content=reasoning_content)
 
     async def generate(self, messages: list[Message], tools: list[ToolSpec] | None = None, **kwargs: Any) -> LLMResponse:
         client = self._get_client()

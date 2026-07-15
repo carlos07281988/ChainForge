@@ -380,7 +380,8 @@ chainforge/
 │   ├── google.py        # Google Gemini — streaming, tool calls
 │   ├── azure.py         # Azure OpenAI — streaming, tool calls
 │   ├── bedrock.py       # AWS Bedrock — Claude, Llama, Mistral, Titan
-│   └── ollama.py        # OllamaProvider — local inference
+│   ├── ollama.py        # OllamaProvider — local inference
+│   └── deepseek.py       # DeepSeekProvider — DeepSeek-V3/R1 (reasoning)
 │
 ├── agents/              # 10 agent patterns
 │   ├── __init__.py
@@ -2150,6 +2151,38 @@ print(provider.capabilities)
 Supported pricing models: GPT-4o, GPT-4o-mini, Claude Sonnet, Claude Haiku, Gemini Flash/Pro.
 
 ---
+
+### DeepSeek Provider — Reasoning Model Support / DeepSeek 推理模型
+
+ChainForge supports DeepSeek's chat and reasoning models through an OpenAI-compatible API:
+
+```python
+from chainforge.providers import DeepSeekProvider
+
+# DeepSeek-V3: standard chat
+llm = DeepSeekProvider(model="deepseek-chat", api_key="sk-...")
+
+# DeepSeek-R1: reasoning with thinking trace
+llm = DeepSeekProvider(model="deepseek-reasoner", api_key="sk-...")
+
+# Or set DEEPSEEK_API_KEY environment variable
+import os
+os.environ["DEEPSEEK_API_KEY"] = "sk-..."
+llm = DeepSeekProvider(model="deepseek-reasoner")
+
+# The reasoning_content is automatically extracted
+resp = await llm.generate([Message.user("What is 9.11 vs 9.9?")])
+print(resp.reasoning_content)  # Thinking chain from R1
+print(resp.content)           # Final answer
+```
+
+**Capabilities**: `deepseek-reasoner` declares `reasoning` capability, `deepseek-chat` supports tool calling.
+
+| Model | Type | Cost (per 1K input) | Features |
+|-------|------|---------------------|----------|
+| `deepseek-chat` | V3 chat | $0.00027 | Tool calling, streaming |
+| `deepseek-reasoner` | R1 reasoning | $0.00055 | Reasoning trace, tool calling |
+
 
 ### MCP Auto-Discovery / MCP 自动发现
 
