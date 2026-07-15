@@ -270,6 +270,7 @@ result = await supervisor.run("调研并写报告")
 
 ```
 chainforge/
+├── routing/           # SmartRouter — cost-optimized model routing
 ├── __init__.py          # 公开 API 导出
 ├── __main__.py          # python -m chainforge
 ├── _version.py          # 版本号
@@ -372,7 +373,8 @@ chainforge/
 │
 ├── tracing/             # 可观测性
 │   ├── __init__.py
-│   └── tracer.py        # Tracer, Span, ConsoleTracer, tracing_middleware
+│   ├── tracer.py        # Tracer, Span, ConsoleTracer, tracing_middleware
+│   └── store.py         # TraceStore — SQLite trace persistence
 │
 ├── mcp/                 # Model Context Protocol
 │   ├── __init__.py
@@ -515,7 +517,8 @@ ChainForge 内置 10 种 Agent 模式，覆盖不同场景：
 
 推理策略是 ChainForge 的**框架级抽象**，让你可以在任何 Agent 的执行循环中注入结构化思维模式，而无需修改 Agent 本身。
 
-与 `chainforge/agents/` 中预置的 Agent 模式（ReAct、ChainOfThought 等）不同，推理策略是**可组合的钩子**，可以在任何 Agent 上混搭使用。
+与 `chainforge/
+├── routing/           # SmartRouter — cost-optimized model routingagents/` 中预置的 Agent 模式（ReAct、ChainOfThought 等）不同，推理策略是**可组合的钩子**，可以在任何 Agent 上混搭使用。
 
 ### 架构
 
@@ -1466,6 +1469,116 @@ print(result.summary())
 Each test case injects its own tool definitions and verifies tool name, arguments, and safety behavior.
 
 
+### SmartRouter — Cost-Optimized Model Routing / 智能模型路由
+
+Automatically classify task complexity and route to the optimal model — reducing costs by 50-80%:
+
+```python
+from chainforge.routing import SmartRouter
+from chainforge.providers import OpenAIProvider, DeepSeekProvider
+
+router = SmartRouter()
+
+# Register models with max complexity each handles
+router.register("fast", OpenAIProvider(model="gpt-4o-mini"), max_complexity=2)
+router.register("full", OpenAIProvider(model="gpt-4o"), max_complexity=5)
+router.register("reasoning", DeepSeekProvider(model="deepseek-reasoner"), max_complexity=5)
+
+# Manually classify and route
+prompt = "What is 2+2?"
+name, llm = router.get_llm(prompt)  # Returns ("fast", gpt-4o-mini)
+print(f"Routed to: {name}")  # "fast"
+
+# Or create a self-routing agent
+agent = router.create_cost_optimized_agent(tools=[get_weather])
+async for event in await agent.run("Weather in Beijing?"):
+    ...  # Auto-routes to cheapest capable model
+```
+
+Routing strategies:
+
+| Strategy | Behavior | Use Case |
+|----------|----------|----------|
+| cost_optimized | Cheapest model that can handle complexity | Production cost reduction |
+| fallback | Start cheap, upgrade on failure | Reliability-sensitive |
+| capability | Match task to model strengths | Vision/reasoning tasks |
+
+Complexity classification (1-5) is done by a lightweight LLM call to a cheap model.
+
+---
+
+### GraphRAG Pipeline — Community Detection + Summarization / 图谱增强检索
+
+Extends KnowledgeGraphMemory with Microsoft GraphRAG-style pipeline:
+
+```python
+from chainforge.rag import GraphRAGPipeline
+from chainforge.memory import KnowledgeGraphMemory
+
+# Build a knowledge graph
+kg = KnowledgeGraphMemory()
+kg.add_triple("Alice", "works_at", "Google")
+kg.add_triple("Bob", "works_at", "Google")
+kg.add_triple("Alice", "likes", "Python")
+kg.add_triple("Charlie", "works_at", "Anthropic")
+kg.add_triple("Charlie", "likes", "Rust")
+
+# Create GraphRAG pipeline
+pipeline = GraphRAGPipeline(llm=my_llm, kg=kg)
+
+# Step 1: Detect communities (connected components)
+communities = pipeline.build_communities()
+# [{"id": "community_0", "entities": ["Alice", "Bob", "Google"], "summary": ""},
+#  {"id": "community_1", "entities": ["Charlie", "Anthropic", "Rust"], "summary": ""}]
+
+# Step 2: Generate LLM summaries per community
+await pipeline.summarize_communities()
+
+# Step 3: Query using GraphRAG
+result = await pipeline.query("Who works with Alice?")
+# Returns: community summaries + relevant entity details
+```
+
+Pipeline:
+1. Community detection — BFS connected components (configurable min size)
+2. Community summarization — LLM generates summary of what each community represents
+3. GraphRAG query — entity match → find communities → return summaries
+
+---
+
+### Trace Viewer — Monitoring Dashboard / 追踪查看器
+
+Persist execution traces to SQLite and query via REST API:
+
+```python
+from chainforge.tracing import Tracer, ConsoleTracer, TraceStore
+from chainforge.tracing.tracer import tracing_middleware
+
+# Record traces
+tracer = ConsoleTracer()
+store = TraceStore("traces.db")
+
+# Use with Agent (middleware automatically records)
+agent = Agent(llm=llm, tools=[...], middlewares=[tracing_middleware(tracer)])
+stream = await agent.run("Hello")
+
+# Persist completed trace
+if tracer.current_trace:
+    await store.save(tracer.current_trace)
+
+# Query traces via API
+traces = await store.list_traces(limit=10)
+trace_detail = await store.get_trace(trace_id)
+stats = await store.get_stats()
+# {"total_traces": 42, "avg_duration_ms": 1250.5, "total_spans": 156}
+
+# Or via HTTP (when running chainforge serve)
+# GET  /api/v1/traces            — list traces
+# GET  /api/v1/traces/stats      — aggregate statistics
+# GET  /api/v1/traces/{id}       — trace with spans
+# GET  /api/v1/traces?agent_id=x — filter by agent
+
+
 ### Constrained Decoding — Token-Level Structured Output / 约束解码
 
 Guarantee schema-compliant JSON output with three backends: outlines, lm-format-enforcer, or jsonmode (fallback).
@@ -1684,7 +1797,8 @@ registry.add_builtin("filesystem")
 registry.add_builtin("sqlite")
 ```
 
-MCPRegistry scans: `$CHAINFORGE_MCP_SERVERS`, `.chainforge-mcp.json`, `~/.chainforge/mcp_servers.json`.
+MCPRegistry scans: `$CHAINFORGE_MCP_SERVERS`, `.chainforge-mcp.json`, `~/.chainforge/
+├── routing/           # SmartRouter — cost-optimized model routingmcp_servers.json`.
 
 ---
 
