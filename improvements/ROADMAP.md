@@ -656,3 +656,54 @@
 5. **NL-as-Code Compiler** — 自然语言编程的桥梁
 6. **Swarm Intelligence** — 群体智能的涌现行为探索
 
+
+
+## Phase 12: Agent Frontier — Second Wave of Revolutionary Features (🛠 In Progress)
+
+### P0: Adaptive Tool Synthesis
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **Tool synthesis in Sandbox** — agent writes, tests, and registers new tools at runtime |
+| 📋 | Tool caching — same-signature tools are reused across sessions |
+| 📋 | Synthesis policy — on_demand and proactive (anticipate tool needs) |
+
+### P0: Visual Debugger UI
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Web-based step-through** — React SPA for TimeTravelDebugger |
+| 📋 | State inspection — view messages, context, tool results in tree view |
+| 📋 | Replay controls — rewind, step, branch, compare |
+
+### P1: Liquid Time-Series Memory
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **Decay-based forgetting** — memory weights decay over time (exp(-t/tau)) |
+| 🛠 | **Frequency boosting** — frequently accessed memories have enhanced weight |
+| 📋 | Auto-consolidation — merge semantically similar low-weight memories |
+
+### P1: Execution Provenance Graph
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Causal link tracking** — each event records what caused it |
+| 📋 | Provenance query — "why did the agent do X?" |
+
+### P2: Prompt Injection Detection
+
+| State | Feature |
+|-------|---------|
+| 🛠 | **Pattern-based detection** — known injection pattern matching |
+| 📋 | LLM-based detection — secondary LLM evaluates prompt safety |
+| 📋 | Automatic response modes — block, flag, sanitize |
+
+### Priority for Phase 12
+
+1. **Adaptive Tool Synthesis** — 独家壁垒，框架级能力
+2. **Liquid Time-Series Memory** — 解决长上下文天花板
+3. **Prompt Injection Detection** — 安全补短板
+4. **Visual Debugger UI** — 追上 LangGraph Studio
+5. **Execution Provenance Graph** — 调试器升级
+

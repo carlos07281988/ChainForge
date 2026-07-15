@@ -66,3 +66,6 @@ __all__ = [
     "GuardrailMiddleware",
     "GuardrailBlocked",
 ]
+
+from chainforge.guardrails.injection import PromptInjectionGuardrail
+__all__.extend(["PromptInjectionGuardrail"])

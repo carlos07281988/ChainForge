@@ -41,3 +41,6 @@ __all__ = [
     "count_tokens",
     "total_message_tokens",
 ]
+
+from chainforge.memory.liquid import LiquidMemory, LiquidItem
+__all__.extend(["LiquidMemory", "LiquidItem"])

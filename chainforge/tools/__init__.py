@@ -27,3 +27,6 @@ from chainforge.tools.openapi import OpenAPIToolkit
 __all__.extend(["RuntimeToolRegistry",
     "ToolRegistration",
     "OpenAPIToolkit"])
+
+from chainforge.tools.synthesis import ToolSynthesizer, ToolCache, SynthesizedTool
+__all__.extend(["ToolSynthesizer", "ToolCache", "SynthesizedTool"])
