@@ -20,6 +20,7 @@ from chainforge.core.pipeline import Pipeline
 from chainforge.core.middleware import Middleware
 from chainforge.core.graph import DAG, CyclicGraph, GraphNodeType, DAGNodeType, Node, Edge, ConditionalEdge
 from chainforge.core.human_in_loop import HumanInTheLoop, ApprovalRequest, ApprovalDecision
+from chainforge.core.debugger import StepDebugger
 from chainforge.core.state import AgentState, StateTracker, StateTransition, Checkpointer, InMemoryCheckpointer, SQLiteCheckpointer, ThreadInfo
 from chainforge.core.files import FileLoader, FileContent, load_file, load_image
 
@@ -34,6 +35,7 @@ __all__ = [
     "Middleware",
     "HumanInTheLoop", "ApprovalRequest", "ApprovalDecision",
     "AgentState", "StateTracker", "StateTransition", "Checkpointer", "InMemoryCheckpointer", "SQLiteCheckpointer", "ThreadInfo",
+    "StepDebugger",
     "FileLoader", "FileContent",
     "load_file", "load_image",
 ]

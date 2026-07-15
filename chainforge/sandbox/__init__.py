@@ -16,7 +16,7 @@
 Provides isolated execution for Python, shell, and other languages.
 
 Usage:
-    from chainforge.sandbox import SubprocessSandbox
+    from chainforge.sandbox import SubprocessSandbox, DockerSandbox
 
     sandbox = SubprocessSandbox(timeout=30)
     result = await sandbox.execute("print('hello')", "python")
@@ -25,5 +25,6 @@ Usage:
 
 from chainforge.sandbox.base import Sandbox, SandboxResult
 from chainforge.sandbox.subprocess import SubprocessSandbox
+from chainforge.sandbox.docker import DockerSandbox
 
-__all__ = ["Sandbox", "SandboxResult", "SubprocessSandbox"]
+__all__ = ["Sandbox", "SandboxResult", "SubprocessSandbox", "DockerSandbox"]

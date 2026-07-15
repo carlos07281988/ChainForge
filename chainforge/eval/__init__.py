@@ -18,6 +18,7 @@ from chainforge.eval.suite import EvalSuite
 from chainforge.eval.runner import EvalRunner, EvalResult, EvalRun
 from chainforge.eval.metrics import MetricsCollector, builtin_metrics
 from chainforge.eval.report import EvalReport, format_report
+from chainforge.eval.benchmarks import BFCLRunner, BFCLCase, BFCLResult, bfcl_cases
 from chainforge.eval.judge import LLMJudgeEval, PairwiseEval, JudgeResult, PairwiseResult
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "EvalReport", "format_report",
     "LLMJudgeEval", "PairwiseEval",
     "JudgeResult", "PairwiseResult",
+    "BFCLRunner", "BFCLCase", "BFCLResult", "bfcl_cases",
 ]

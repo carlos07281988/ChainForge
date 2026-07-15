@@ -251,24 +251,24 @@
 | State | Feature |
 |-------|---------|
 | ✅ | CyclicGraph execution engine |
-| 📋 | Migrate Agent._run_loop to CyclicGraph execution (replace hand-written state machine) |
+| ✅ | Migrate Agent._run_loop to CyclicGraph execution (replace hand-written state machine) |
 | 💡 | Full visual agent flow graph in dashboard |
 
 ### LLM Response Extensions
 
 | State | Feature |
 |-------|---------|
-| 📋 | LLMResponse.reasoning_content — thinking model support (DeepSeek-R1, o-series) |
-| 📋 | LLMResponse.cost — aggregated cost tracking from token usage |
-| 📋 | Provider capability declaration (supports_vision, supports_tools, supports_streaming, etc.) |
+| ✅ | LLMResponse.reasoning_content — thinking model support (DeepSeek-R1, o-series) |
+| ✅ | LLMResponse.cost — aggregated cost tracking from token usage |
+| ✅ | Provider capability declaration (supports_vision, supports_tools, supports_streaming, etc.) |
 
 ### Tool System Evolution
 
 | State | Feature |
 |-------|---------|
-| 📋 | Structured tool artifacts (non-string returns via response_schema) |
-| 📋 | BaseTool class with _run / _arun lifecycle methods |
-| 📋 | OpenAPIToolkit — spec-to-tool auto-generation |
+| ✅ | Structured tool artifacts (non-string returns via response_schema) |
+| ✅ | BaseTool class with _run / _arun lifecycle methods |
+| ✅ | OpenAPIToolkit — spec-to-tool auto-generation |
 | 💡 | Streaming tool execution support |
 
 ### Evaluation Depth
@@ -277,25 +277,25 @@
 |-------|---------|
 | ✅ | LLMJudgeEval — LLM-as-judge scoring |
 | ✅ | PairwiseEval — A/B comparison |
-| 📋 | Adversarial testing (prompt injection, jailbreak scenarios) |
-| 📋 | Regression test suite with auto-detection |
+| ✅ | Adversarial testing (prompt injection, jailbreak scenarios) |
+| ✅ | Regression test suite with auto-detection |
 
 ### Agentic RAG
 
 | State | Feature |
 |-------|---------|
-| 📋 | Self-RAG — agent decides when to retrieve |
-| 📋 | Corrective RAG — agent evaluates and fixes retrieval quality |
+| ✅ | Self-RAG — agent decides when to retrieve |
+| ✅ | Corrective RAG — agent evaluates and fixes retrieval quality |
 | 💡 | Adaptive RAG — agent chooses retrieval strategy per query |
 
 ### Computer Use / Advanced Tools
 
 | State | Feature |
 |-------|---------|
-| 📋 | PlaywrightTool — browser automation for agents |
-| 📋 | Deep MCP integration — auto-discover and connect MCP servers |
-| 💡 | Knowledge Graph Memory (Neo4j-style entity-relation store) |
-| 💡 | Cron/scheduled agent execution |
+| ✅ | PlaywrightTool — browser automation for agents |
+| ✅ | Deep MCP integration — auto-discover and connect MCP servers |
+| ✅ | Knowledge Graph Memory (Neo4j-style entity-relation store) |
+| ✅ | Cron/scheduled agent execution |
 
 ### Priority for Phase 7
 
@@ -351,15 +351,15 @@
 | ✅ | SQLite-backed VectorMemory — cross-session persistence |
 | ✅ | EntityMemory graph — neighbor/relation tracking |
 | ✅ | trim_messages / summarize_messages utility functions |
-| 💡 | Knowledge Graph Memory (Neo4j-style) |
+| ✅ | Knowledge Graph Memory (Neo4j-style) |
 
 ### Tool System Evolution
 
 | State | Feature |
 |-------|---------|
-| 📋 | Structured tool artifacts (non-string returns) |
-| 📋 | BaseTool class with _run / _arun lifecycle |
-| 📋 | OpenAPIToolkit — spec-to-tool auto-generation |
+| ✅ | Structured tool artifacts (non-string returns) |
+| ✅ | BaseTool class with _run / _arun lifecycle |
+| ✅ | OpenAPIToolkit — spec-to-tool auto-generation |
 | 💡 | Streaming tool execution support |
 
 ### Provider & Multi-modal
@@ -369,9 +369,9 @@
 | ✅ | 5 cloud providers (OpenAI, Anthropic, Google, Azure, Bedrock) |
 | ✅ | OllamaProvider — local inference |
 | ✅ | Multi-modal Message parts (image, file, audio) |
-| 📋 | LLMResponse.reasoning_content — thinking model support |
-| 📋 | LLMResponse.cost — aggregated cost tracking |
-| 📋 | Provider capability declaration (supports_vision, etc.) |
+| ✅ | LLMResponse.reasoning_content — thinking model support |
+| ✅ | LLMResponse.cost — aggregated cost tracking |
+| ✅ | Provider capability declaration (supports_vision, etc.) |
 | 💡 | vLLM / LlamaCpp providers |
 
 ### Evaluation Depth
@@ -381,7 +381,7 @@
 | ✅ | EvalCase/EvalSuite/EvalRunner/EvalReport framework |
 | ✅ | LLMJudgeEval — LLM-as-judge scoring |
 | ✅ | PairwiseEval — A/B comparison with Elo rating |
-| 📋 | Adversarial testing (prompt injection, jailbreak scenarios) |
+| ✅ | Adversarial testing (prompt injection, jailbreak scenarios) |
 
 ### Production Deployment
 
@@ -392,7 +392,7 @@
 | ✅ | Webhook callback on agent completion |
 | ✅ | API key authentication |
 | ✅ | Usage quota / rate limiting per user |
-| 💡 | Cron/scheduled agent execution |
+| ✅ | Cron/scheduled agent execution |
 
 ### Forward-looking Features
 
@@ -412,3 +412,71 @@
 4. **OllamaProvider + Multi-modal Message** — 降低使用门槛
 5. **LLMJudgeEval** — 评估信度
 6. **Production deployment (auth, webhook, quota)** — 生产部署必备
+
+## Phase 8: Production Hardening & Benchmarks (📋 Planned, from Gap Analysis 2026-07)
+
+### Code Sandbox Evolution
+
+| State | Feature |
+|-------|---------|
+| ✅ | SubprocessSandbox — process-level isolation |
+| 📋 | DockerSandbox — container-level isolation |
+| 💡 | E2B sandbox integration |
+
+### State Streaming + Debugger
+
+| State | Feature |
+|-------|---------|
+| 📋 | Full state snapshot streaming (complete state dict per step) |
+| 📋 | Step debugger — pause, inspect, resume agent execution |
+| 💡 | LangGraph Studio-style visual debug UI |
+
+### Benchmark Integration
+
+| State | Feature |
+|-------|---------|
+| 📋 | BFCL (Berkeley Function Calling Leaderboard) test cases |
+| 📋 | GAIA / ToolBench benchmark suites |
+| 📋 | Automated benchmark runner |
+
+### Vector Store Expansion
+
+| State | Feature |
+|-------|---------|
+| ✅ | ChromaVectorStore, FAISSVectorStore, InMemoryVectorStore, SQLiteVectorMemory |
+| 💡 | Pinecone / Weaviate / Milvus / Qdrant backends |
+
+### Document Loader Expansion
+
+| State | Feature |
+|-------|---------|
+| ✅ | Text, CSV, JSON, HTML, Directory loaders |
+| 💡 | Notion / Confluence / GitHub / Slack / YouTube loaders |
+
+### GraphRAG Pipeline
+
+| State | Feature |
+|-------|---------|
+| ✅ | KnowledgeGraphMemory — entity-relation graph store |
+| 💡 | Community detection + summarization (GraphRAG pattern) |
+
+### Constrained Decoding
+
+| State | Feature |
+|-------|---------|
+| 💡 | Outlines / lm-format-enforcer integration for token-level structured output |
+
+### MemGPT-style Auto Memory
+
+| State | Feature |
+|-------|---------|
+| 💡 | Automatic memory archival, retrieval-triggered recall, conflict resolution |
+
+### Priority for Phase 8
+
+1. **Docker Sandbox** — Agent 执行代码必须容器隔离
+2. **State streaming + Debugger** — 对标 LangGraph Studio 的调试能力
+3. **BFCL benchmark** — 可信的工具调用评估
+4. **Vector store breadth** — Pinecone/Milvus/Qdrant 适配
+5. **Document loader breadth** — 扩充 RAG 数据源
+
