@@ -354,13 +354,14 @@ chainforge/
 ├── _version.py          # Version string
 ├── client.py            # HTTP client for ChainForge server
 ├── server.py            # HTTP server (FastAPI + REST + SSE)
+├── scheduler.py          # AgentScheduler — cron-style agent execution
 ├── logging.py           # Structured logging (text/json, per-module levels)
 │
 ├── core/                # Foundational primitives
 │   ├── __init__.py
 │   ├── agent.py         # Agent execution loop (LLM ↔ Tools ↔ LLM...)
-│   ├── llm.py           # LLM Protocol + LLMResponse
-│   ├── tool.py          # Tool Protocol + FunctionTool + @tool decorator
+│   ├── llm.py           # LLM Protocol + LLMResponse (reasoning_content, cost, capabilities)
+│   ├── tool.py          # Tool Protocol + FunctionTool + @tool + BaseTool + ToolSpec.response_schema
 │   ├── message.py       # Message, ToolCall, ToolResult, Role, ContentPart (multi-modal)
 │   ├── stream.py        # StreamEvent (7 types) + Stream wrapper
 │   ├── pipeline.py      # Sequential step composition with >>
@@ -398,7 +399,9 @@ chainforge/
 │
 ├── tools/               # Tool system
 │   ├── __init__.py
-│   └── builtin.py       # Built-in tools (current_time, calculate, echo)
+│   ├── builtin.py       # Built-in tools (current_time, calculate, echo)
+│   ├── openapi.py        # OpenAPIToolkit — spec-to-tool auto-generation
+│   └── computer_use.py   # PlaywrightTool — browser automation
 │
 ├── skills/              # Reusable capability bundles
 │   ├── __init__.py
@@ -411,6 +414,7 @@ chainforge/
 │   ├── buffer.py        # Sliding-window buffer
 │   ├── vector.py        # VectorMemory + SQLiteVectorMemory
 │   ├── entity.py        # EntityMemory with graph relationships
+│   ├── knowledge_graph.py # KnowledgeGraphMemory — entity-relation graph store
 │   ├── manager.py       # MemoryManager — coordinates working/episodic/semantic
 │   ├── utils.py         # trim_messages, summarize_messages, count_tokens
 │   └── summary.py       # Running-summary compression
@@ -492,6 +496,7 @@ User Prompt
 ### `chainforge`
 
 | `Middleware` | Composable hook wrapper |
+| `BaseTool` | Optional tool base class with _run/_arun lifecycle |
 
 ### `chainforge.core.errors`
 
@@ -553,6 +558,16 @@ User Prompt
 - [x] **Multi-modal messages** — Image/file/audio ContentPart support
 - [x] **LLM-as-Judge evaluation** — LLMJudgeEval + PairwiseEval
 - [x] **Production server** — API key auth, thread management, webhooks, usage tracking
+- [x] **LLMResponse.reasoning_content + cost** — thinking model support + auto cost calculation
+- [x] **Provider capabilities** — capability declaration per provider (vision, tools, streaming)
+- [x] **BaseTool + structured artifacts** — lifecycle hooks + ToolSpec.response_schema
+- [x] **OpenAPIToolkit** — OpenAPI spec to ChainForge tools converter
+- [x] **Agentic RAG** — SelfRAG + CorrectiveRAG (retrieval quality evaluation)
+- [x] **KnowledgeGraphMemory** — entity-relation graph with neighborhood traversal
+- [x] **AgentScheduler** — cron-style scheduled agent execution
+- [x] **PlaywrightTool** — browser automation (navigate, click, fill, screenshot)
+- [x] **MCP auto-discovery** — environment variables + config files scanning
+- [x] **Adversarial testing** — 8 security/robustness eval cases
 - [x] **Streaming agent state** — explicit state machine (StateTracker) with iteration/depth metadata
 - [x] **Langfuse integration** — `langfuse_tracing_middleware`
 - [x] **Bedrock provider** — AWS Bedrock (Claude, Llama, etc.)

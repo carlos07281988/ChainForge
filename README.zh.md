@@ -275,13 +275,14 @@ chainforge/
 ├── _version.py          # 版本号
 ├── client.py            # ChainForge HTTP 客户端
 ├── server.py            # HTTP 服务 (FastAPI + REST + SSE)
+├── scheduler.py          # AgentScheduler — 定时 Agent 执行
 ├── logging.py           # 结构化日志 (text/json, 模块级日志级别)
 │
 ├── core/                # 核心基元
 │   ├── __init__.py
 │   ├── agent.py         # Agent 执行循环 (LLM ↔ Tools ↔ LLM...)
-│   ├── llm.py           # LLM 协议 + LLMResponse
-│   ├── tool.py          # Tool 协议 + FunctionTool + @tool 装饰器
+│   ├── llm.py           # LLM 协议 + LLMResponse（reasoning_content、cost、capabilities）
+│   ├── tool.py          # Tool 协议 + FunctionTool + @tool + BaseTool + ToolSpec.response_schema
 │   ├── message.py       # Message, ToolCall, ToolResult, Role, ContentPart（多模态支持）
 │   ├── stream.py        # StreamEvent (7 种类型) + Stream 包装器
 │   ├── pipeline.py      # 线性步骤组合 (>>)
@@ -319,7 +320,9 @@ chainforge/
 │
 ├── tools/               # 工具系统
 │   ├── __init__.py
-│   └── builtin.py       # 内置工具 (current_time, calculate, echo)
+│   ├── builtin.py       # 内置工具 (current_time, calculate, echo)
+│   ├── openapi.py        # OpenAPIToolkit — spec-to-tool 转换
+│   └── computer_use.py   # PlaywrightTool — 浏览器自动化
 │
 ├── skills/              # 可复用技能包
 │   ├── __init__.py
@@ -332,6 +335,7 @@ chainforge/
 │   ├── buffer.py        # 滑动窗口缓冲区
 │   ├── vector.py        # VectorMemory + SQLiteVectorMemory（向量记忆）
 │   ├── entity.py        # EntityMemory（实体提取 + 关系图）
+│   ├── knowledge_graph.py # KnowledgeGraphMemory（实体关系图存储）
 │   ├── manager.py       # MemoryManager（协调工作/情景/语义三级记忆）
 │   ├── utils.py         # trim_messages, summarize_messages 工具函数
 │   └── summary.py       # 运行摘要压缩
@@ -973,6 +977,16 @@ sequenceDiagram
 - ✅ **多模态消息** — 图片/文件/音频 ContentPart
 - ✅ **LLM-as-Judge 评估** — LLMJudgeEval + PairwiseEval
 - ✅ **生产部署增强** — API key 认证、线程管理、Webhook、用量追踪
+- ✅ **LLMResponse.reasoning_content + cost** — 推理模型支持 + 自动成本计算
+- ✅ **Provider capabilities** — 每个 Provider 声明能力（vision、tools、streaming）
+- ✅ **BaseTool + 结构化产出** — 生命周期钩子 + ToolSpec.response_schema
+- ✅ **OpenAPIToolkit** — OpenAPI 规范自动转为 ChainForge 工具
+- ✅ **Agentic RAG** — SelfRAG + CorrectiveRAG（检索质量评估与修正）
+- ✅ **KnowledgeGraphMemory** — 实体关系图 + 邻域遍历
+- ✅ **AgentScheduler** — 定时 Agent 执行器
+- ✅ **PlaywrightTool** — 浏览器自动化（导航、点击、填表、截图）
+- ✅ **MCP 自动发现** — 环境变量 + 配置文件扫描
+- ✅ **对抗性测试** — 8 个安全/鲁棒性评估用例
 - ✅ **A2A 协议** — Google Agent-to-Agent 标准协议
 - ✅ CLI 脚手架 + 评估命令
 - ✅ Agent 评估框架（EvalSuite / EvalRunner / EvalReport）
