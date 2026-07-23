@@ -26,6 +26,13 @@
 - [控制台](#-控制台)
 - [DAG 可视化编辑器](#-dag-可视化编辑器)
 - [路线图](#-路线图)
+- [Advanced Features / 高级功能](#advanced-features--高级功能)
+  - [ArtifactStore — 制品管理](#artifactstore--文件与媒体制品管理--file--media-artifact-management)
+  - [InvocationContext — 调用上下文](#invocationcontext--标准化执行上下文--standardized-execution-context)
+  - [Lifecycle Hooks — 生命周期钩子](#工具与-agent-生命周期钩子--tool--agent-lifecycle-hooks)
+  - [ActivityLogger — 活动日志](#activitylogger--结构化活动日志--structured-activity-logging)
+  - [ThreadManager — 会话线程管理](#threadmanager--会话线程管理--conversation-thread-management)
+  - [WebSearch — 网络搜索](#webssearch-与-webfetch--内置网络搜索--built-in-web-search)
 
 ---
 
@@ -1817,6 +1824,217 @@ Available providers and their capabilities:
 | OpenAI | chat, streaming, tool_calling, function_calling, parallel_tool_calls, structured_output, vision (gpt-4o+) |
 | Anthropic | chat, streaming, tool_calling, function_calling, structured_output, vision |
 | Ollama | chat, streaming, tool_calling (optional: vision) |
+
+
+### ArtifactStore — 文件与媒体制品管理 / File & Media Artifact Management
+
+Agent 执行过程中产生的文件、图片、代码、结构化数据的一等公民制品管理。
+
+```python
+from chainforge.core.artifact import ArtifactStore, ArtifactType
+
+store = ArtifactStore(name="session-data")
+
+# 保存不同类型制品
+code_art = await store.save("analysis.py", data=b"print('hello')", mime_type="text/x-python")
+img_art = await store.save_from_file("chart.png", tags=["visualization"])
+json_art = await store.save_json("results.json", {"accuracy": 0.95, "loss": 0.05})
+
+# 检索和搜索
+loaded = await store.get(code_art.id)
+results = await store.search(tags=["visualization"])
+text_artifacts = await store.search(artifact_type=ArtifactType.text)
+
+# 会话级视图
+session_store = store.session_scope("session-1")
+await session_store.save("note.txt", b"Hello")
+
+# 生命周期管理
+await store.prune(max_age=3600)  # 删除1小时前的制品
+stats = store.stats()  # {"count": 42, "total_size": 1024000, "by_type": {...}}
+```
+
+| 方法 | 描述 |
+|------|------|
+| `save()` | 存储原始字节数据，带名称、MIME类型、元数据 |
+| `save_text()` / `save_json()` | 存储文本或JSON制品 |
+| `save_from_file()` | 从磁盘加载并存储文件 |
+| `get()` / `delete()` | 按ID检索或删除 |
+| `search()` | 按名称、标签、类型、MIME类型搜索 |
+| `prune()` | 按时间或数量清理旧制品 |
+| `session_scope()` | 按session_id过滤的视图 |
+
+---
+
+### InvocationContext — 标准化执行上下文 / Standardized Execution Context
+
+统一上下文容器，携带会话、身份、追踪和配置元数据，贯穿 agent 执行管道。
+
+```python
+from chainforge.core.context import InvocationContext, with_context, get_invocation_context
+
+# 创建上下文
+ctx = InvocationContext(
+    session_id="sess-abc123",
+    user_id="user-456",
+    thread_id="thread-789",
+    tags=["production", "v2"],
+    metadata={"source": "web", "priority": "high"},
+)
+
+# 传递给 Agent 执行
+stream = await agent.run("Hello", context=ctx.to_dict())
+
+# 快速辅助函数
+ctx_dict = with_context(session_id="sess-1", user_id="user-1", source="mobile")
+
+# 从上下文中提取
+received_ctx = get_invocation_context(ctx_dict)
+print(received_ctx.session_id, received_ctx.user_id)
+```
+
+**关键字段:** `session_id`, `user_id`, `invocation_id`, `trace_id`, `locale`, `tags`, `metadata`。
+
+---
+
+### 工具与 Agent 生命周期钩子 / Tool & Agent Lifecycle Hooks
+
+细粒度的钩子系统，可在工具执行前后修改行为，灵感来自 Google ADK。与 Callback（仅观察）不同，Hook 可以**修改参数、跳过执行、转换结果**。
+
+```python
+from chainforge.core.hooks import ToolHook, AgentHook, LoggingHook, MetricsHook, TimingHook
+
+class ValidationHook(ToolHook):
+    async def before_run(self, name: str, args: dict, ctx: dict) -> dict | None:
+        if "query" in args and len(args["query"]) > 1000:
+            args["query"] = args["query"][:1000]  # 截断过长的输入
+        return args
+
+    async def after_run(self, name: str, args: dict, result: Any, ctx: dict) -> Any:
+        if isinstance(result, str) and len(result) > 10000:
+            return result[:10000] + "...[截断]"
+        return result
+
+# 直接在 Agent 中使用
+agent = Agent(
+    llm=llm,
+    hooks=[ValidationHook(), LoggingHook(), TimingHook(threshold_ms=2000)],
+)
+
+# 内置钩子
+log_hook = LoggingHook()      # 记录所有工具/Agent 事件
+metrics = MetricsHook()       # 收集执行时间和事件计数
+timing = TimingHook(threshold_ms=1000)  # 对慢工具发出警告
+```
+
+| 钩子 | 工具级别 | Agent 级别 | 用途 |
+|------|:---:|:---:|------|
+| `ToolHook` | ✅ | | before_run / after_run / on_error |
+| `AgentHook` | | ✅ | on_start / on_step / on_error / on_finish |
+| `LoggingHook` | ✅ | ✅ | 结构化事件日志 |
+| `MetricsHook` | | ✅ | 执行时间和事件计数 |
+| `TimingHook` | ✅ | | 逐工具执行时间统计 |
+
+---
+
+### ActivityLogger — 结构化活动日志 / Structured Activity Logging
+
+可查询、可分级的活动日志系统，用于 Agent 监控、调试和审计。
+
+```python
+from chainforge.core.activity import ActivityLogger
+
+log = ActivityLogger(name="my-agent", max_events=5000)
+
+# 记录活动
+log.info("agent.run", "处理请求", session_id="sess-1")
+log.tool_call("web_search", {"query": "最新 AI 新闻"}, duration_ms=120)
+log.warning("tool.slow", "搜索耗时5秒", tool_name="web_search", duration_ms=5000)
+log.error("tool.failed", "API 超时", error="ConnectionError")
+
+# 带过滤的查询
+recent = log.query(category="tool.*", level="error", limit=10)
+search_events = log.query(tool_name="web_search", since=time.time() - 3600)
+
+# 统计信息
+stats = log.stats()
+# {"total_events": 152, "by_category": {"agent": 12, "tool": 140}, "by_tool": {"web_search": 80}}
+
+# 导出
+log.export_json("activity_log.json", pretty=True)
+```
+
+**查询过滤:** `category`（支持通配符，如 `"tool.*"`）、`level`、`session_id`、`tool_name`、`tag`、`since`/`until`。
+
+---
+
+### ThreadManager — 会话线程管理 / Conversation Thread Management
+
+多轮对话的线程管理，支持消息历史、线程隔离、回合追踪。
+
+```python
+from chainforge.core.thread import ThreadManager
+from chainforge.core.message import Message
+
+mgr = ThreadManager()
+
+# 创建会话线程
+thread = await mgr.create_thread(
+    user_id="user-abc",
+    title="客户支持对话",
+    tags=["support", "production"],
+)
+
+# 追踪对话回合
+turn = await mgr.start_turn(thread.id)
+await mgr.add_message(thread.id, Message.user("今天天气怎么样？"))
+await mgr.add_message(thread.id, Message.assistant("25°C，晴天。"))
+await mgr.end_turn(thread.id, turn.turn_id, duration_ms=1500)
+
+# 获取历史
+history = await mgr.get_history(thread.id)
+last_5 = await mgr.get_last_n(thread.id, n=5)
+
+# 列出活跃线程
+active = await mgr.list_threads(user_id="user-abc", active_only=True)
+
+# 统计
+stats = mgr.stats()
+# {"total_threads": 12, "active_threads": 8, "total_messages": 450}
+```
+
+**核心功能:** 线程CRUD、消息历史（自动裁剪）、回合追踪、元数据管理、按用户过滤。
+
+---
+
+### WebSearch 与 WebFetch — 内置网络搜索 / Built-in Web Search
+
+内置网络搜索和网页抓取工具，支持多个后端，灵感来自 Google ADK 的 WebSearch 工具。
+
+```python
+from chainforge.tools.websearch import web_search, web_fetch
+
+# DuckDuckGo 搜索（免费，无需 API key）
+results = await web_search("AI 代理最新发展")
+# 返回: "1. Title\n   Snippet\n   Source: url\n\n2. ..."
+
+# 使用 SerpAPI 后端
+results = await web_search("AI news", backend="serpapi", api_key="...")
+
+# 获取网页文本内容
+content = await web_fetch("https://example.com/article", max_chars=3000)
+
+# 作为 Agent 工具
+agent = Agent(llm=llm, tools=[web_search, web_fetch])
+```
+
+| 后端 | API Key | 费用 | 质量 |
+|------|---------|------|------|
+| `duckduckgo`（默认） | 无 | 免费 | 良好 |
+| `serpapi` | `SERPAPI_API_KEY` | 付费 | 优秀 |
+| `bing` | `BING_API_KEY` | 付费 | 优秀 |
+
+也可通过 `web_search_toolkit()` 批量导入。
 
 
 Apache 2.0

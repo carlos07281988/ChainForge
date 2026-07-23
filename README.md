@@ -32,6 +32,13 @@
   - [Dream/Simulation Mode](#dream--simulation-mode--梦境模拟模式)
   - [Technology Tree](#technology-tree--科技树)
   - [AgentPopulation](#agentpopulation--多代演化)
+  - [ArtifactStore](#artifactstore--file--media-artifact-management--制品管理)
+  - [InvocationContext](#invocationcontext--standardized-execution-context--调用上下文)
+  - [Lifecycle Hooks](#tool--agent-lifecycle-hooks--beforeafter-execution-hooks--生命周期钩子)
+  - [ActivityLogger](#activitylogger--structured-activity-logging--活动日志)
+  - [ThreadManager](#threadmanager--conversation-thread--session-management--会话线程管理)
+  - [WebSearch & WebFetch](#webssearch--webfetch--built-in-web-search--网络搜索工具)
+
   - [Behavioral Testing](#behavioral-testing-framework--行为测试框架)
   - [Performance Budget](#performance-budget-contracts--性能预算契约)
   - [Agent-as-Microservice](#agent-as-microservice--一行部署-agent)

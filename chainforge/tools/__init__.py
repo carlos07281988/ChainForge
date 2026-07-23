@@ -28,5 +28,9 @@ __all__.extend(["RuntimeToolRegistry",
     "ToolRegistration",
     "OpenAPIToolkit"])
 
+from chainforge.tools.websearch import web_search, web_fetch, web_search_toolkit
 from chainforge.tools.synthesis import ToolSynthesizer, ToolCache, SynthesizedTool
+from chainforge.tools.websearch import web_search, web_fetch, web_search_toolkit
+
+__all__.extend(["web_search", "web_fetch", "web_search_toolkit"])
 __all__.extend(["ToolSynthesizer", "ToolCache", "SynthesizedTool"])

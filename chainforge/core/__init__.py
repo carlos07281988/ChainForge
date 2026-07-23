@@ -27,6 +27,11 @@ from chainforge.core.time_travel import TimeTravelDebugger, ExecutionCheckpoint
 from chainforge.core.graph_dsl import parse_workflow_dict, parse_workflow_yaml, parse_workflow_json, workflow_to_dict
 from chainforge.core.multimodal import image_to_message, file_to_message
 from chainforge.core.files import FileLoader, FileContent, load_file, load_image
+from chainforge.core.artifact import Artifact, ArtifactType, ArtifactStore, ScopedArtifactStore
+from chainforge.core.context import InvocationContext, get_invocation_context, with_context
+from chainforge.core.hooks import ToolHook, AgentHook, LoggingHook, MetricsHook, TimingHook
+from chainforge.core.activity import ActivityLogger, ActivityEvent, ActivityLevel
+from chainforge.core.thread import ThreadManager, ThreadInfo, TurnInfo, ThreadMetadata
 
 __all__ = [
     "LLM", "LLMResponse",
@@ -46,4 +51,9 @@ __all__ = [
     "image_to_message", "file_to_message",
     "FileLoader", "FileContent",
     "load_file", "load_image",
+    "Artifact", "ArtifactType", "ArtifactStore", "ScopedArtifactStore",
+    "InvocationContext", "get_invocation_context", "with_context",
+    "ToolHook", "AgentHook", "LoggingHook", "MetricsHook", "TimingHook",
+    "ActivityLogger", "ActivityEvent", "ActivityLevel",
+    "ThreadManager", "ThreadInfo", "TurnInfo", "ThreadMetadata",
 ]
