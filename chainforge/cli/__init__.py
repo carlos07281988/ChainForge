@@ -94,6 +94,16 @@ def main():
     r.add_argument("agent_id", help="Registered agent ID or inline spec")
     r.add_argument("prompt", nargs="*", help="Prompt text")
 
+    # chainforge compile
+    co = sub.add_parser("compile", help="Compile natural language into an agent workflow (NL → Agent Compiler)")
+    co.add_argument("description", nargs="*", help="Natural language description of the workflow")
+    co.add_argument("--template", default=None, help="Force a specific template by name")
+    co.add_argument("--yaml", action="store_true", dest="as_yaml", help="Output as YAML instead of Python")
+    co.add_argument("--run", action="store_true", help="Compile and run immediately")
+    co.add_argument("--output", default=None, help="Save generated code to file")
+    co.add_argument("--list-templates", action="store_true", help="List available workflow templates")
+    co.add_argument("--provider", default=None, help="LLM provider for NL parsing (openai, anthropic, google)")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -112,6 +122,9 @@ def main():
         _handle_run(args)
     elif args.command == "eval":
         _handle_eval(args)
+    elif args.command == "compile":
+        import asyncio
+        asyncio.run(_handle_compile(args))
     else:
         parser.print_help()
 
@@ -329,6 +342,67 @@ def _handle_config(args):
 
 
 # ── scaffold / quickstart / init ─────────────────────────────────────────────
+
+def _handle_config(args):
+def _handle_compile(args):
+    """Compile natural language into agent workflow."""
+    from chainforge.compiler import compile_workflow, list_templates
+
+    if args.list_templates:
+        templates = list_templates()
+        print("Available workflow templates:")
+        print(f"{'Name':<24} {'Description':<48} {'Keywords'}")
+        print("-" * 90)
+        for t in templates:
+            kw = ", ".join(t["keywords"][:5])
+            print(f"{t['name']:<24} {t['description'][:46]:<48} {kw}")
+        return
+
+    description = " ".join(args.description) if args.description else ""
+    if not description:
+        print("❌ Please provide a workflow description or use --list-templates")
+        print("   Example: chainforge compile \"search web and summarize\"")
+        return
+
+    # Set up LLM if provider specified
+    llm = None
+    if args.provider:
+        if args.provider == "openai":
+            from chainforge.providers import OpenAIProvider
+            llm = OpenAIProvider()
+        elif args.provider == "anthropic":
+            from chainforge.providers import AnthropicProvider
+            llm = AnthropicProvider()
+        elif args.provider == "google":
+            from chainforge.providers import GoogleProvider
+            llm = GoogleProvider()
+
+    result = await compile_workflow(description, llm=llm)
+
+    print(result.summary())
+    print()
+
+    if not result.success:
+        return
+
+    # Output code
+    if args.as_yaml:
+        output = result.yaml_output
+    else:
+        output = result.python_code
+
+    if args.output:
+        with open(args.output, "w") as f:
+            f.write(output)
+        print(f"✅ Saved to {args.output}")
+    else:
+        print(output)
+
+    if args.run:
+        print("\n🚀 Running workflow...")
+        from chainforge.compiler import compile_and_run
+        await compile_and_run(description, llm=llm)
+
 
 def _scaffold_project(name: str, target_dir: str, template: str | None = None):
     from pathlib import Path

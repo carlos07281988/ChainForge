@@ -33,7 +33,8 @@
   - [ActivityLogger — 活动日志](#activitylogger--结构化活动日志--structured-activity-logging)
   - [ThreadManager — 会话线程管理](#threadmanager--会话线程管理--conversation-thread-management)
   - [WebSearch — 网络搜索]
-  - [Agent Visual Debugger — 可视化调试器](#agent-visual-debugger--可视化调试器--interactive-debugging-ui)
+  - [Agent Visual Debugger — 可视化调试器]
+  - [NL → Agent Compiler — 自然语言编译器](#agent-visual-debugger--可视化调试器--interactive-debugging-ui)
 
 ---
 

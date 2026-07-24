@@ -39,6 +39,7 @@
   - [ThreadManager](#threadmanager--conversation-thread--session-management--会话线程管理)
   - [WebSearch & WebFetch](#webssearch--webfetch--built-in-web-search--网络搜索工具)
   - [Agent Visual Debugger](#agent-visual-debugger--interactive-debugging-ui--可视化调试器)
+  - [NL → Agent Compiler](#nl--agent-compiler--compile-natural-language-to-workflows--自然语言编译器)
 
   - [Behavioral Testing](#behavioral-testing-framework--行为测试框架)
   - [Performance Budget](#performance-budget-contracts--性能预算契约)
