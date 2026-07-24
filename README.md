@@ -44,10 +44,332 @@
   - [Behavioral Testing](#behavioral-testing-framework--行为测试框架)
   - [Performance Budget](#performance-budget-contracts--性能预算契约)
   - [Agent-as-Microservice](#agent-as-microservice--一行部署-agent)
+- [What Makes ChainForge Unique](#what-makes-chainforge-unique--为什么是-chainforge)
 - [License](#license--许可)
 
 ---
 
+
+
+
+
+## What Makes ChainForge Unique / 为什么是 ChainForge
+
+ChainForge isn't another LangChain fork or CrewAI variant. It's a **clean-slate redesign**
+that ships features no other agent framework has — features that fundamentally change
+what agents can do. Every feature listed here is built-in, zero external dependencies.
+
+---
+
+### ⏱ TimeTravelDebugger — Time-Travel Debugging
+
+Record full execution snapshots, rewind to any checkpoint, fork branches for comparison,
+and trace causal chains. Not step-over debugging — **time-travel debugging**.
+
+```python
+from chainforge.core.time_travel import TimeTravelDebugger
+
+debugger = TimeTravelDebugger(agent, max_checkpoints=50)
+stream = await debugger.run("Analyze this data")
+
+# Rewind and replay from checkpoint 3
+replay_stream = debugger.replay("ckp_3")
+branch_stream = debugger.branch("ckp_3")  # Fork for comparison
+```
+
+**Unique value:** No other open-source agent framework has this. LangGraph Studio
+is a hosted service — ChainForge's is built-in and self-hosted.
+
+---
+
+### 🗣️ NL → Agent Compiler — Natural Language to Workflows
+
+Describe agent workflows in plain language; ChainForge compiles them into
+executable CyclicGraphs. Two modes: **template** (instant, no LLM) and **LLM** (arbitrary).
+
+```python
+from chainforge.compiler import compile_workflow
+
+# Template mode — instant, no LLM needed
+result = await compile_workflow("search web and answer questions")
+print(result.python_code)  # Executable CyclicGraph code
+
+# LLM mode — handles any description
+result = await compile_workflow(
+    "search the web, if results found summarize, otherwise generate",
+    llm=llm,
+)
+
+# CLI: chainforge compile "search web and summarize" --run
+```
+
+**Unique value:** The only agent framework where you can "prompt an agent into existence."
+No YAML, no Python code.
+
+---
+
+### 🔍 Execution Provenance Graph — Causal Decision Tracing
+
+Every decision records *why it happened*. Trace from any output back through the
+causal chain to the originating input. Know exactly which tool call led to which
+LLM response and why.
+
+```python
+from chainforge.core.provenance import ProvenanceTracker
+
+tracker = ProvenanceTracker()
+async for event in tracker.track(agent.run(prompt)):
+    yield event
+
+# Walk the causal chain
+chain = tracker.trace_decision("tool_call_3")
+print(tracker.format_chain(chain))
+# ▶ Input: weather?
+#   └─ LLM: Let me search
+#     └─ Tool: search({"q": "weather"})
+#       └─ Result: sunny
+#         └─ Response: It's sunny
+
+# Critical path: minimal decision nodes
+path = tracker.critical_path()
+```
+
+**Unique value:** Goes beyond logging — full causal tracing. Every output is
+linked back through the chain of decisions that produced it.
+
+---
+
+### 🤖 Self-Healing Agents — Automatic Failure Recovery
+
+Tools fail. Self-Healing Agents detect failures, classify them, and automatically
+recover with retries, fallback tools, and escalation strategies.
+
+```python
+from chainforge.core.healing import SelfHealingWrapper, HealingPolicy
+
+policy = HealingPolicy(
+    max_retries=2,
+    fallback_tools={
+        "web_search": ["web_fetch", "duckduckgo_search"],
+        "calculate": ["math_tool"],
+    },
+)
+agent = SelfHealingWrapper(my_agent, policy=policy)
+stream = await agent.run("Search for AI news")
+
+# Check healing stats
+print(agent.stats())
+# {"total_calls": 42, "failures": 3, "healed": 2, "per_tool": {...}}
+```
+
+**Unique value:** Agents that survive production failures without human intervention.
+Error classification + fallback chains + automatic retry with exponential backoff.
+
+---
+
+### 🧠 Agent Memory Consolidation — Human-Like Memory
+
+Agents periodically review their memories, score them by recency/frequency/quality,
+prune low-confidence facts, and compress related information into summaries.
+Like human memory consolidation during sleep.
+
+```python
+from chainforge.core.consolidation import MemoryConsolidator
+
+consolidator = MemoryConsolidator(
+    config={"confidence_threshold": 0.3, "enable_compression": True}
+)
+
+memories = [
+    "User likes Python",
+    "User works at Google",
+    "User prefers dark mode",
+    "User writes Python daily",
+]
+report = consolidator.consolidate(memories)
+# {"reviewed": 4, "pruned": 0, "compressed": 1, "patterns": [...]}
+```
+
+**Unique value:** Beyond sliding windows and vector stores — active memory
+management that prioritizes, prunes, and consolidates.
+
+---
+
+### 🔗 Auditable Execution Chain — Tamper-Evident Logs
+
+Every agent action is recorded in a SHA-256 hash chain. Modifying any entry
+invalidates all subsequent hashes. Production-grade audit trails built in.
+
+```python
+from chainforge.core.audit import AuditLog, audit_middleware
+
+log = AuditLog(session_id="session-1")
+agent = Agent(llm=llm, middlewares=[audit_middleware(log)])
+stream = await agent.run("Hello")
+
+# Verify integrity
+report = log.verify()
+assert report["valid"]  # Detects any tampering
+
+# Export and restore with full integrity
+data = log.export()
+restored = AuditLog.from_entries(data)
+assert restored.verify()["valid"]
+```
+
+**Unique value:** Every agent interaction is cryptographically verifiable.
+Essential for compliance (finance, healthcare, legal).
+
+---
+
+### 🛡️ Behavior Contract Runtime — Declarative Enforcement
+
+Define contracts for what your agent can and cannot do. Runtime enforcement
+blocks violations before they happen.
+
+```python
+from chainforge.core.contracts import (
+    ContractRegistry, SecurityContract,
+    PerformanceContract, ContractEnforcer,
+)
+
+contracts = ContractRegistry()
+contracts.add(SecurityContract(
+    name="no_delete", rule="disallow_tool",
+    tool_pattern="delete_*", severity="error",
+))
+contracts.add(PerformanceContract(
+    name="budget", rule="max_llm_calls", value=5,
+))
+
+enforcer = ContractEnforcer(agent=my_agent, contracts=contracts)
+stream = await enforcer.run("Hello")
+print(enforcer.report())
+# {"passed": True, "violations": [], "contracts_checked": 2}
+```
+
+**Unique value:** ASL specification language meets runtime enforcement.
+Kubernetes-for-Agents — declare what your agent should do, and it's enforced.
+
+---
+
+### 🔧 ToolSynthesizer — Agents Write Their Own Tools
+
+When existing tools don't fit the task, agents write, test, and register new
+tools at runtime. LLM generates Python code → syntax validation → execution
+test → ToolSpec extraction — all automatic.
+
+```python
+from chainforge.tools.synthesis import ToolSynthesizer
+
+synthesizer = ToolSynthesizer(llm=my_llm)
+new_tool = await synthesizer.synthesize(
+    "Calculate compound interest given principal, rate, and time",
+    tool_name="compound_interest",
+)
+agent = Agent(llm=llm, tools=[new_tool, search_tool])
+```
+
+**Unique value:** No other framework lets agents extend their own capabilities
+at runtime. This changes the ceiling of what agents can accomplish.
+
+---
+
+### 🧪 Cross-Model Consensus & Routing
+
+**ConsensusAgent** — Run the same prompt across GPT-4o, Claude, and Gemini
+simultaneously. Resolve with majority vote, confidence weighting, or fallback chains.
+
+```python
+from chainforge.orchestration.consensus import ConsensusAgent, ConsensusStrategy
+
+agent = ConsensusAgent(
+    llm=OpenAIProvider(model="gpt-4o"),
+    models={
+        "gpt4o": OpenAIProvider(model="gpt-4o"),
+        "sonnet": AnthropicProvider(model="claude-sonnet-4-20250514"),
+        "gemini": GoogleProvider(model="gemini-2.0-flash"),
+    },
+    strategy=ConsensusStrategy.majority_vote,
+    max_parallel=3,
+)
+```
+
+**SmartRouter 2.0** — Route sub-tasks to the best model by capability, cost, and latency.
+Adaptive selection with cost tracking and fallback chains.
+
+```python
+from chainforge.routing.adaptive import AdaptiveRouter, ModelRegistry
+
+registry = ModelRegistry()
+registry.register("gpt-4o-mini", cost_per_1k=0.00015, latency_ms=300,
+                  capabilities={"chat", "tool_calling"})
+registry.register("gpt-4o", cost_per_1k=0.0025, latency_ms=800,
+                  capabilities={"chat", "tool_calling", "vision", "reasoning"})
+
+router = AdaptiveRouter(registry=registry, optimize_for="cost")
+provider = await router.select("Write a complex algorithm")
+# → gpt-4o (needs reasoning)
+```
+
+---
+
+### 🌿 Self-Optimizing Agents
+
+**SelfEvolvingAgent** — Records execution metrics, progressively optimizes
+system prompts, tool selection, and error avoidance.
+
+**Technology Tree** — Civilization-style: agents unlock capabilities by using tools.
+Unlock "advanced_search" after 10 successful searches.
+
+**Dream / Simulation Mode** — Agents predict tool outcomes before executing,
+compare predictions with actual results, and learn from discrepancies.
+
+**AgentPopulation** — Genetic algorithm framework evolves optimal agent
+configurations across generations (tournament selection, crossover, mutation).
+
+---
+
+### 🧊 LiquidMemory — Time-Series Decay Memory
+
+Items have continuously decaying weights. Frequently accessed items get boosted —
+simulating human memory. No fixed token windows.
+
+```python
+from chainforge.memory.liquid import LiquidMemory
+
+mem = LiquidMemory(decay_rate=0.05, frequency_boost=1.5)
+await mem.add("User prefers dark mode", tags=["preference"])
+results = await mem.get_context(top_k=10)  # Weighted by decay + frequency
+```
+
+---
+
+### 🧪 Adversarial Testing Engine — Security Evaluation
+
+Automated security testing against prompt injection, jailbreaks, and encoding
+abuse. Generates 27+ attacks, runs them through your guardrails, and reports
+detection rates and security scores.
+
+```python
+from chainforge.eval.adversarial import AdversarialTester
+
+tester = AdversarialTester()
+report = await tester.run()
+print(f"Security Score: {report.security_score}/100")
+print(report.summary())
+# Detected:  22/27  |  False Pos: 0/3  |  Score: 85/100
+```
+
+---
+
+## What's NOT Included / 其他框架有但 ChainForge 没有的
+
+ChainForge intentionally does not include:
+- **Visual Studio / LangGraph Studio** — We provide the protocol (ALDP) and
+  Python API (TimeTravelDebugger). UI is a separate concern.
+- **Hosted platform / LangSmith** — Self-hosted tracing built in.
+- **100+ dependencies** — ChainForge depends on pydantic + stdlib only.
 
 
 ## Why ChainForge? / 为什么选择 ChainForge

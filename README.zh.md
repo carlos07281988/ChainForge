@@ -10,6 +10,7 @@
 
 ## 📖 目录
 
+- [ChainForge 独有特性](#chainforge-独有特性--what-makes-chainforge-unique)
 - [为什么选择 ChainForge](#-为什么选择-chainforge)
 - [快速开始](#-快速开始)
 - [安装](#-安装)
@@ -37,6 +38,62 @@
   - [NL → Agent Compiler — 自然语言编译器](#agent-visual-debugger--可视化调试器--interactive-debugging-ui)
 
 ---
+
+
+## ChainForge 独有特性 / What Makes ChainForge Unique
+
+ChainForge 不是又一个 LangChain 分支或 CrewAI 变体。它是**彻底的重构**，内置了其他代理框架没有的功能。
+
+---
+
+### ⏱ TimeTravelDebugger — 时间旅行调试
+
+记录完整执行快照，可回退到任意检查点、分叉分支对比、追踪因果链——不是单步调试，是**时间旅行调试**。
+
+### 🗣️ NL → Agent Compiler — 自然语言编译器
+
+用自然语言描述工作流，ChainForge 自动编译为可执行的 CyclicGraph。支持模板模式（即时，无需 LLM）和 LLM 模式（任意描述）。`chainforge compile "搜索网页并总结" --run`
+
+### 🔍 Execution Provenance — 执行溯源图
+
+每个决策都记录了"为什么发生"。从任意输出回溯因果链到原始输入，知道哪个工具调用导致了哪个 LLM 响应。
+
+### 🤖 Self-Healing Agents — 自愈代理
+
+工具失败时自动检测、分类、恢复。支持指数退避重试、回退工具链、自动升级策略。`agent.stats()` 查看治愈率。
+
+### 🧠 Memory Consolidation — 记忆整合
+
+代理定期回顾记忆，按时效/频率/质量评分，修剪低置信度事实，压缩相关信息。类似人类睡眠中的记忆巩固。
+
+### 🔗 Auditable Execution Chain — 可审计执行链
+
+每次代理动作都通过 SHA-256 哈希链记录。修改任何条目都会使后续所有哈希失效——生产级审计追踪。
+
+### 🛡️ Behavior Contract Runtime — 契约运行时
+
+声明式定义安全和性能契约（禁止工具、预算上限），运行时强制执行，违规自动阻断或告警。
+
+### 🔧 ToolSynthesizer — 自适应工具合成
+
+代理在运行时自己编写、测试、注册新工具。LLM 生成代码 → 语法验证 → 执行测试 → 自动提取 ToolSpec。
+
+### 🧪 Cross-Model Consensus — 跨模型共识
+
+同时用 GPT-4o、Claude、Gemini 对同一 prompt 推理，通过多数投票、置信度加权等 4 种策略解决分歧。
+
+### 🌿 Self-Optimizing Agents — 自优化代理
+
+自进化代理（SelfEvolvingAgent）自动优化 system prompt 和参数。科技树（Technology Tree）游戏式解锁能力。梦境模式（Dream Mode）预测后再行动。
+
+### 🧊 LiquidMemory — 液态时序记忆
+
+连续衰减/增强的记忆权重，而非固定上下文窗口。频繁访问的记忆自动提升，不常用的自然淡出。
+
+---
+
+**独特的定位：** 其他框架需要 100+ 依赖，ChainForge 只依赖 pydantic + stdlib。LangGraph Studio 是托管服务，ChainForge 的调试器内置自托管。LangSmith 是外部平台，ChainForge 的追踪从第一天就是框架的一部分。
+
 
 ## 🎯 为什么选择 ChainForge
 
