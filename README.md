@@ -2961,6 +2961,220 @@ print(pop.fitness_history())
 
 
 
+
+### ArtifactStore — File & Media Artifact Management / 制品管理
+
+First-class artifact management for files, images, code, and structured data produced during agent execution.
+
+```python
+from chainforge.core.artifact import ArtifactStore, ArtifactType
+
+store = ArtifactStore(name="session-data")
+
+# Save different artifact types
+code_art = await store.save("analysis.py", data=b"print('hello')", mime_type="text/x-python")
+img_art = await store.save_from_file("chart.png", tags=["visualization"])
+json_art = await store.save_json("results.json", {"accuracy": 0.95, "loss": 0.05})
+
+# Retrieve and search
+loaded = await store.get(code_art.id)
+results = await store.search(tags=["visualization"])
+text_artifacts = await store.search(artifact_type=ArtifactType.text)
+
+# Session-scoped view
+session_store = store.session_scope("session-1")
+await session_store.save("note.txt", b"Hello")
+
+# Lifecycle management
+await store.prune(max_age=3600)  # Remove artifacts older than 1 hour
+stats = store.stats()  # {"count": 42, "total_size": 1024000, "by_type": {...}}
+```
+
+| Method | Description |
+|--------|-------------|
+| `save()` | Store raw bytes with name, MIME type, metadata |
+| `save_text()` / `save_json()` | Store text or JSON artifacts |
+| `save_from_file()` | Load and store a file from disk |
+| `get()` / `delete()` | Retrieve or remove by ID |
+| `search()` | Filter by name, tags, type, MIME type |
+| `prune()` | Remove old artifacts by age or count |
+| `session_scope()` | Scoped view filtered by session_id |
+
+---
+
+### InvocationContext — Standardized Execution Context / 调用上下文
+
+A uniform context container carrying session, identity, tracing, and configuration metadata across the entire agent execution pipeline.
+
+```python
+from chainforge.core.context import InvocationContext, with_context, get_invocation_context
+
+# Create context
+ctx = InvocationContext(
+    session_id="sess-abc123",
+    user_id="user-456",
+    thread_id="thread-789",
+    tags=["production", "v2"],
+    metadata={"source": "web", "priority": "high"},
+)
+
+# Pass to agent execution
+stream = await agent.run("Hello", context=ctx.to_dict())
+
+# Quick helper
+ctx_dict = with_context(session_id="sess-1", user_id="user-1", source="mobile")
+
+# Extract from received context
+received_ctx = get_invocation_context(ctx_dict)
+print(received_ctx.session_id, received_ctx.user_id)
+```
+
+**Key fields:** `session_id`, `user_id`, `invocation_id`, `trace_id`, `locale`, `tags`, `metadata`.
+
+---
+
+### Tool & Agent Lifecycle Hooks — Before/After Execution Hooks / 生命周期钩子
+
+Fine-grained hooks at the tool and agent level, inspired by Google ADK. Hooks can **modify behavior** (transform args, skip execution), while Callbacks only observe.
+
+```python
+from chainforge.core.hooks import ToolHook, AgentHook, LoggingHook, MetricsHook, TimingHook
+
+class ValidationHook(ToolHook):
+    async def before_run(self, name: str, args: dict, ctx: dict) -> dict | None:
+        if "query" in args and len(args["query"]) > 1000:
+            args["query"] = args["query"][:1000]  # Truncate
+        return args
+
+    async def after_run(self, name: str, args: dict, result: Any, ctx: dict) -> Any:
+        if isinstance(result, str) and len(result) > 10000:
+            return result[:10000] + "...[truncated]"
+        return result
+
+# Use hooks directly in agent
+agent = Agent(
+    llm=llm,
+    hooks=[ValidationHook(), LoggingHook(), TimingHook(threshold_ms=2000)],
+)
+
+# Built-in hooks
+log_hook = LoggingHook()      # Logs all tool/agent events
+metrics = MetricsHook()       # Collects timing and event counts
+timing = TimingHook(threshold_ms=1000)  # Warns on slow tools
+```
+
+| Hook | Tool Level | Agent Level | Purpose |
+|------|:---:|:---:|--------|
+| `ToolHook` | ✅ | | before_run / after_run / on_error |
+| `AgentHook` | | ✅ | on_start / on_step / on_error / on_finish |
+| `LoggingHook` | ✅ | ✅ | Structured event logging |
+| `MetricsHook` | | ✅ | Execution timing and counts |
+| `TimingHook` | ✅ | | Per-tool execution timing |
+
+---
+
+### ActivityLogger — Structured Activity Logging / 活动日志
+
+Queryable, categorized activity logs for agent monitoring, debugging, and auditing.
+
+```python
+from chainforge.core.activity import ActivityLogger
+
+log = ActivityLogger(name="my-agent", max_events=5000)
+
+# Log activities
+log.info("agent.run", "Processing request", session_id="sess-1")
+log.tool_call("web_search", {"query": "latest AI news"}, duration_ms=120)
+log.warning("tool.slow", "Search took 5s", tool_name="web_search", duration_ms=5000)
+log.error("tool.failed", "API timeout", error="ConnectionError")
+
+# Query with filters
+recent = log.query(category="tool.*", level="error", limit=10)
+search_events = log.query(tool_name="web_search", since=time.time() - 3600)
+
+# Statistics
+stats = log.stats()
+# {"total_events": 152, "by_category": {"agent": 12, "tool": 140}, "by_tool": {"web_search": 80}}
+
+# Export
+log.export_json("activity_log.json", pretty=True)
+```
+
+**Query filters:** `category` (glob, e.g. `"tool.*"`), `level`, `session_id`, `tool_name`, `tag`, `since`/`until`.
+
+---
+
+### ThreadManager — Conversation Thread & Session Management / 会话线程管理
+
+Multi-turn conversation management with thread isolation, message history, and turn tracking.
+
+```python
+from chainforge.core.thread import ThreadManager
+from chainforge.core.message import Message
+
+mgr = ThreadManager()
+
+# Create a conversation thread
+thread = await mgr.create_thread(
+    user_id="user-abc",
+    title="Customer support chat",
+    tags=["support", "production"],
+)
+
+# Track conversation turns
+turn = await mgr.start_turn(thread.id)
+await mgr.add_message(thread.id, Message.user("What's the weather?"))
+await mgr.add_message(thread.id, Message.assistant("It's 25°C and sunny."))
+await mgr.end_turn(thread.id, turn.turn_id, duration_ms=1500)
+
+# Retrieve history
+history = await mgr.get_history(thread.id)
+last_5 = await mgr.get_last_n(thread.id, n=5)
+
+# List active threads
+active = await mgr.list_threads(user_id="user-abc", active_only=True)
+
+# Session stats
+stats = mgr.stats()
+# {"total_threads": 12, "active_threads": 8, "total_messages": 450}
+```
+
+**Key features:** Thread CRUD, message history with auto-prune, turn tracking, metadata management, per-user filtering.
+
+---
+
+### WebSearch & WebFetch — Built-in Web Search / 网络搜索工具
+
+Built-in web search and page fetching with multiple backends, inspired by Google ADK's WebSearch tool.
+
+```python
+from chainforge.tools.websearch import web_search, web_fetch
+
+# DuckDuckGo search (free, no API key)
+results = await web_search("latest developments in AI agents")
+# Returns: "1. Title\n   Snippet\n   Source: url\n\n2. ..."
+
+# With SerpAPI backend
+results = await web_search("AI news", backend="serpapi", api_key="...")
+
+# Fetch and extract text from a URL
+content = await web_fetch("https://example.com/article", max_chars=3000)
+
+# Use as agent tools
+agent = Agent(llm=llm, tools=[web_search, web_fetch])
+```
+
+| Backend | API Key | Cost | Quality |
+|---------|---------|------|---------|
+| `duckduckgo` (default) | None | Free | Good |
+| `serpapi` | `SERPAPI_API_KEY` | Paid tier | Excellent |
+| `bing` | `BING_API_KEY` | Paid tier | Excellent |
+
+Also available via `web_search_toolkit()` for bulk import.
+
+---
+
+
 ## Agent Specification Language (ASL) / Agent 规范语言
 
 A declarative YAML spec covering the full agent lifecycle — model config, tools, behavior contracts, testing, monitoring, and evolution.
