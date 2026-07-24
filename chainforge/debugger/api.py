@@ -212,6 +212,26 @@ class DebuggerAPI:
             session = self._get_session(session_id)
             return session.provenance_graph()
 
+        @self.router.get("/sessions/{session_id}/provenance/path")
+        async def get_provenance_path(session_id: str):
+            session = self._get_session(session_id)
+            return {"path": session.provenance_path()}
+
+        @self.router.get("/sessions/{session_id}/provenance/critical-path")
+        async def get_critical_path(session_id: str):
+            session = self._get_session(session_id)
+            return {"critical_path": session.critical_path()}
+
+        @self.router.get("/sessions/{session_id}/provenance/trace/{node_id}")
+        async def get_trace_decision(session_id: str, node_id: str):
+            session = self._get_session(session_id)
+            return {"trace": session.trace_decision(node_id)}
+
+        @self.router.get("/sessions/{session_id}/provenance/summary")
+        async def get_provenance_summary(session_id: str):
+            session = self._get_session(session_id)
+            return session.provenance_summary()
+
         # ── WebSocket ──────────────────────────────────────────────────
 
         @self.router.websocket("/sessions/{session_id}/ws")

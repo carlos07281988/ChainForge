@@ -180,7 +180,7 @@ class DebugSession(BaseModel):
         Yields:
             StreamEvents for UI consumption.
         """
-        self._debugger = TimeTravelDebugger(self.agent, max_checkpoints=100)
+        self._debugger = TimeTravelDebugger(self.agent, max_checkpoints=100, provenance=True)
         self.status = SessionStatus.running
         self._events.clear()
 
@@ -246,12 +246,39 @@ class DebugSession(BaseModel):
     def provenance_graph(self) -> dict[str, Any]:
         if self._debugger is None:
             return {}
-        return self._debugger.provenance_graph()
+        # Use ProvenanceTracker if available
+        if self._debugger.provenance:
+            return self._debugger.provenance.graph()
+        return {}
 
     def trace_decision(self, event_id: str) -> list[dict[str, Any]]:
         if self._debugger is None:
             return []
-        return self._debugger.trace_decision(event_id)
+        # Use ProvenanceTracker if available
+        if self._debugger.provenance:
+            chain = self._debugger.provenance.trace_decision(event_id)
+            return [n.model_dump() for n in chain]
+        return []
+
+    def provenance_path(self) -> list[dict[str, Any]]:
+        """Get the full causal path from root to last node."""
+        if self._debugger is None or not self._debugger.provenance:
+            return []
+        chain = self._debugger.provenance.path()
+        return [n.model_dump() for n in chain]
+
+    def critical_path(self) -> list[dict[str, Any]]:
+        """Get the critical (decision-only) causal path."""
+        if self._debugger is None or not self._debugger.provenance:
+            return []
+        chain = self._debugger.provenance.critical_path()
+        return [n.model_dump() for n in chain]
+
+    def provenance_summary(self) -> dict[str, Any]:
+        """Get provenance summary statistics."""
+        if self._debugger is None or not self._debugger.provenance:
+            return {}
+        return self._debugger.provenance.summary()
 
     # ── Summary ────────────────────────────────────────────────────────
 

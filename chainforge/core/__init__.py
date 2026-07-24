@@ -32,6 +32,7 @@ from chainforge.core.context import InvocationContext, get_invocation_context, w
 from chainforge.core.hooks import ToolHook, AgentHook, LoggingHook, MetricsHook, TimingHook
 from chainforge.core.activity import ActivityLogger, ActivityEvent, ActivityLevel
 from chainforge.core.thread import ThreadManager, ThreadInfo, TurnInfo, ThreadMetadata
+from chainforge.core.provenance import ProvenanceTracker, ProvenanceNode, ProvenanceStore
 
 __all__ = [
     "LLM", "LLMResponse",
@@ -56,4 +57,5 @@ __all__ = [
     "ToolHook", "AgentHook", "LoggingHook", "MetricsHook", "TimingHook",
     "ActivityLogger", "ActivityEvent", "ActivityLevel",
     "ThreadManager", "ThreadInfo", "TurnInfo", "ThreadMetadata",
+    "ProvenanceTracker", "ProvenanceNode", "ProvenanceStore",
 ]
