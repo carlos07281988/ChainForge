@@ -52,6 +52,478 @@
 | 📋 | **Breakpoints** — pause on tool_call, state transition, LLM response |
 
 
+
+## Phase 17: Agent Visual Debugger UI (📋 Planned)
+
+> Build a web-based visual debugger for TimeTravelDebugger — the LangGraph Studio equivalent.
+
+### P0: Core Debugger UI
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Execution timeline** — visual waterfall of agent events (LLM calls, tool calls, state transitions) |
+| 📋 | **State inspector** — browse message history, tool results, context at any checkpoint |
+| 📋 | **Branch explorer** — fork execution at any checkpoint, compare branches side-by-side |
+| 📋 | **Search & filter** — filter events by type, search across messages and tool results |
+
+### P1: Interactive Controls
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Step-through** — execute one event at a time (step over, step into tool) |
+| 📋 | **Breakpoints** — pause on tool_call, error, state transition |
+| 📋 | **Replay from checkpoint** — rewind to any point and replay with modifications |
+| 📋 | **Live attach** — connect to a running agent and observe in real-time |
+
+### P2: Advanced
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Provenance graph view** — causal graph of decisions (which input caused which output) |
+| 📋 | **Diff view** — compare two execution branches for differences |
+| 📋 | **Export/import** — save debug sessions, share with team |
+
+### Architecture
+
+```
+React UI (TimeTravelDebugger UI)
+    │ WebSocket (ALDP protocol)
+    ▼
+FastAPI Server (embedded in chainforge serve)
+    │ ALDP events
+    ▼
+ChainForge Agent (wrapped with TimeTravelDebugger)
+```
+
+### Priority & Effort
+
+1. **Execution timeline + state inspector** — 5-7d (core value)
+2. **Branch explorer + step-through** — 3-5d
+3. **Breakpoints + live attach** — 3-5d
+4. **Provenance graph + diff view** — 5-7d
+
+
+
+## Phase 18: Natural Language → Agent Compiler (📋 Planned)
+
+> Describe agent workflows in natural language; ChainForge compiles them into CyclicGraphs.
+
+### Core Pipeline
+
+| State | Feature |
+|-------|---------|
+| 📋 | **NL parser** — LLM-based parsing of natural language workflow descriptions |
+| 📋 | **Graph IR generator** — convert parsed description into intermediate graph representation |
+| 📋 | **CyclicGraph codegen** — emit Python code or YAML for CyclicGraph |
+| 📋 | **Validation & feedback** — validate generated graph, report errors and suggestions |
+
+### User Experience
+
+| State | Feature |
+|-------|---------|
+| 📋 | **CLI mode** — `chainforge compile "search then summarize"` |
+| 📋 | **Interactive mode** — chainforge compile --interactive for step-by-step refinement |
+| 📋 | **Template library** — common patterns as reusable templates |
+
+### Example
+
+```
+$ chainforge compile "search the web, if results found summarize them, 
+  otherwise generate a response from knowledge"
+
+→ Generates:
+  entry → web_search → [has_results? → yes→ llm_summarize → exit]
+                       [has_results? → no → llm_generate → exit]
+```
+
+### Effort
+
+1. **NL parser + IR** — 7-10d
+2. **CyclicGraph codegen + templates** — 5-7d
+3. **Interactive mode + validation** — 3-5d
+
+
+
+## Phase 19: Execution Provenance Graph — Upgrade (📋 Planned)
+
+> Upgrade existing TimeTravelDebugger with full causal tracing and provenance graph visualization.
+
+### P1: Causal Tracing Engine
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Input→Output tracking** — trace every tool result back to its originating LLM call |
+| 📋 | **Causal chain query** — `trace_decision(output_id)` returns full causal chain |
+| 📋 | **Provenance graph storage** — persist provenance data alongside checkpoints |
+
+### P2: Provenance API
+
+| State | Feature |
+|-------|---------|
+| 📋 | **REST API** — query provenance data via HTTP (integrated with ALDP) |
+| 📋 | **GraphQL-like queries** — "which inputs influenced this output?" |
+| 📋 | **Cross-agent provenance** — trace decisions across multi-agent orchestrations |
+
+### P3: Visualization
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Causal DAG rendering** — visual graph of causal relationships |
+| 📋 | **Highlight path** — highlight the critical path for a given output |
+| 📋 | **Anomaly detection** — flag decisions with unusual causal depth or breadth |
+
+### Effort
+
+1. **Causal tracing engine** — 5-7d (builds on existing TimeTravelDebugger)
+2. **Provenance API + storage** — 3-5d
+3. **Visualization** — 5-7d (reuses Debugger UI components)
+
+
+
+## Phase 20: Agentic IDE (📋 Future)
+
+> Interactive web-based development environment for building, testing, and deploying agents.
+
+### P0: Agent Playground
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Chat interface** — talk to your agent in real-time from the browser |
+| 📋 | **Live modification** — change system prompt, tools, model while agent is running |
+| 📋 | **Tool call inspector** — inspect and modify tool arguments before execution |
+| 📋 | **Session persistence** — save and restore agent sessions |
+
+### P1: Development Tools
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Prompt editor** — syntax-highlighted editor with version history |
+| 📋 | **Tool manager** — browse, enable/disable, configure tools |
+| 📋 | **Model switcher** — swap models in real-time, compare outputs |
+| 📋 | **Memory viewer** — inspect buffer, vector, entity memory contents |
+
+### P2: Deployment
+
+| State | Feature |
+|-------|---------|
+| 📋 | **One-click deploy** — deploy agent as microservice from the IDE |
+| 📋 | **Usage dashboard** — real-time metrics, cost tracking, error rates |
+| 📋 | **Version management** — publish, rollback, A/B test agent versions |
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│              Agentic IDE (React)             │
+│  Chat  │  Prompt Editor  │  Tools  │  Deploy │
+└────┬────────────────────────────────────────┘
+     │ REST + WebSocket (ALDP)
+     ▼
+┌─────────────────────────────────────────────┐
+│           ChainForge Server (FastAPI)         │
+│  Agent Runtime  │  Config Store  │  Deployer │
+└─────────────────────────────────────────────┘
+```
+
+### Effort
+
+1. **Agent Playground (chat + live modify)** — 7-10d
+2. **Development tools (prompt/tool/memory editors)** — 7-10d
+3. **Deployment dashboard** — 5-7d
+
+
+
+## Phase 21: Self-Healing Agents (📋 Future)
+
+> Agents that detect failures, diagnose root causes, and automatically recover.
+
+### P0: Failure Detection
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Error pattern recognition** — classify failures (tool error, LLM refusal, timeout, hallucination) |
+| 📋 | **Success rate tracking** — per-tool, per-model, per-prompt success metrics |
+| 📋 | **Anomaly detection** — detect when agent behavior deviates from expected patterns |
+
+### P1: Auto-Diagnosis
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Root cause analysis** — trace failure back to its cause (bad prompt, wrong tool, insufficient context) |
+| 📋 | **Healing strategy selection** — choose fix strategy: retry, rephrase, switch tool, escalate |
+| 📋 | **Diagnosis report** — structured report of what went wrong and why |
+
+### P2: Self-Recovery
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Automatic retry with modification** — retry with adjusted parameters |
+| 📋 | **Prompt auto-patch** — modify system prompt to prevent recurrence |
+| 📋 | **Tool fallback chain** — define fallback tools for common failure modes |
+| 📋 | **Sub-agent creation** — spawn specialized sub-agent to handle recurring failure patterns |
+
+### Effort
+
+1. **Failure detection + tracking** — 5-7d
+2. **Root cause analysis** — 5-7d (uses Execution Provenance Graph)
+3. **Self-recovery strategies** — 7-10d
+
+
+
+## Phase 22: Agent Memory Consolidation (📋 Future)
+
+> Simulate human memory consolidation — periodic review, pattern extraction, and pruning.
+
+### P0: Memory Review Engine
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Periodic consolidation** — configurable consolidation schedule (every N turns, every hour, etc.) |
+| 📋 | **Pattern extraction** — LLM analyzes memories to extract recurring themes and facts |
+| 📋 | **Confidence scoring** — assign confidence to memories based on frequency and consistency |
+
+### P1: Memory Pruning & Archival
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Low-confidence pruning** — remove memories below confidence threshold |
+| 📋 | **Semantic compression** — merge related memories into condensed summaries |
+| 📋 | **Hierarchical archiving** — working → episodic → semantic memory migration |
+
+### P2: Integration
+
+| State | Feature |
+|-------|---------|
+| 📋 | **AutoMemoryManager integration** — plug into existing AutoMemoryManager |
+| 📋 | **Memory quality metrics** — track precision/recall of consolidated memories |
+| 📋 | **User-guided consolidation** — allow users to review and correct consolidation |
+
+### Effort
+
+1. **Memory review + confidence scoring** — 5-7d
+2. **Pruning + compression** — 5-7d
+3. **Integration + metrics** — 3-5d
+
+
+
+## Phase 23: Federated Agent Execution (📋 Future)
+
+> Agents delegate sub-tasks to agents on other machines, clouds, or frameworks.
+
+### P0: Agent Discovery
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Agent registry** — register and discover remote agents via A2A protocol |
+| 📋 | **Capability advertisement** — agents publish their capabilities as structured specs |
+| 📋 | **Health checking** — monitor remote agent availability and latency |
+
+### P1: Remote Execution
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Remote tool call** — call a remote agent's tool as if it were local |
+| 📋 | **Streaming across boundaries** — stream events from remote agent execution |
+| 📋 | **Cross-framework bridge** — call LangChain/CrewAI/AutoGen agents via A2A |
+
+### P2: Orchestration
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Global planner** — plan task decomposition across distributed agents |
+| 📋 | **Result aggregation** — collect and merge results from multiple remote agents |
+| 📋 | **Fault tolerance** — retry with different remote agent on failure |
+
+### Effort
+
+1. **Agent registry + discovery** — 5-7d (builds on A2A protocol)
+2. **Remote execution** — 5-7d
+3. **Orchestration + fault tolerance** — 5-7d
+
+
+
+## Phase 24: Auditable Execution Chain (📋 Future)
+
+> Cryptographically signed agent execution logs for compliance, auditing, and debugging.
+
+### P0: Execution Logging
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Immutable log** — append-only log of all agent actions (LLM calls, tool calls, decisions) |
+| 📋 | **Merkle tree chaining** — each entry cryptographically hashed to the previous |
+| 📋 | **Signature verification** — verify log integrity with public key |
+
+### P1: Compliance & Audit
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Audit query** — search execution logs by criteria (user, tool, time range, decision) |
+| 📋 | **Compliance report generation** — produce structured compliance reports |
+| 📋 | **Redaction** — selectively redact sensitive data while preserving chain integrity |
+| 📋 | **Export** — export signed logs in standard formats (JSON, CSV, XLSX) |
+
+### P2: Integration
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Middleware integration** — plug into existing middleware chain |
+| 📋 | **Callback integration** — log via existing Callback system |
+| 📋 | **SIEM export** — export to standard SIEM formats (CEF, LEEF) |
+
+### Effort
+
+1. **Immutable log + Merkle chaining** — 5-7d
+2. **Audit query + compliance reports** — 5-7d
+3. **Integration + SIEM export** — 3-5d
+
+
+
+## Phase 25: Adversarial Testing Engine (📋 Future)
+
+> Automated adversarial testing for agent security and robustness.
+
+### P0: Attack Generation
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Prompt injection generation** — auto-generate prompt injection attacks (50+ patterns) |
+| 📋 | **Jailbreak generation** — generate jailbreak attempts targeting the system prompt |
+| 📋 | **Edge case fuzzing** — generate unexpected inputs (empty, very long, malformed) |
+
+### P1: Automated Testing
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Test runner** — run generated attacks against agent, collect results |
+| 📋 | **Defense evaluation** — test guardrails (PromptInjectionGuardrail) against attacks |
+| 📋 | **Regression testing** — re-run attacks after agent changes to detect regressions |
+
+### P2: Reporting
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Security score** — aggregate security score based on attack success rate |
+| 📋 | **Vulnerability report** — structured report of discovered vulnerabilities |
+| 📋 | **Improvement suggestions** — auto-suggest guardrail improvements based on findings |
+
+### Effort
+
+1. **Attack generation pipeline** — 5-7d (uses existing Eval framework)
+2. **Automated testing + regression** — 5-7d
+3. **Reporting + score** — 3-5d
+
+
+
+## Phase 26: Adaptive Multi-Model Router — SmartRouter 2.0 (📋 Future)
+
+> Route sub-tasks to different models in real-time based on capability, cost, and latency.
+
+### P0: Capability-Aware Routing
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Capability registry** — each model declares capabilities (reasoning, code, vision, function-calling) |
+| 📋 | **Task capability inference** — infer required capabilities from task description |
+| 📋 | **Real-time model selection** — select best model for each sub-task |
+
+### P1: Cost-Latency Optimization
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Cost tracking** — per-model cost accumulation |
+| 📋 | **Latency tracking** — per-model latency distribution |
+| 📋 | **Cost-latency tradeoff** — configurable objective (min cost, min latency, or balanced) |
+
+### P2: Dynamic Switching
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Mid-execution switch** — switch models mid-task if current model is underperforming |
+| 📋 | **Fallback chains** — try model A, fall back to B if A fails, fall back to C if B fails |
+| 📋 | **Sticky routing** — keep same model for related sub-tasks when beneficial |
+
+### Effort
+
+1. **Capability registry + inference** — 5-7d
+2. **Cost-latency optimization** — 3-5d
+3. **Dynamic switching + fallback** — 5-7d
+
+
+
+## Phase 27: Agent Behavior Contract Runtime (📋 Future)
+
+> Formalize ASL (Agent Specification Language) into a runtime-executable contract.
+
+### P0: Contract Execution
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Contract parser** — parse ASL YAML into executable contract objects |
+| 📋 | **Runtime enforcement** — monitor agent execution against contract (budget, behavior, tools) |
+| 📋 | **Violation reporting** — structured violation reports with causal context |
+
+### P1: Contract Types
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Behavior contracts** — "agent should never reveal system prompt" |
+| 📋 | **Performance contracts** — "response under 5s, cost under $0.01" |
+| 📋 | **Security contracts** — "never call delete_file tool" |
+| 📋 | **Quality contracts** — "always cite sources, never hallucinate" |
+
+### P2: Contract Lifecycle
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Contract testing** — validate contracts before deployment |
+| 📋 | **Contract versioning** — evolve contracts across agent versions |
+| 📋 | **Auto-remediation** — define actions on contract violation (warn, block, escalate) |
+
+### Effort
+
+1. **Contract parser + enforcement** — 5-7d
+2. **Contract types + validators** — 5-7d
+3. **Contract lifecycle + remediation** — 3-5d
+
+
+
+## Phase 28: Activity Log Dashboard (📋 Future)
+
+> Real-time web dashboard for structured activity logs.
+
+### P0: Log Viewer
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Real-time feed** — live streaming of activity events |
+| 📋 | **Filter & search** — filter by category, level, tool, session |
+| 📋 | **Timeline view** — chronological view with severity color coding |
+
+### P1: Analytics
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Aggregated metrics** — request rate, error rate, latency distribution |
+| 📋 | **Tool usage stats** — most/least used tools, failure rates per tool |
+| 📋 | **Cost analytics** — per-model, per-session, per-user cost breakdown |
+
+### P2: Alerting
+
+| State | Feature |
+|-------|---------|
+| 📋 | **Threshold alerts** — alert on error rate > X%, latency > Yms |
+| 📋 | **Anomaly detection** — detect unusual activity patterns |
+| 📋 | **Webhook integration** — forward alerts to PagerDuty, Slack, etc. |
+
+### Effort
+
+1. **Log viewer + filters** — 5-7d (builds on ActivityLogger + existing server.py)
+2. **Analytics dashboard** — 5-7d
+3. **Alerting + webhooks** — 3-5d
+
+
+
 ## Legend
 
 | Icon | Meaning |

@@ -38,6 +38,7 @@
   - [ActivityLogger](#activitylogger--structured-activity-logging--活动日志)
   - [ThreadManager](#threadmanager--conversation-thread--session-management--会话线程管理)
   - [WebSearch & WebFetch](#webssearch--webfetch--built-in-web-search--网络搜索工具)
+  - [Agent Visual Debugger](#agent-visual-debugger--interactive-debugging-ui--可视化调试器)
 
   - [Behavioral Testing](#behavioral-testing-framework--行为测试框架)
   - [Performance Budget](#performance-budget-contracts--性能预算契约)
@@ -3174,6 +3175,48 @@ Also available via `web_search_toolkit()` for bulk import.
 
 ---
 
+
+
+### Agent Visual Debugger — Interactive Debugging UI / 可视化调试器
+
+Web-based visual debugger for agent execution. Provides real-time timeline, state inspection, breakpoints, and checkpoint browsing — the open-source equivalent of LangGraph Studio.
+
+```python
+from chainforge.debugger import DebugSession, Breakpoint, DebuggerAPI
+
+# Python API: wrap any Agent for debugging
+session = DebugSession(agent=my_agent, name="my-debug")
+
+# Add breakpoints
+session.add_breakpoint(Breakpoint(event_type="tool_call"))
+session.add_breakpoint(Breakpoint(event_type="error"))
+
+# Run with step-through control
+async for event in session.run("What's the weather?"):
+    if event.type == "tool_call":
+        session.pause()  # inspect before execution
+        # ... inspect state via session.get_checkpoint_state(...)
+        session.resume()
+
+# Web API: serve via FastAPI
+debug_api = DebuggerAPI()
+debug_api.register_agent("my-agent", my_agent)
+app.include_router(debug_api.router, prefix="/api/v1/debug")
+
+# Then open http://localhost:8000/dashboard/debugger
+```
+
+| Feature | Description |
+|---------|-------------|
+| **Real-time timeline** | Live waterfall of LLM calls, tool calls, state transitions |
+| **State inspector** | Browse messages, tool results, agent state at any checkpoint |
+| **Breakpoints** | Pause on tool_call, error, or state transition |
+| **Step-through** | Execute one event at a time with step over/into controls |
+| **Checkpoint browsing** | Rewind to any previous checkpoint, inspect full state |
+| **Provenance graph** | Causal chain: which input caused which output |
+| **Branch & compare** | Fork execution at any checkpoint, compare branches |
+
+**Architecture:** `chainforge/debugger/` — DebugSession wraps Agent + TimeTravelDebugger with pause/step/resume. DebuggerAPI provides 15+ REST endpoints + WebSocket for the React frontend at `/dashboard/debugger`.
 
 ## Agent Specification Language (ASL) / Agent 规范语言
 

@@ -32,7 +32,8 @@
   - [Lifecycle Hooks — 生命周期钩子](#工具与-agent-生命周期钩子--tool--agent-lifecycle-hooks)
   - [ActivityLogger — 活动日志](#activitylogger--结构化活动日志--structured-activity-logging)
   - [ThreadManager — 会话线程管理](#threadmanager--会话线程管理--conversation-thread-management)
-  - [WebSearch — 网络搜索](#webssearch-与-webfetch--内置网络搜索--built-in-web-search)
+  - [WebSearch — 网络搜索]
+  - [Agent Visual Debugger — 可视化调试器](#agent-visual-debugger--可视化调试器--interactive-debugging-ui)
 
 ---
 
@@ -2037,8 +2038,42 @@ agent = Agent(llm=llm, tools=[web_search, web_fetch])
 也可通过 `web_search_toolkit()` 批量导入。
 
 
-Apache 2.0
+### Agent Visual Debugger — 可视化调试器 / Interactive Debugging UI
 
+基于 Web 的 Agent 可视化调试器。提供实时时间线、状态检查、断点控制和检查点浏览——LangGraph Studio 的开源对等品。
+
+```python
+from chainforge.debugger import DebugSession, Breakpoint
+
+# 将任意 Agent 包装为可调试会话
+session = DebugSession(agent=my_agent, name="my-debug")
+
+# 添加断点
+session.add_breakpoint(Breakpoint(event_type="tool_call"))
+session.add_breakpoint(Breakpoint(event_type="error"))
+
+# 带步进控制的执行
+async for event in session.run("今天天气怎么样？"):
+    if event.type == "tool_call":
+        session.pause()  # 执行前检查
+        # ... 用 session.get_checkpoint_state(...) 检查状态
+        session.resume()
+```
+
+| 功能 | 描述 |
+|------|------|
+| **实时时间线** | LLM 调用、工具调用、状态转换的实时瀑布流 |
+| **状态检查器** | 浏览任何检查点的消息、工具结果、Agent 状态 |
+| **断点** | 在 tool_call、error 或 state 转换时暂停 |
+| **步进执行** | 一次执行一个事件，支持 step over/into |
+| **检查点浏览** | 回溯到任意之前的检查点，查看完整状态 |
+| **溯源图** | 因果链追踪：哪个输入导致哪个输出 |
+| **分支对比** | 在任何检查点分叉执行，对比不同分支 |
+
+**架构:** `chainforge/debugger/` — DebugSession 包装 Agent + TimeTravelDebugger，支持暂停/步进/恢复。DebuggerAPI 提供 15+ REST 端点 + WebSocket，前端位于 `/dashboard/debugger`。
+
+
+Apache 2.0
 ---
 
 <p align="center"><strong>锻造链</strong> — 锻造你的链。</p>

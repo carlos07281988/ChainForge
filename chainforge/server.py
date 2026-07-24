@@ -587,7 +587,23 @@ async def dashboard_dag_editor():
     return HTMLResponse(content=page.read_text(encoding="utf-8"))
 
 
-# ── CLI entry point ────────────────────────────────────────────────────────
+# ── Debugger API ───────────────────────────────────────────────────────────
+
+_debugger_api = None
+
+
+def get_debugger_api():
+    global _debugger_api
+    if _debugger_api is None:
+        from chainforge.debugger import DebuggerAPI
+        _debugger_api = DebuggerAPI()
+    return _debugger_api
+
+
+@app.on_event("startup")
+async def register_debugger():
+    api = get_debugger_api()
+    app.include_router(api.router, prefix="/api/v1/debug")
 
 # ── Trace Viewer API ────────────────────────────────────────────────────────
 
@@ -626,34 +642,12 @@ async def get_trace(trace_id: str):
         raise HTTPException(status_code=404, detail=f"Trace '{trace_id}' not found")
     return trace
 
+# ── Debugger Dashboard route ──────────────────────────────────────────────
 
+@app.get("/dashboard/debugger")
+async def dashboard_debugger():
+    page = STATIC_DIR / "debugger.html"
+    if not page.exists():
+        raise HTTPException(status_code=404)
+    return HTMLResponse(content=page.read_text(encoding="utf-8"))
 
-
-def run_server(host: str = "0.0.0.0", port: int = 8000, reload: bool = False):
-    """Start the ChainForge HTTP server.
-
-    Args:
-        host: Host to bind to.
-        port: Port to listen on.
-        reload: Enable auto-reload on code changes.
-    """
-    try:
-        import uvicorn
-    except ImportError:
-        raise ImportError("uvicorn is required. Install with: pip install 'chainforge[server]'")
-
-    if _API_KEY:
-        print(f"   API key authentication: enabled")
-    else:
-        print(f"   API key authentication: disabled (set CHAINFORGE_API_KEY to enable)")
-
-    print(f"   Registered agents: {len(_agent_registry)}")
-    for aid in _agent_registry:
-        desc = _agent_registry[aid].get("description", "")
-        wh = _agent_registry[aid].get("webhook_url", "")
-        wh_str = f" [webhook: {wh}]" if wh else ""
-        print(f"     - {aid}: {desc}{wh_str}")
-    print(f"   Listening on http://{host}:{port}")
-    print(f"   Dashboard: http://{host}:{port}/dashboard")
-    print(f"   API docs: http://{host}:{port}/docs")
-    uvicorn.run(app, host=host, port=port, reload=reload)

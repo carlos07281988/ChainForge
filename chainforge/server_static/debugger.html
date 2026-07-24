@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChainForge Agent Debugger</title>
+  <link rel="stylesheet" href="/static/css/debugger.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h1>🔍 Debugger</h1>
+        <button class="btn btn-sm btn-primary" onclick="debuggerUI.onNewSession()">+ New</button>
+      </div>
+      <div style="padding:8px 12px;border-bottom:1px solid var(--border)">
+        <input id="agent-id-input" class="prompt-input" placeholder="Agent ID (default)" style="font-size:11px;padding:4px 8px;">
+      </div>
+      <div id="session-list" class="session-list">
+        <div style="color:var(--text-muted);padding:20px;text-align:center;font-size:12px">
+          Loading sessions...
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Control Bar -->
+      <div class="control-bar">
+        <input id="prompt-input" class="prompt-input" placeholder="Enter prompt and press Enter to run...">
+        <button id="control-run" class="btn btn-success">▶ Run</button>
+        <button id="control-pause" class="btn">⏸ Pause</button>
+        <button id="control-resume" class="btn">▶ Resume</button>
+        <button id="control-step" class="btn">⏭ Step</button>
+        <span id="status-indicator" class="status-badge pending">ready</span>
+      </div>
+
+      <!-- Breakpoints -->
+      <div id="breakpoint-bar" class="breakpoint-bar">
+        <span style="color:var(--text-muted)">Breakpoints:</span>
+        <button class="btn btn-sm" onclick="debuggerUI.addBreakpoint('tool_call')">+ Tool</button>
+        <button class="btn btn-sm" onclick="debuggerUI.addBreakpoint('error')">+ Error</button>
+        <button class="btn btn-sm" onclick="debuggerUI.addBreakpoint('state')">+ State</button>
+      </div>
+
+      <!-- Timeline + Inspector -->
+      <div style="display:flex;flex:1;overflow:hidden">
+        <!-- Timeline -->
+        <div id="timeline" class="timeline-container">
+          <div id="empty-state" class="timeline-empty">
+            <div style="font-size:32px;opacity:0.3">⚡</div>
+            <div>Enter a prompt and click Run to start debugging</div>
+            <div style="font-size:11px;color:var(--text-muted)">
+              Events will appear here in real-time
+            </div>
+          </div>
+        </div>
+
+        <!-- Inspector Panel -->
+        <div class="inspector-panel">
+          <div class="inspector-header">📋 Event Inspector</div>
+          <div id="inspector-body" class="inspector-body">
+            <div class="inspector-empty">
+              Select an event from the timeline to inspect its details
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/debugger.js"></script>
+</body>
+</html>
