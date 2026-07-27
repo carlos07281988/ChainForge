@@ -75,7 +75,6 @@ class NIMProvider(BaseModel):
     _last_health: bool = True
     _last_health_time: float = 0.0
     _available_models: list[str] = []
-    _gpu_info: dict[str, Any] = {}
 
     @property
     def capabilities(self) -> set[str]:

@@ -173,6 +173,8 @@ class AuditReporter:
             if e["type"] == "data_label":
                 data_labels_seen.extend(e["data"].get("labels", []))
 
+        from chainforge.governance.policy import GovernancePolicy
+
         compliance_items: list[ComplianceItem] = []
 
         # Check: PII data should not use cloud providers
@@ -212,7 +214,6 @@ class AuditReporter:
 
         # Custom policy checks
         if policies:
-            from chainforge.governance.policy import GovernancePolicy
             for p in policies:
                 if not isinstance(p, GovernancePolicy):
                     continue

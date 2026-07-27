@@ -129,7 +129,7 @@ class ModelVersionTracker:
             True if the current state matches the expected snapshot.
         """
         if current_params is not None:
-            model = current_params.pop("model", "unknown")
+            model = current_params.get("model", "unknown")
             current_hash = _make_hash(
                 provider,
                 model,

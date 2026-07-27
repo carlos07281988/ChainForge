@@ -169,7 +169,7 @@ class InfraProbe:
             import httpx
             async with httpx.AsyncClient(timeout=5.0) as client:
                 resp = await client.get(
-                    f"{self._nim_url.rstrip('/v1')}/v1/models",
+                    f"{self._nim_url.removesuffix('/v1')}/v1/models",
                 )
                 self._nim_available = resp.status_code == 200
         except Exception as e:
@@ -188,7 +188,7 @@ class InfraProbe:
             import httpx
             async with httpx.AsyncClient(timeout=5.0) as client:
                 resp = await client.get(
-                    f"{self._ollama_url.rstrip('/v1')}/v1/models",
+                    f"{self._ollama_url.removesuffix('/v1')}/v1/models",
                 )
                 self._ollama_available = resp.status_code == 200
         except Exception as e:
@@ -204,7 +204,6 @@ class InfraProbe:
         ollama_ok = await self.check_ollama()
         return {"nim": nim_ok, "ollama": ollama_ok}
 
-    @property
     async def available_backends(self) -> set[str]:
         """Set of currently available local backend providers."""
         status = await self.probe_all()
@@ -293,9 +292,9 @@ class PolicyAwareRouter:
             if decision.is_restricted:
                 allowed_providers = set(decision.allowed_providers)
 
-        # Step 3: Infrastructure filtering
+        # Step 3: Infrastructure filtering (only when policies constrain providers)
         infra_available: set[str] = set()
-        if self._infra_probe:
+        if self._infra_probe and allowed_providers:
             infra_available = await self._infra_probe.available_backends
 
         # Step 4: Build candidate list

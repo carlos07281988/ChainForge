@@ -165,6 +165,9 @@ class PolicyEngine:
                 decision.warnings.append(
                     f"[{policy.name}] {policy.description or 'Policy warning'}"
                 )
+            elif policy.action == "audit_only":
+                # Audit-only: tag for logging but don't restrict
+                pass
 
         if enforce_providers_set:
             decision.allowed_providers = sorted(enforce_providers_set)
