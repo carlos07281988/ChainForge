@@ -37,9 +37,14 @@ from chainforge.governance.policy import (
     PolicyDecision,
     PolicyEngine,
 )
+from chainforge.governance.residency import DataResidency
+from chainforge.governance.versioning import ModelVersionTracker, VersionRecord
 
 __all__ = [
     "GovernancePolicy",
     "PolicyDecision",
     "PolicyEngine",
+    "DataResidency",
+    "ModelVersionTracker",
+    "VersionRecord",
 ]
