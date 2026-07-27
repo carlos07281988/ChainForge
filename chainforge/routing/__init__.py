@@ -29,6 +29,18 @@ Usage:
 
 from chainforge.routing.router import SmartRouter, RouteConfig, RoutingStrategy
 from chainforge.routing.adaptive import AdaptiveRouter, ModelRegistry, ModelInfo, CostTracker
+from chainforge.routing.policy_router import PolicyAwareRouter, InfraProbe, DataClassifier
 
 
-__all__ = ["SmartRouter", "RouteConfig", "RoutingStrategy", "AdaptiveRouter", "ModelRegistry", "ModelInfo", "CostTracker"]
+__all__ = [
+    "SmartRouter",
+    "RouteConfig",
+    "RoutingStrategy",
+    "AdaptiveRouter",
+    "ModelRegistry",
+    "ModelInfo",
+    "CostTracker",
+    "PolicyAwareRouter",
+    "InfraProbe",
+    "DataClassifier",
+]
