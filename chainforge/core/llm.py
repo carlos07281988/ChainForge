@@ -44,6 +44,12 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
     "claude-opus-4": {"input": 0.015, "output": 0.075},
     "gemini-2.0-flash": {"input": 0.0001, "output": 0.0004},
     "gemini-2.0-pro": {"input": 0.002, "output": 0.005},
+
+    # NVIDIA NIM (local, cost = GPU time proxy)
+    "meta/llama-3.1-8b-instruct":    {"input": 0.0, "output": 0.0},
+    "meta/llama-3.1-70b-instruct":   {"input": 0.0, "output": 0.0},
+    "meta/llama-3.3-70b-instruct":   {"input": 0.0, "output": 0.0},
+    "mistralai/mistral-7b-instruct": {"input": 0.0, "output": 0.0},
 }
 
 

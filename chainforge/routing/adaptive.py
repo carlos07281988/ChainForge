@@ -387,6 +387,12 @@ class AdaptiveRouter:
             elif info.provider == "ollama":
                 from chainforge.providers import OllamaProvider
                 return OllamaProvider(model=info.name)
+            elif info.provider == "nim":
+                from chainforge.providers import NIMProvider
+                return NIMProvider(model=info.name)
+            elif info.provider == "bedrock":
+                from chainforge.providers import BedrockProvider
+                return BedrockProvider(model=info.name)
             else:
                 from chainforge.providers import OpenAIProvider
                 return OpenAIProvider(model=info.name)
