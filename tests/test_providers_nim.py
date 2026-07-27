@@ -1,4 +1,20 @@
+# Copyright 2026 ChainForge Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Tests for the NVIDIA NIM provider."""
+
+from __future__ import annotations
+
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 
@@ -16,7 +32,6 @@ class TestNIMProvider:
         assert nim.model == "meta/llama-3.1-8b-instruct"
         assert nim.base_url == "http://localhost:8000/v1"
         assert nim.api_key is None
-        assert nim.health_check_interval == 30
 
     def test_custom_config(self):
         """Custom config is respected."""

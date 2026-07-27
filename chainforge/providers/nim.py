@@ -57,7 +57,6 @@ class NIMProvider(BaseModel):
         model: Model identifier, e.g. 'meta/llama-3.1-70b-instruct'.
         base_url: NIM endpoint URL, defaults to 'http://localhost:8000/v1'.
         api_key: API key (NIM defaults to no auth, use None for local).
-        health_check_interval: Seconds between automatic health checks.
         top_k: NIM-specific top-k sampling.
         repetition_penalty: NIM-specific repetition penalty.
     """
@@ -67,9 +66,6 @@ class NIMProvider(BaseModel):
     model: str = Field(default="meta/llama-3.1-8b-instruct")
     base_url: str = Field(default="http://localhost:8000/v1")
     api_key: str | None = Field(default=None)
-
-    # Local GPU awareness
-    health_check_interval: int = Field(default=30, ge=10)
 
     # NIM-specific inference parameters
     top_k: int | None = Field(default=None, ge=1, le=100)
@@ -194,11 +190,7 @@ class NIMProvider(BaseModel):
         tools: list[ToolSpec] | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
-        """Generate a complete (non-streaming) response from NIM.
-
-        Auto-checks health before generation. NIM-specific parameters
-        (top_k, repetition_penalty) are passed through kwargs.
-        """
+        """Generate a complete (non-streaming) response from NIM."""
         client = self._get_client()
         openai_messages = self._to_openai_messages(messages)
         openai_tools = self._to_tool_specs(tools) if tools else None
