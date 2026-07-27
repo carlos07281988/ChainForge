@@ -39,6 +39,7 @@ from chainforge.governance.policy import (
 )
 from chainforge.governance.residency import DataResidency
 from chainforge.governance.versioning import ModelVersionTracker, VersionRecord
+from chainforge.governance.audit import AuditReporter, AuditReport, ComplianceItem
 
 __all__ = [
     "GovernancePolicy",
@@ -47,4 +48,7 @@ __all__ = [
     "DataResidency",
     "ModelVersionTracker",
     "VersionRecord",
+    "AuditReporter",
+    "AuditReport",
+    "ComplianceItem",
 ]
