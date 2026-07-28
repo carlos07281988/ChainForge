@@ -1063,6 +1063,13 @@ User Prompt
 - [x] **Agent Benchmarking as Code** — YAML 声明式 benchmark、`chainforge bench` CLI、自动回归检测、多 model/tool 对比
 - [x] **Agent Federation Protocol** — 跨框架 Agent 互操作、HTTP+JSON Schema 标准协议、LangChain/CrewAI/AutoGen 互调
 
+### Phase 32: Graph Intelligence, Distillation, Observability & Personalization (Coming Next)
+
+- [ ] **GraphRAG 3.0: Multi-Agent Knowledge Graph Engine** — 去中心化 Knowledge Graph、跨 Agent 知识共享、Graph-native Agent Memory、GraphQL-native query layer、Graph Embedding-powered semantic search
+- [ ] **Agent Distillation Pipeline** — Agent 行为蒸馏到小模型（llama/qwen）、自动训练数据生成、LoRA fine-tuning 集成、成本优化 80%+
+- [ ] **Agent Observability 2.0 — 行为异常检测** — 实时异常检测（失败率飙升/陌生工具调用/token 异常）、SOC 级告警、自动根因分析
+- [ ] **Agent Personalization Engine** — 用户级偏好学习、行为 Profile 建模、自适应响应风格、Multi-tenant personality isolation
+
 ### Longer Term
 
 - [ ] Agent Mesh Networking (multi-region agent clusters)
