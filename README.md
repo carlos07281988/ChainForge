@@ -1041,10 +1041,20 @@ User Prompt
 - [x] **Agent Supply Chain Security** — dependency scanning, permission policies (YAML export + middleware), SPDX/CycloneDX SBOM, MCP endpoint verification
 - [x] **Collective Agent Memory** — shared experience pool across agents, Ebbinghaus forgetting curve, conflict resolution
 
-### Coming Next
+### Phase 30: Agent Internet — Identity, Economy & Discovery (Coming Next)
 
-- [ ] Multi-Agent Economics Dashboard (cost attribution per team/project)
-- [ ] Threat Intelligence feed integration for agent supply chain
+- [ ] **Agent Identity & Reputation Protocol** — Ed25519 密钥对 + 请求签名 + 信誉评分引擎 + 可验证凭证
+- [ ] **Agent Economic Protocol** — 跨 Agent 自动计费 + Credit Ledger + 定价合约 + Invoice/Revenue 报表
+- [ ] **Agent Capability Registry** — DNS for Agents: 能力注册、语义发现、自动协商、版本化、优雅下线
+- [ ] **Durable Agent Execution** — 持久化执行、Redis/Postgres checkpoint、崩溃恢复、死信队列、异步 Job 句柄
+- [ ] **Agent Data Lineage & GDPR Right-to-Forget** — 全量数据血缘追踪、一键删除、防篡改 Deletion Proof
+
+### Longer Term
+
+- [ ] Agent Mesh Networking (multi-region agent clusters)
+- [ ] Streaming Agent-to-Agent Protocol (WebSocket-based real-time agent chains)
+- [ ] Agent Fine-Tuning Pipeline (collective memory → LoRA fine-tuning feedback loop)
+- [ ] Multi-Modal Agent Orchestration (vision + audio + structured data in a single agent)
 
 ---
 
