@@ -1041,13 +1041,19 @@ User Prompt
 - [x] **Agent Supply Chain Security** — dependency scanning, permission policies (YAML export + middleware), SPDX/CycloneDX SBOM, MCP endpoint verification
 - [x] **Collective Agent Memory** — shared experience pool across agents, Ebbinghaus forgetting curve, conflict resolution
 
-### Phase 30: Agent Internet — Identity, Economy & Discovery (Coming Next)
+### Phase 30: Agent Internet — Identity, Economy & Discovery
 
-- [ ] **Agent Identity & Reputation Protocol** — Ed25519 密钥对 + 请求签名 + 信誉评分引擎 + 可验证凭证
-- [ ] **Agent Economic Protocol** — 跨 Agent 自动计费 + Credit Ledger + 定价合约 + Invoice/Revenue 报表
-- [ ] **Agent Capability Registry** — DNS for Agents: 能力注册、语义发现、自动协商、版本化、优雅下线
-- [ ] **Durable Agent Execution** — 持久化执行、Redis/Postgres checkpoint、崩溃恢复、死信队列、异步 Job 句柄
-- [ ] **Agent Data Lineage & GDPR Right-to-Forget** — 全量数据血缘追踪、一键删除、防篡改 Deletion Proof
+- [x] **Agent Identity & Reputation Protocol** — Ed25519 密钥对 + 请求签名 + 信誉评分引擎 + 可验证凭证
+- [x] **Agent Economic Protocol** — 跨 Agent 自动计费 + Credit Ledger + 定价合约 + Invoice/Revenue 报表
+- [x] **Agent Capability Registry** — DNS for Agents: 能力注册、语义发现、自动协商、版本化、优雅下线
+- [x] **Durable Agent Execution** — 持久化执行、Checkpoint、崩溃恢复、死信队列、异步 Job 句柄
+- [x] **Agent Data Lineage & GDPR Right-to-Forget** — 全量数据血缘追踪、一键删除、防篡改 Deletion Proof
+
+### Phase 31: Agent Justice, Benchmarking & Federation (Coming Next)
+
+- [ ] **Agent Justice Protocol** — 可争议决策机制、Decision Review Package、Human Appeal 流程、Article 86 合规
+- [ ] **Agent Benchmarking as Code** — YAML 声明式 benchmark、`chainforge bench` CLI、自动回归检测、多 model/tool 对比
+- [ ] **Agent Federation Protocol** — 跨框架 Agent 互操作、HTTP+JSON Schema 标准协议、LangChain/CrewAI/AutoGen 互调
 
 ### Longer Term
 
