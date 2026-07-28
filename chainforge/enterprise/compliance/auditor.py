@@ -119,7 +119,7 @@ class ComplianceAuditor:
         self._init_db()
 
     def _init_db(self) -> None:
-        self._conn = sqlite3.connect(str(self._log_path))
+        self._conn = sqlite3.connect(str(self._log_path), check_same_thread=False)
         self._conn.execute(
             "CREATE TABLE IF NOT EXISTS events ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -193,6 +193,13 @@ class ComplianceAuditor:
             total_events=count,
             recommendations=recommendations,
         )
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
 
     def close(self) -> None:
         """Close the audit database connection."""

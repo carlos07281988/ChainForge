@@ -22,16 +22,15 @@ class ExperienceRecorder:
     def __init__(self, memory: CollectiveMemory):
         self._memory = memory
 
-    def middleware(self, task_hint: str = "") -> Callable:
+    def middleware(self, task_hint: str = "", task_type: str = "general") -> Callable:
         """Create a middleware that records an Experience after each run."""
-        start = time.time()
-        tokens_used = 0
-        cost_total = 0.0
-        model_used = "unknown"
-        content_collected: list[str] = []
 
         async def _mw(messages, ctx, next_handler):
-            nonlocal model_used, tokens_used, cost_total
+            start = time.time()
+            tokens_used = 0
+            cost_total = 0.0
+            model_used = "unknown"
+            content_collected: list[str] = []
             async for event in next_handler(messages, ctx):
                 if isinstance(event, LLMResponse):
                     if event.usage:
@@ -48,7 +47,7 @@ class ExperienceRecorder:
             exp = Experience(
                 id=uuid.uuid4().hex[:12],
                 task=task_summary,
-                task_type="general",
+                task_type=task_type,
                 tools_used=ctx.get("tool_names", []),
                 model_used=model_used,
                 outcome="success",

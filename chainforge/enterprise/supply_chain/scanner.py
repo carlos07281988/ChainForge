@@ -97,27 +97,6 @@ class SupplyChainScanner:
             except Exception as e:
                 logger.warning(f"Failed to scan skill: {e}")
 
-        # MCP inventory
-        mcp_config = getattr(agent, "_mcp_config", None)
-        if mcp_config is not None and isinstance(mcp_config, dict):
-            for server_name, server_cfg in mcp_config.items():
-                url: str = server_cfg if isinstance(server_cfg, str) else server_cfg.get("url", str(server_cfg))
-                mcp_risk: float = 0.0
-                reason: str = ""
-                if isinstance(url, str):
-                    if any(domain in url for domain in ["api.", ".com", ".io", ".net"]):
-                        mcp_risk = 1.0
-                        reason = "External domain detected"
-                    else:
-                        reason = "Internal/local MCP server"
-                mcp_servers.append({
-                    "name": server_name,
-                    "url": url,
-                    "risk": "medium" if mcp_risk > 0 else "low",
-                    "reason": reason,
-                })
-                risk_total += mcp_risk
-
         return SupplyChainReport(
             tools=tools,
             skills=skills,

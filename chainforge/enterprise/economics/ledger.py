@@ -54,7 +54,7 @@ class TokenLedger:
         self._conn: sqlite3.Connection | None = None
         if backend == "sqlite":
             path = db_path or "chainforge_costs.db"
-            self._conn = sqlite3.connect(str(Path(path)))
+            self._conn = sqlite3.connect(str(Path(path)), check_same_thread=False)
             self._conn.execute(
                 "CREATE TABLE IF NOT EXISTS costs ("
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, "

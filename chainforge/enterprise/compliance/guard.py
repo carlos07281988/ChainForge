@@ -106,9 +106,9 @@ class ComplianceGuard:
                             "request_id": req.request_id,
                         })
                     yield StreamEvent(
-                        type=EventType.ERROR,
+                        type=EventType.error,
                         content="Human approval denied",
-                        metadata={"reason": "hitl_denied"},
+                        data={"reason": "hitl_denied"},
                     )
                     return
                 if self._auditor:
@@ -121,9 +121,9 @@ class ComplianceGuard:
                     "Blocking request."
                 )
                 yield StreamEvent(
-                    type=EventType.ERROR,
+                    type=EventType.error,
                     content="Human approval required but no handler configured",
-                    metadata={"reason": "hitl_no_handler"},
+                    data={"reason": "hitl_no_handler"},
                 )
                 return
 
