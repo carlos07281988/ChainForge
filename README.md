@@ -709,12 +709,20 @@ agent = Agent(llm=..., tools=mcp_tools)
 ```
 chainforge/
 ├── routing/             # SmartRouter 3.0 — governance-aware model routing
-├── enterprise/           # Enterprise Fabric™ — compliance, economics, security, collective memory
+├── enterprise/           # Enterprise Fabric™ — 13 enterprise modules (SDK only)
 │   ├── __init__.py
 │   ├── compliance/       # EU AI Act engine — risk classification + HITL + audit
 │   ├── economics/        # Cost tracking + budget guards + attribution
 │   ├── collective/       # Shared agent experiences + forgetting curves + conflict resolution
-│   └── supply_chain/     # Dependency scanning + permission policies + SBOM export
+│   ├── supply_chain/     # Dependency scanning + permission policies + SBOM export
+│   ├── identity/         # Agent Identity — Ed25519 keypairs + reputation scoring
+│   ├── economy/          # Agent Economy — cross-agent billing + credit ledger
+│   ├── registry/         # Capability Registry — DNS for Agents + auto-negotiation
+│   ├── durable/          # Durable Execution — checkpointing + crash recovery + DLQ
+│   ├── lineage/          # Data Lineage — GDPR Right-to-Forget + deletion proof
+│   ├── justice/          # Agent Justice — contestable decisions + human appeal
+│   ├── bench/            # Benchmarking as Code — YAML suites + regression detection
+│   └── federation/       # Agent Federation — cross-framework interop protocol
 ├── governance/           # PolicyEngine, DataResidency, ModelVersionTracker, AuditReporter
 ├── __init__.py          # Public API exports
 ├── __main__.py          # python -m chainforge
@@ -1049,11 +1057,11 @@ User Prompt
 - [x] **Durable Agent Execution** — 持久化执行、Checkpoint、崩溃恢复、死信队列、异步 Job 句柄
 - [x] **Agent Data Lineage & GDPR Right-to-Forget** — 全量数据血缘追踪、一键删除、防篡改 Deletion Proof
 
-### Phase 31: Agent Justice, Benchmarking & Federation (Coming Next)
+### Phase 31: Agent Justice, Benchmarking & Federation
 
-- [ ] **Agent Justice Protocol** — 可争议决策机制、Decision Review Package、Human Appeal 流程、Article 86 合规
-- [ ] **Agent Benchmarking as Code** — YAML 声明式 benchmark、`chainforge bench` CLI、自动回归检测、多 model/tool 对比
-- [ ] **Agent Federation Protocol** — 跨框架 Agent 互操作、HTTP+JSON Schema 标准协议、LangChain/CrewAI/AutoGen 互调
+- [x] **Agent Justice Protocol** — 可争议决策机制、Decision Review Package、Human Appeal 流程、Article 86 合规
+- [x] **Agent Benchmarking as Code** — YAML 声明式 benchmark、`chainforge bench` CLI、自动回归检测、多 model/tool 对比
+- [x] **Agent Federation Protocol** — 跨框架 Agent 互操作、HTTP+JSON Schema 标准协议、LangChain/CrewAI/AutoGen 互调
 
 ### Longer Term
 
@@ -2647,6 +2655,208 @@ skill_tool = skill.to_tool()
 chainforge skill list        # List available skills
 chainforge skill add <path>  # Register a skill
 chainforge skill info <name> # Show skill details
+```
+
+---
+
+## Agent Internet / Agent 互联网 (Phase 30)
+
+ChainForge 的 "Agent Internet" 层 — 让 agent 拥有身份、经济、注册、持久化、数据血缘能力。
+
+### 🪪 Agent Identity & Reputation Protocol / 身份与信誉
+
+Ed25519 密钥对、请求签名、DID、信誉评分引擎、可验证凭证。
+
+```python
+from chainforge.enterprise.identity import (
+    AgentIdentity, ReputationEngine, TrustPolicy, VerifiableCredential,
+)
+
+# 生成 Ed25519 身份
+identity = AgentIdentity.create("support-bot", "acme-corp", ["chat", "refund"])
+print(identity.did)  # → "did:chainforge:cf-a1b2c3d4"
+
+# 信誉评分
+engine = ReputationEngine()
+engine.record_event(identity.agent_id, "successful_call", latency_ms=120)
+score = engine.score(identity.agent_id)
+# → ReputationScore(overall=92/100, reliability=95, safety=100)
+
+# 跨组织信任
+vc = VerifiableCredential.issue(identity, "partner-agent", {"role": "admin"})
+assert vc.verify(identity.public_key)
+
+# TrustPolicy — 低信誉 agent 自动限制权限
+agent = Agent(llm=llm, identity=identity, trust_policy=TrustPolicy(rules=[
+    TrustRule(min_reputation=70, action="allow"),
+    TrustRule(max_reputation=50, action="block_all_tools"),
+]))
+```
+
+### 💳 Agent Economic Protocol / 经济协议
+
+跨 Agent 自动计费、Credit Ledger、定价合约、Invoice/Revenue 报表。
+
+```python
+from chainforge.enterprise.economy import AgentEconomy, BillingContract
+
+economy = AgentEconomy()
+economy.register_contract("seller-1", BillingContract(pricing={"per_tool_call": 0.05}))
+
+seller_agent = Agent(llm=llm, economy=economy, economy_role="seller")
+buyer_agent  = Agent(llm=llm, economy=economy, economy_role="buyer", credit_limit=100.0)
+
+# buyer 调用 seller → Transaction 自动记录
+inv = economy.invoice(buyer_agent, period="this-month")
+# → Invoice(total_payable=$12.50)
+rev = economy.revenue(seller_agent, period="this-month")
+# → RevenueReport(total_earned=$10.00)
+economy.settle(from_agent=buyer_agent, to_agent=seller_agent, amount=10.00)
+```
+
+### 🧩 Agent Capability Registry / 能力注册中心
+
+DNS for Agents — 能力注册、语义发现、自动协商、版本化、优雅下线。
+
+```python
+from chainforge.enterprise.registry import CapabilityRegistry, AgentProfile, AutoNegotiation
+
+registry = CapabilityRegistry(namespace="acme-corp")
+registry.register(AgentProfile(
+    agent_id="a1", name="PostgreSQL Agent", version="2.1.0",
+    capabilities=["postgresql:query", "sql:generate"],
+    tools_exposed=["query_db", "generate_sql"],
+    endpoints={"a2a": "a2a://db-agent.acme.com/agent"},
+))
+
+# 发现
+matches = await registry.discover(capability="postgresql:query")
+# 自动协商
+neg = AutoNegotiation("buyer-1", "postgresql:query", registry=registry)
+result = await neg.start()
+# → provider=PostgreSQL Agent, contract={pricing, SLA, match_score}
+```
+
+### ⏳ Durable Agent Execution / 持久化执行
+
+Checkpoint、崩溃恢复、Dead Letter Queue、异步 Job 句柄。
+
+```python
+from chainforge.enterprise.durable import (
+    DurableExecutor, DeadLetterQueue, CrashRecoveryPolicy,
+)
+
+executor = DurableExecutor(
+    backend="sqlite", checkpoint_every=30,
+    crash_recovery=CrashRecoveryPolicy(auto_retry=True, max_retries=3),
+    on_complete=lambda j: slack.send(f"Job {j.job_id} done"),
+)
+
+job = await executor.submit(agent, "审计所有 AWS S3 bucket")
+status = await executor.status(job.job_id)
+# → JobStatus(progress=0.67, elapsed="2h15m")
+
+# 崩溃 → 重启 → 从最后的 checkpoint 续跑
+dlq = DeadLetterQueue()
+dlq.enqueue("failed-job", reason="tool timeout")
+dlq.list()   # 查看失败任务
+dlq.retry("failed-job")  # 手动重试
+```
+
+### 📜 Agent Data Lineage & GDPR Right-to-Forget / 数据血缘
+
+全量数据足迹追踪、一键删除、防篡改 Deletion Proof。
+
+```python
+from chainforge.enterprise.lineage import (
+    DataLineageTracker, DataSubject, ErasureRequest, DeletionProof,
+)
+
+tracker = DataLineageTracker(backend="sqlite")
+agent = Agent(llm=llm, tools=[...], middlewares=[tracker.middleware()])
+
+# 查询数据足迹
+fp = tracker.query(DataSubject(email="carlos@example.com"))
+# → DataFootprint(total_locations=6, risk_assessment="medium")
+
+# GDPR 删除
+report = await tracker.erase(ErasureRequest(
+    data_subjects=[{"email": "carlos@example.com"}],
+    requested_by="dpo@acme.com",
+))
+print(report.summary())  # → 4/6 erased, 2 pending
+
+# 防篡改删除证明
+proof = DeletionProof(report)
+proof.export("deletion-proof-carlos.json")
+assert proof.verify()
+```
+
+---
+
+## Agent Justice, Benchmarking & Federation / 公正、评估、联邦 (Phase 31)
+
+### ⚖️ Agent Justice Protocol / 可争议决策
+
+决策证据包自动收集、Decision Review Package、Human Appeal 流程。
+
+```python
+from chainforge.enterprise.justice import (
+    JusticeGuard, EvidencePack, AppealEngine, AppealRequest,
+)
+
+agent = Agent(llm=llm, tools=[...], middlewares=[JusticeGuard()])
+# 每次执行自动收集 EvidencePack
+
+engine = AppealEngine()
+appeal = engine.submit(AppealRequest(
+    run_id="run-abc", reason="退款金额不对", raised_by="user@test.com",
+))
+review = engine.generate_review(appeal, evidence_pack)
+print(review.summary())  # 决策复盘
+verdict = await engine.human_appeal(appeal, "reviewer@acme.com", review)
+```
+
+### 🎯 Agent Benchmarking as Code / 声明式基准测试
+
+YAML 声明 benchmark、自动回归检测、多 agent/model 对比。
+
+```python
+from chainforge.enterprise.bench import (
+    BenchmarkSuite, BenchmarkRunner, RegressionDetector,
+)
+
+suite = BenchmarkSuite.load("chainforge.bench.yaml")
+runner = BenchmarkRunner(suite)
+result = await runner.run(agent, scenario="refund_request")
+
+# A/B 对比
+comparison = await runner.compare(agent_gpt4o, agent_claude, "refund_request")
+# → winner: agent_claude (faster, cheaper, same accuracy)
+
+# 回归检测
+detector = RegressionDetector(baseline=v1_results)
+report = detector.check(v2_results)
+# → ⚠️ refund_request regressed — BLOCK deployment!
+```
+
+### 🌐 Agent Federation Protocol / 跨框架联邦
+
+跨框架 Agent 互操作 — ChainForge ↔ LangChain / CrewAI / AutoGen。
+
+```python
+from chainforge.enterprise.federation import FederatedAgent, AgentExport
+
+# 导入外部 agent（LangChain / CrewAI / AutoGen）为 ChainForge Agent
+external = FederatedAgent(endpoint="https://langchain-agent/agent")
+agent = Agent(llm=external, tools=[...])  # external 当作普通 LLM 使用
+
+# 导出 ChainForge agent 为 HTTP endpoint → 外部框架调用
+export = AgentExport(agent=my_agent, protocol="chainforge-interop-v1")
+export.serve(port=9100)  # → http://0.0.0.0:9100/agent
+
+# API 兼容: OpenAI chat completions format
+# curl -X POST http://0.0.0.0:9100/agent -d '{"messages":[...]}'
 ```
 
 ---
