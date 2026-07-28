@@ -65,9 +65,13 @@ class StreamingAgent(BaseModel):
         Yields:
             StreamFrame instances representing text, tool_call, tool_result, error, and done events.
         """
+        import asyncio as _asyncio
+
         self._interrupted = False
         self._seq = 0
         self._stream_id = stream_id or self._stream_id or self.agent_id
+
+        _saw_done = False
 
         try:
             stream = await self.agent.run(prompt)
@@ -108,6 +112,7 @@ class StreamingAgent(BaseModel):
                             seq=self._next_seq(),
                         )
                     case "done":
+                        _saw_done = True
                         yield _inherit_payload(event, self.agent_id, self._stream_id, self._next_seq())
                     case _:
                         # Forward unknown event types as a generic frame with full payload
@@ -119,6 +124,10 @@ class StreamingAgent(BaseModel):
                             payload={"content": event.content or "", "event_type": event.type, **event.data},
                         )
 
+        except GeneratorExit:
+            # Consumer stopped iterating early — clean exit
+            return
+
         except Exception as exc:
             yield StreamFrame.error_frame(
                 agent_id=self.agent_id,
@@ -127,13 +136,12 @@ class StreamingAgent(BaseModel):
                 seq=self._next_seq(),
             )
 
-        finally:
-            if not self._interrupted:
-                yield StreamFrame.done_frame(
-                    agent_id=self.agent_id,
-                    stream_id=self._stream_id,
-                    seq=self._next_seq(),
-                )
+        if not _saw_done and not self._interrupted:
+            yield StreamFrame.done_frame(
+                agent_id=self.agent_id,
+                stream_id=self._stream_id,
+                seq=self._next_seq(),
+            )
 
     async def consume_frame(self, frame: StreamFrame) -> None:
         """Process an incoming frame from another agent.
