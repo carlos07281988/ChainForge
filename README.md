@@ -10,8 +10,10 @@
 
 ## Table of Contents
 
-- [Why ChainForge?](#why-chainforge--为什么选择-chainforge)
+- [Table of Contents](#table-of-contents)
+- [What Makes ChainForge Unique](#what-makes-chainforge-unique--为什么是-chainforge)
 - [Quick Start](#quick-start--快速开始)
+- [Why ChainForge?](#why-chainforge--为什么选择-chainforge)
 - [Installation](#installation--安装)
 - [Core Concepts](#core-concepts--核心概念)
 - [Examples](#examples--示例)
@@ -19,38 +21,56 @@
 - [API Reference](#api-reference--api-参考)
 - [Design Principles](#design-principles--设计原则)
 - [Roadmap](#roadmap--路线图)
-- [Agent Patterns (11)](#agent-patterns--代理模式)
-- [Advanced Features (22)](#advanced-features--高级功能)
+- [Agent Patterns](#agent-patterns--代理模式)
+- [Reasoning Strategies](#reasoning-strategies--推理策略)
+- [Agent Linking](#agent-linking--代理链接)
+- [Evaluation & Testing](#evaluation-testing--评估测试)
+- [Dashboard](#dashboard--控制台)
+- [DAG Visual Editor](#dag-visual-editor--dag-可视化编辑器)
+- [A2A Protocol](#a2a-protocol--a2a-protocol--agent-to-agent-协议)
+- [Code Sandbox](#code-sandbox--代码沙箱)
+- [Memory 2.0 (Vector Memory)](#memory-20-vector-memory--memory-20-vector-memory--向量记忆)
+- [Agent Config Declaration](#agent-config-declaration--声明式-agent-配置)
+- [Logging](#logging--日志)
+- [Skills](#skills--技能)
+- [Instructions](#instructions)
+- [Advanced Features](#advanced-features--高级功能)
   - [TimeTravelDebugger](#timetraveldebugger--时间旅行调试器)
   - [ConsensusAgent](#consensusagent--跨模型共识仲裁)
   - [SelfEvolvingAgent](#selfevolvingagent--自进化代理)
   - [ToolSynthesizer](#toolsynthesizer--自适应工具合成)
   - [LiquidMemory](#liquidmemory--液态时序记忆)
   - [PromptInjectionGuardrail](#promptinjectionguardrail--提示注入检测)
-  - [Workflow DSL](#declarative-workflow-dsl--声明式工作流)
+  - [Workflow DSL](#workflow-dsl--声明式工作流)
   - [Multi-Modal Pipeline](#multi-modal-pipeline--多模态输入管道)
-  - [Dream/Simulation Mode](#dream--simulation-mode--梦境模拟模式)
+  - [Dream/Simulation Mode](#dreamsimulation-mode--梦境模拟模式)
   - [Technology Tree](#technology-tree--科技树)
   - [AgentPopulation](#agentpopulation--多代演化)
-  - [ArtifactStore](#artifactstore--file--media-artifact-management--制品管理)
-  - [InvocationContext](#invocationcontext--standardized-execution-context--调用上下文)
-  - [Lifecycle Hooks](#tool--agent-lifecycle-hooks--beforeafter-execution-hooks--生命周期钩子)
-  - [ActivityLogger](#activitylogger--structured-activity-logging--活动日志)
-  - [ThreadManager](#threadmanager--conversation-thread--session-management--会话线程管理)
-  - [WebSearch & WebFetch](#webssearch--webfetch--built-in-web-search--网络搜索工具)
-  - [Agent Visual Debugger](#agent-visual-debugger--interactive-debugging-ui--可视化调试器)
-  - [NL → Agent Compiler](#nl--agent-compiler--compile-natural-language-to-workflows--自然语言编译器)
-
-  - [Behavioral Testing](#behavioral-testing-framework--行为测试框架)
-  - [Performance Budget](#performance-budget-contracts--性能预算契约)
+  - [ArtifactStore](#artifactstore--制品管理)
+  - [InvocationContext](#invocationcontext--调用上下文)
+  - [Lifecycle Hooks](#lifecycle-hooks--生命周期钩子)
+  - [ActivityLogger](#activitylogger--活动日志)
+  - [ThreadManager](#threadmanager--会话线程管理)
+  - [WebSearch & WebFetch](#websearch-webfetch--网络搜索工具)
+  - [Agent Visual Debugger](#agent-visual-debugger--可视化调试器)
+  - [NL → Agent Compiler](#nl-agent-compiler--自然语言编译器)
+  - [Behavioral Testing](#behavioral-testing--行为测试框架)
+  - [Performance Budget](#performance-budget--性能预算契约)
   - [Agent-as-Microservice](#agent-as-microservice--一行部署-agent)
-- [What Makes ChainForge Unique](#what-makes-chainforge-unique--为什么是-chainforge)
+- [Enterprise Fabric (Pure SDK)](#enterprise-fabric--企业级-sdk)
+  - [EU AI Act Compliance Engine](#-eu-ai-act-compliance-engine--合规引擎)
+  - [Agent Economics Layer](#-agent-economics-layer--经济核算)
+  - [Agent Supply Chain Security](#-agent-supply-chain-security--供应链安全)
+  - [Collective Agent Memory](#-collective-agent-memory--群体记忆)
+- [NVIDIA NIM Provider + Governance 2.0 + SmartRouter 3.0](#nvidia-nim-provider--governance-20--smartrouter-30)
+  - [NVIDIA NIM Provider](#-nvidia-nim-provider-)
+  - [Governance 2.0](#-governance-20-)
+  - [SmartRouter 3.0](#-smartrouter-30-策略感知路由)
+- [Agent Specification Language (ASL)](#agent-specification-language-asl--agent-规范语言)
+- [What's NOT Included](#whats-not-included--其他框架有但-chainforge-没有的)
 - [License](#license--许可)
 
 ---
-
-
-
 
 
 ## What Makes ChainForge Unique / 为什么是 ChainForge
@@ -363,33 +383,7 @@ print(report.summary())
 
 ---
 
-## What's NOT Included / 其他框架有但 ChainForge 没有的
 
-ChainForge intentionally does not include:
-- **Visual Studio / LangGraph Studio** — We provide the protocol (ALDP) and
-  Python API (TimeTravelDebugger). UI is a separate concern.
-- **Hosted platform / LangSmith** — Self-hosted tracing built in.
-- **100+ dependencies** — ChainForge depends on pydantic + stdlib only.
-
-
-## Why ChainForge? / 为什么选择 ChainForge
-
-LangChain pioneered the agent framework space, but its architecture carries years of backward-compatibility debt. ChainForge is a clean-slate redesign driven by what we've learned since:
-
-LangChain 开创了 Agent 框架的先河，但其架构背负着多年的向后兼容债务。ChainForge 是一次彻底的重构。
-
-| Pain Point | LangChain | ChainForge | 对比说明 |
-|---|---|---|---|
-| API complexity | Chain, Runnable, LCEL | **Protocol-based** — minimal | API 复杂度降低 80% |
-| Streaming | Bolted on, callbacks | **Streaming-first** | 流式原生支持 |
-| Tool integration | Layered pipeline | **Tool Protocol** | 工具即插即用 |
-| State management | Separate LangGraph | **Agent loop built-in** | 无需额外框架 |
-| Observability | LangSmith external | **Built-in middleware** | 零外部依赖 |
-| Async | Secondary | **Async-native** | 性能更优 |
-| Error handling | Opaque traces | **Typed errors** | 精确定位 |
-| Dependencies | 100+ transitive | **Only pydantic + stdlib** | 极致轻量 |
-
----
 
 ## Quick Start / 快速开始
 
@@ -433,6 +427,29 @@ asyncio.run(main())
 
 ---
 
+
+
+## Why ChainForge? / 为什么选择 ChainForge
+
+LangChain pioneered the agent framework space, but its architecture carries years of backward-compatibility debt. ChainForge is a clean-slate redesign driven by what we've learned since:
+
+LangChain 开创了 Agent 框架的先河，但其架构背负着多年的向后兼容债务。ChainForge 是一次彻底的重构。
+
+| Pain Point | LangChain | ChainForge | 对比说明 |
+|---|---|---|---|
+| API complexity | Chain, Runnable, LCEL | **Protocol-based** — minimal | API 复杂度降低 80% |
+| Streaming | Bolted on, callbacks | **Streaming-first** | 流式原生支持 |
+| Tool integration | Layered pipeline | **Tool Protocol** | 工具即插即用 |
+| State management | Separate LangGraph | **Agent loop built-in** | 无需额外框架 |
+| Observability | LangSmith external | **Built-in middleware** | 零外部依赖 |
+| Async | Secondary | **Async-native** | 性能更优 |
+| Error handling | Opaque traces | **Typed errors** | 精确定位 |
+| Dependencies | 100+ transitive | **Only pydantic + stdlib** | 极致轻量 |
+
+---
+
+
+
 ## Installation / 安装
 
 **Requires Python 3.11+ / 需要 Python 3.11+**
@@ -454,6 +471,8 @@ pip install "chainforge[all]"
 **Requires Python 3.11+.**
 
 ---
+
+
 
 ## Core Concepts / 核心概念
 
@@ -557,6 +576,8 @@ agent = Agent(
 ```
 
 ---
+
+
 
 ## Examples / 示例
 
@@ -681,11 +702,20 @@ agent = Agent(llm=..., tools=mcp_tools)
 
 ---
 
+
+
 ## Architecture / 架构
 
 ```
 chainforge/
-├── routing/           # SmartRouter — cost-optimized model routing
+├── routing/             # SmartRouter 3.0 — governance-aware model routing
+├── enterprise/           # Enterprise Fabric™ — compliance, economics, security, collective memory
+│   ├── __init__.py
+│   ├── compliance/       # EU AI Act engine — risk classification + HITL + audit
+│   ├── economics/        # Cost tracking + budget guards + attribution
+│   ├── collective/       # Shared agent experiences + forgetting curves + conflict resolution
+│   └── supply_chain/     # Dependency scanning + permission policies + SBOM export
+├── governance/           # PolicyEngine, DataResidency, ModelVersionTracker, AuditReporter
 ├── __init__.py          # Public API exports
 ├── __main__.py          # python -m chainforge
 ├── _version.py          # Version string
@@ -720,7 +750,8 @@ chainforge/
 │   ├── azure.py         # Azure OpenAI — streaming, tool calls
 │   ├── bedrock.py       # AWS Bedrock — Claude, Llama, Mistral, Titan
 │   ├── ollama.py        # OllamaProvider — local inference
-│   └── deepseek.py       # DeepSeekProvider — DeepSeek-V3/R1 (reasoning)
+│   ├── deepseek.py       # DeepSeekProvider — DeepSeek-V3/R1 (reasoning)
+│   └── nim.py            # NIMProvider — NVIDIA NIM local GPU inference
 │
 ├── agents/              # 10 agent patterns
 │   ├── __init__.py
@@ -824,6 +855,7 @@ chainforge/
 ├── rag/                 # RAG pipeline
 ├── reasoning/           # Reasoning strategies
 ├── routing/             # SmartRouter model routing
+├── governance/          # Governance 2.0 — policy engine + residency + version tracking
 ├── parsers/             # Output parsers
 ├── cache/               # LLM response caching
 ├── callbacks/           # Lifecycle callbacks
@@ -877,6 +909,8 @@ User Prompt
 
 ---
 
+
+
 ## API Reference / API 参考
 
 ### `chainforge`
@@ -910,6 +944,8 @@ User Prompt
 
 ---
 
+
+
 ## Design Principles / 设计原则
 
 1. **Protocols, not base classes** — interfaces are `typing.Protocol` subclasses. You don't inherit, you implement.
@@ -920,6 +956,8 @@ User Prompt
 6. **Composability over configuration** — Pipeline `>>`, middleware chains, tool lists. Composition is the API.
 
 ---
+
+
 
 ## Roadmap / 路线图
 
@@ -967,178 +1005,267 @@ User Prompt
 - [x] **Technology Tree** — capability tree with usage-driven unlocks + event callbacks
 - [x] **Multi-Generational Evolution** — genetic algorithm: tournament selection, crossover, mutation
 
+### Phase 15: Production Engineering & Compliance
+
+- [x] **Behavior Testing Framework** — model-agnostic functional tests for agents
+- [x] **Performance Budget Contracts** — latency/cost/token limits with auto-enforcement
+- [x] **Agent-as-Microservice** — `@service` decorator for one-line FastAPI deployment
+
+### Phase 16-20: Developer Experience & Intelligence
+
+- [x] **ALDP (Agent Live Debug Protocol)** — WebSocket-based live debugging
+- [x] **NL → Agent Compiler** — natural language to CyclicGraph (template + LLM modes)
+- [x] **Agent Visual Debugger UI** — browser-based agent inspection
+- [x] **Execution Provenance Graph** — full causal chain tracing
+- [x] **Agent Hub & Agent Tool** — centralized registry, agent-as-tool composition
+
+### Phase 21-27: Enterprise-Grade Agent Reliability
+
+- [x] **Self-Healing Agents** — automatic failure detection, classification, and recovery
+- [x] **Agent Memory Consolidation** — human-like memory compression and recall
+- [x] **Auditable Execution Chain** — tamper-evident audit logs
+- [x] **Adversarial Testing Engine** — automated security testing for agents
+- [x] **SmartRouter 2.0** — Adaptive Multi-Model Router (capability, cost, latency)
+- [x] **Behavior Contract Runtime** — declarative policy enforcement at runtime
+
+### Phase 28: NVIDIA NIM + Governance 2.0 + SmartRouter 3.0
+
+- [x] **NVIDIA NIM Provider** — local GPU inference with health checking + model discovery
+- [x] **Governance 2.0** — PolicyEngine, DataResidency, ModelVersionTracker, AuditReporter
+- [x] **SmartRouter 3.0 (Policy-Aware Router)** — data classification → policy match → infra filter → cost optimization
+
+### Phase 29: Enterprise Fabric™ (Pure SDK)
+
+- [x] **EU AI Act Compliance Engine** — auto risk classification (4 tiers), HITL enforcement, Article 11-15 audit reports
+- [x] **Agent Economics Layer** — real-time cost tracking, multi-tenant attribution, budget guards with auto-downgrade
+- [x] **Agent Supply Chain Security** — dependency scanning, permission policies (YAML export + middleware), SPDX/CycloneDX SBOM, MCP endpoint verification
+- [x] **Collective Agent Memory** — shared experience pool across agents, Ebbinghaus forgetting curve, conflict resolution
+
 ### Coming Next
 
-- [ ] Visual Agent Debugger UI (LangGraph Studio equivalent)
-- [ ] Execution Provenance Graph visualization
-- [ ] NL to CyclicGraph compiler
-- [ ] Agent MoE (Mixture of Experts routing)
+- [ ] Multi-Agent Economics Dashboard (cost attribution per team/project)
+- [ ] Threat Intelligence feed integration for agent supply chain
 
 ---
 
-## Logging / 日志
+## Enterprise Fabric™ / 企业级 SDK
 
-ChainForge provides a structured, production-ready logging system built on Python's `logging` module.
+ChainForge 企业级模块 — **纯 SDK，零前端**。每个模块通过 middleware 或可选参数集成，无需修改 Agent 核心 API。
 
-### Quick Start / 快速开始
+---
+
+### 🏛️ EU AI Act Compliance Engine / 合规引擎
+
+自动评估 agent 风险等级（minimal/limited/high/unacceptable），高风险场景强制 HITL，一键生成符合 EU AI Act Article 11-15 的审计报告。
 
 ```python
-from chainforge import configure_logging
-
-# Human-readable text output (default)
-configure_logging(level="INFO")
-
-# JSON structured logging (for log aggregators)
-configure_logging(level="DEBUG", format="json")
-
-# Per-module log levels
-configure_logging(
-    level="WARNING",
-    module_levels={
-        "agent": "DEBUG",         # Verbose agent internals
-        "providers.openai": "INFO", # Show API calls
-    },
+from chainforge.enterprise.compliance import (
+    ComplianceGuard, RiskClassifier, HITLPolicy, ComplianceAuditor,
 )
 
-# Log to file
-configure_logging(level="DEBUG", output="logs/chainforge.log")
-```
-
-### Logging / 日志 Middleware
-
-The `logging_middleware` captures the full lifecycle of each agent run:
-
-```python
-from chainforge import Agent
-from chainforge.middleware.logging_mw import logging_middleware
+classifier = RiskClassifier()
+tier, rules = classifier.classify(["delete_file"], ["pii"], "healthcare")
+# → (RiskTier.HIGH, [RiskRule(...), RiskRule(...)])
 
 agent = Agent(
-    llm=...,
-    tools=[...],
-    middlewares=[logging_middleware(
-        log_input=True,         # Log user prompts
-        log_output=True,        # Log agent responses
-        log_tool_calls=True,    # Log tool invocations + results
-        log_states=True,        # Log state transitions
-    )],
+    llm=SmartRouter(...),
+    tools=[delete_file, query_db],
+    middlewares=[
+        ComplianceGuard(
+            classifier=classifier,
+            hitl_policy=HITLPolicy(
+                require_approval_on=["high"],
+                approval_handler=my_slack_approval_fn,
+            ),
+            auditor=ComplianceAuditor(log_path="compliance.db"),
+        ),
+    ],
 )
+
+# 导出合规报告
+auditor = ComplianceAuditor(regulation="eu-ai-act-2026")
+report = auditor.generate(risk_tier="high", has_hitl=True)
+print(report.to_markdown())    # 给合规官
+report_data = report.to_json() # 给 DevOps 管道
 ```
 
-Example JSON output:
-
-```json
-{"ts": "14:30:01.234", "level": "INFO", "logger": "chainforge.agent", "msg": "[run_123] Agent started", "data": {"input": "Weather in Beijing?", "messages": 2}}
-{"ts": "14:30:01.456", "level": "DEBUG", "logger": "chainforge.agent", "msg": "[run_123] state → thinking", "data": {"state": {"state": "thinking", "iteration": 0}}}
-{"ts": "14:30:02.001", "level": "INFO", "logger": "chainforge.agent", "msg": "[run_123] tool → get_weather", "data": {"tool_call": {"name": "get_weather", "args": {"city": "Beijing"}}}}
-{"ts": "14:30:02.234", "level": "INFO", "logger": "chainforge.agent", "msg": "[run_123] Done in 1.20s", "data": {"duration_s": 1.2, "tool_calls": 1}}
-```
-
-### Module Loggers
-
-Every module has a namespaced logger under `chainforge.*`:
-
-| `chainforge.middleware.retry` | Retry attempts | INFO |
-
-### Structured Data
-
-Use `log_data()` to attach structured data to log entries:
-
-```python
-from chainforge import log_data, get_logger
-
-logger = get_logger("my_module")
-log_data(logger, "INFO", "Processing complete", data={
-    "items_processed": 42,
-    "duration_ms": 150,
-})
-```
-
-In JSON mode, the data dict appears under the `"data"` key. In text mode, it's appended to the message.
+**独特价值:** 2026 年 EU AI Act 全面生效。全球第一个内置 AI 法规合规的 Agent 框架。罚款可达全球营收 7%。
 
 ---
 
-## Skills / 技能
+### 💰 Agent Economics Layer / 经济核算
 
-Skills are reusable capability bundles — instructions + optional tools — that agents can load, compose, and invoke. Compatible with Codex SKILL.md format.
-
-### Using Skills
+实时追踪每个 agent 调用的 token 成本 + GPU 时间 + API 费用，按项目/部门/租户多维归因，预算上限自动降级或熔断。
 
 ```python
-from chainforge.skills import Skill, SkillRegistry
+from chainforge.enterprise.economics import CostTracker, BudgetGuard
 
-# Create a skill inline
-greeting_skill = Skill(
-    name="greeter",
-    description="Creates enthusiastic greetings",
-    instructions="""
-You are a greeting specialist. Always use an enthusiastic tone
-and include emojis.
-""",
-)
+tracker = CostTracker(backend="sqlite", db_path="costs.db")
 
-# Load from SKILL.md (Codex-compatible format)
-skill = Skill.load("./skills/my-skill/SKILL.md")
-
-# Compose into an agent
 agent = Agent(
-    llm=llm,
+    llm=SmartRouter(...),
     tools=[...],
-    skills=[greeting_skill, skill],
+    middlewares=[
+        tracker.middleware(attribution={
+            "project": "customer-support",
+            "department": "operations",
+            "tenant": "acme-corp",
+        }),
+        BudgetGuard(
+            daily_limit=50.0,
+            on_limit="downgrade",
+            fallback_model="gpt-4o-mini",
+        ),
+    ],
 )
+
+report = tracker.report(group_by="project", period="this-month")
+for row in report.to_json():
+    print(f"  {row['dimension']}: ${row['total_cost']:.2f}")
+
+suggestions = tracker.optimize(period="last-30-days")
+# → "Switch 12,000 queries from gpt-4o → gpt-4o-mini: save $240"
 ```
 
-### SKILL.md Format
+**独特价值:** LangChain、CrewAI、AutoGen 全都没有成本核算。你的 CFO 会用这个来逼团队用 ChainForge。
 
-ChainForge loads skills from standard Codex SKILL.md files:
-
-```markdown
----
-name: my-skill
-description: What this skill does
-tags: [tag1, tag2]
 ---
 
-## Instructions
+### 🔗 Agent Supply Chain Security / 供应链安全
 
-Markdown instructions here...
-```
-
-### Skill Registry
+扫描每个 tool/skill/MCP server 的依赖链，生成最小权限策略，导出 SBOM（SPDX/CycloneDX）。
 
 ```python
-from chainforge.skills import SkillRegistry
+from chainforge.enterprise.supply_chain import (
+    SupplyChainScanner, PermissionPolicy, SBOMExporter,
+)
 
-registry = SkillRegistry()
-registry.load_dir("./skills")
-registry.register(my_skill)
+scanner = SupplyChainScanner()
+report = scanner.scan(agent)
+# → SupplyChainReport: total_risk_score=4.2/10
 
-# Query
-skill = registry.get("skill-name")
-results = registry.search("weather")
-tagged = registry.find_by_tag("demo")
+policy = scanner.recommend_policy(agent)
+policy.to_yaml("security/policies/my_agent.yaml")
 
-# Convert all skills to tools
-tools = registry.to_tools()
+# Runtime 强制策略执行
+agent = Agent(
+    llm=llm, tools=[...],
+    middlewares=[policy.as_middleware()],
+)
+
+sbom = SBOMExporter().export(agent, format="spdx")
+sbom.save("sbom.my_agent.spdx.json")
 ```
 
-### Skills / 技能 as Tools
+**独特价值:** MCP 生态爆发增长，安全性是真空。这是下一个 log4j 级别的风险面。
 
-Each skill automatically generates a tool specification, enabling agents to discover and invoke skills dynamically:
+---
+
+### 🧠 Collective Agent Memory / 群体记忆
+
+多个 agent 共享学习。成功/失败经验自动沉淀，新 agent 启动时自动检索，Ebbinghaus 遗忘曲线自动衰减过时经验。
 
 ```python
-skill_tool = skill.to_tool()
-# The agent can now call this skill via tool calls
+from chainforge.enterprise.collective import (
+    CollectiveMemory, ConflictResolver,
+)
+
+cm = CollectiveMemory(namespace="customer-support")
+
+agent_a = Agent(llm=llm, tools=[...], collective_memory=cm)
+await agent_a.run("处理退款请求")  # 经验自动记录
+
+agent_b = Agent(llm=llm, tools=[...], collective_memory=cm)
+# Agent B 自动获得历史经验注入:
+# "Related past experiences:
+#  - [7/15] Refund: refund_tool + email → success ($0.02)
+#  - [7/14] Refund: refund_tool only → customer complained
+#  → Recommend: Always use email after refund_tool"
+
+resolver = ConflictResolver(memory=cm)
+for c in resolver.find_conflicts():
+    print(f"{c.task_type}: {c.recommendation}")
 ```
 
-### CLI
+**独特价值:** 现有 Memory 系统全是单 agent 的。多 agent 协作真正瓶颈是知识共享，ChainForge 是唯一解决这个问题的框架。
 
-```bash
-chainforge skill list        # List available skills
-chainforge skill add <path>  # Register a skill
-chainforge skill info <name> # Show skill details
+---
+
+## NVIDIA NIM Provider + Governance 2.0 + SmartRouter 3.0
+
+### 🖥️ NVIDIA NIM Provider
+
+NVIDIA NIM 推理微服务 — 私有化 GPU 部署，OpenAI 兼容 API。
+
+```python
+from chainforge.providers import NIMProvider
+
+nim = NIMProvider(
+    model="meta/llama-3.1-70b-instruct",
+    base_url="http://gpu-node-01:8000/v1",
+)
+
+if not await nim.health_check():
+    print("NIM service unavailable — switching to fallback")
+
+models = await nim.list_models()
+agent = Agent(llm=nim, tools=[...])
+```
+
+### 🛡️ Governance 2.0
+
+声明式治理 — 数据驻留、版本锁定、合规审计。
+
+```python
+from chainforge.governance import (
+    PolicyEngine, GovernancePolicy, DataResidency,
+    ModelVersionTracker, AuditReporter,
+)
+
+# PII → 仅本地模型
+residency = DataResidency()
+assert residency.is_allowed("nim", ["pii"])    # → True
+assert residency.is_allowed("openai", ["pii"]) # → False
+
+engine = PolicyEngine(policies=[
+    GovernancePolicy(name="pii-local", data_labels=["pii"],
+                     model_provider="nim", action="enforce"),
+])
+decision = await engine.evaluate(["pii"], {})
+# → PolicyDecision(allowed_providers=["nim"])
+
+# 版本锁定
+tracker = ModelVersionTracker()
+record = tracker.snapshot("nim", "meta/llama-3.1-70b-instruct", temperature=0.7)
+assert tracker.verify("nim", record.params_hash)
+```
+
+### 🧭 SmartRouter 3.0 — 策略感知路由
+
+数据分类 → 策略匹配 → 基础设施探针 → 成本优化。
+
+```python
+from chainforge.routing import (
+    PolicyAwareRouter, InfraProbe, DataClassifier,
+)
+from chainforge.routing.adaptive import ModelRegistry
+
+registry = ModelRegistry()
+registry.register("gpt-4o-mini", provider="openai", cost_per_1k=0.00015)
+registry.register("llama-70b", provider="nim", cost_per_1k=0.0)
+
+router = PolicyAwareRouter(registry, policy_engine, InfraProbe())
+
+provider = await router.select("Hello world!")
+# → gpt-4o-mini (public data, cost optimized)
+
+provider = await router.select("My SSN is 123-45-6789")
+# → llama-70b (NIM) — PII forced to local
 ```
 
 ---
+
+
 
 ## Agent Patterns / 代理模式
 
@@ -1609,6 +1736,8 @@ asyncio.run(main())
 
 
 
+
+
 ## Reasoning Strategies / 推理策略
 
 Reasoning Strategies are a **framework-level abstraction** that lets you inject structured thinking patterns into any Agent's execution loop — without modifying the Agent itself.
@@ -1722,6 +1851,8 @@ agent = Agent(llm=llm, reasoning=[FactCheckStrategy()])
 | Integration | Agent is replaced | Agent is enhanced |
 
 In short: **patterns are recipes, strategies are ingredients.**
+
+
 
 ## Agent Linking / 代理链接
 
@@ -1876,6 +2007,8 @@ chain = hub.create_chain(["search", "data"], name="research_analyze")
 | **AgentHub** | Registry + discovery | Managing many agents, auto-routing |
 
 
+
+
 ## Evaluation & Testing / 评估测试
 
 ChainForge includes a built-in evaluation framework for benchmarking agent performance against test cases.
@@ -1988,6 +2121,8 @@ curl -X POST http://localhost:8000/api/v1/eval/run \
 
 ---
 
+
+
 ## Dashboard / 控制台
 
 ChainForge provides a web dashboard for real-time agent streaming visualization and DAG editing.
@@ -2025,6 +2160,8 @@ chainforge serve --port 8000
 | GET | `/api/v1/health` | Health check |
 
 ---
+
+
 
 ## DAG Visual Editor / DAG 可视化编辑器
 
@@ -2080,6 +2217,8 @@ curl "http://localhost:8000/api/v1/dag/stream?dag=\
 
 
 ---
+
+
 
 ## A2A Protocol / Agent-to-Agent 协议
 
@@ -2167,6 +2306,8 @@ sequenceDiagram
 
 
 
+
+
 ## Code Sandbox / 代码沙箱
 
 ChainForge provides isolated code execution environments for agents — safe Python and shell execution without host system exposure.
@@ -2208,6 +2349,8 @@ print(load_image("photo.jpg"))  # data:image/jpeg;base64,...
 csv_data = loader.load_csv("data.csv")  # list of dicts
 json_data = loader.load_json("config.json")
 ```
+
+
 
 
 ## Memory 2.0 (Vector Memory) / 向量记忆
@@ -2252,6 +2395,8 @@ context = await manager.get_context("What does the user like?")
 |----------|------|----------------|
 | `IdentityEmbedding` | Hash-based (dev/test) | No |
 | OpenAI | `text-embedding-3-small` | Yes *(planned)* |
+
+
 
 
 ## Agent Config Declaration / 声明式 Agent 配置
@@ -2319,6 +2464,178 @@ async for event in await agent.run("What is 2 + 2?"):
 | `memory.type` | string | — | `buffer`, `summary`, `vector` |
 | `system_prompt` | string | — | System instructions |
 | `max_iterations` | int | `10` | Max tool-use iterations |
+
+
+
+## Logging / 日志
+
+ChainForge provides a structured, production-ready logging system built on Python's `logging` module.
+
+### Quick Start / 快速开始
+
+```python
+from chainforge import configure_logging
+
+# Human-readable text output (default)
+configure_logging(level="INFO")
+
+# JSON structured logging (for log aggregators)
+configure_logging(level="DEBUG", format="json")
+
+# Per-module log levels
+configure_logging(
+    level="WARNING",
+    module_levels={
+        "agent": "DEBUG",         # Verbose agent internals
+        "providers.openai": "INFO", # Show API calls
+    },
+)
+
+# Log to file
+configure_logging(level="DEBUG", output="logs/chainforge.log")
+```
+
+### Logging / 日志 Middleware
+
+The `logging_middleware` captures the full lifecycle of each agent run:
+
+```python
+from chainforge import Agent
+from chainforge.middleware.logging_mw import logging_middleware
+
+agent = Agent(
+    llm=...,
+    tools=[...],
+    middlewares=[logging_middleware(
+        log_input=True,         # Log user prompts
+        log_output=True,        # Log agent responses
+        log_tool_calls=True,    # Log tool invocations + results
+        log_states=True,        # Log state transitions
+    )],
+)
+```
+
+Example JSON output:
+
+```json
+{"ts": "14:30:01.234", "level": "INFO", "logger": "chainforge.agent", "msg": "[run_123] Agent started", "data": {"input": "Weather in Beijing?", "messages": 2}}
+{"ts": "14:30:01.456", "level": "DEBUG", "logger": "chainforge.agent", "msg": "[run_123] state → thinking", "data": {"state": {"state": "thinking", "iteration": 0}}}
+{"ts": "14:30:02.001", "level": "INFO", "logger": "chainforge.agent", "msg": "[run_123] tool → get_weather", "data": {"tool_call": {"name": "get_weather", "args": {"city": "Beijing"}}}}
+{"ts": "14:30:02.234", "level": "INFO", "logger": "chainforge.agent", "msg": "[run_123] Done in 1.20s", "data": {"duration_s": 1.2, "tool_calls": 1}}
+```
+
+### Module Loggers
+
+Every module has a namespaced logger under `chainforge.*`:
+
+| `chainforge.middleware.retry` | Retry attempts | INFO |
+
+### Structured Data
+
+Use `log_data()` to attach structured data to log entries:
+
+```python
+from chainforge import log_data, get_logger
+
+logger = get_logger("my_module")
+log_data(logger, "INFO", "Processing complete", data={
+    "items_processed": 42,
+    "duration_ms": 150,
+})
+```
+
+In JSON mode, the data dict appears under the `"data"` key. In text mode, it's appended to the message.
+
+---
+
+
+
+## Skills / 技能
+
+Skills are reusable capability bundles — instructions + optional tools — that agents can load, compose, and invoke. Compatible with Codex SKILL.md format.
+
+### Using Skills
+
+```python
+from chainforge.skills import Skill, SkillRegistry
+
+# Create a skill inline
+greeting_skill = Skill(
+    name="greeter",
+    description="Creates enthusiastic greetings",
+    instructions="""
+You are a greeting specialist. Always use an enthusiastic tone
+and include emojis.
+""",
+)
+
+# Load from SKILL.md (Codex-compatible format)
+skill = Skill.load("./skills/my-skill/SKILL.md")
+
+# Compose into an agent
+agent = Agent(
+    llm=llm,
+    tools=[...],
+    skills=[greeting_skill, skill],
+)
+```
+
+### SKILL.md Format
+
+ChainForge loads skills from standard Codex SKILL.md files:
+
+```markdown
+---
+name: my-skill
+description: What this skill does
+tags: [tag1, tag2]
+---
+
+
+
+## Instructions
+
+Markdown instructions here...
+```
+
+### Skill Registry
+
+```python
+from chainforge.skills import SkillRegistry
+
+registry = SkillRegistry()
+registry.load_dir("./skills")
+registry.register(my_skill)
+
+# Query
+skill = registry.get("skill-name")
+results = registry.search("weather")
+tagged = registry.find_by_tag("demo")
+
+# Convert all skills to tools
+tools = registry.to_tools()
+```
+
+### Skills / 技能 as Tools
+
+Each skill automatically generates a tool specification, enabling agents to discover and invoke skills dynamically:
+
+```python
+skill_tool = skill.to_tool()
+# The agent can now call this skill via tool calls
+```
+
+### CLI
+
+```bash
+chainforge skill list        # List available skills
+chainforge skill add <path>  # Register a skill
+chainforge skill info <name> # Show skill details
+```
+
+---
+
+
 
 ## Advanced Features / 高级功能
 
@@ -3541,6 +3858,8 @@ app.include_router(debug_api.router, prefix="/api/v1/debug")
 
 **Architecture:** `chainforge/debugger/` — DebugSession wraps Agent + TimeTravelDebugger with pause/step/resume. DebuggerAPI provides 15+ REST endpoints + WebSocket for the React frontend at `/dashboard/debugger`.
 
+
+
 ## Agent Specification Language (ASL) / Agent 规范语言
 
 A declarative YAML spec covering the full agent lifecycle — model config, tools, behavior contracts, testing, monitoring, and evolution.
@@ -3570,6 +3889,19 @@ See [improvements/ASL.md](./improvements/ASL.md) for the full specification.
 
 ---
 
+
+
+## What's NOT Included / 其他框架有但 ChainForge 没有的
+
+ChainForge intentionally does not include:
+- **Visual Studio / LangGraph Studio** — We provide the protocol (ALDP) and
+  Python API (TimeTravelDebugger). UI is a separate concern.
+- **Hosted platform / LangSmith** — Self-hosted tracing built in.
+- **100+ dependencies** — ChainForge depends on pydantic + stdlib only.
+
+
+
+
 ## License / 许可
 
 Apache 2.0
@@ -3577,3 +3909,5 @@ Apache 2.0
 ---
 
 <p align="center"><strong>锻造链</strong> — 锻造你的链。</p>
+
+
