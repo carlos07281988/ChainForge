@@ -26,7 +26,7 @@ from __future__ import annotations
 import asyncio
 
 from chainforge.core.agent import Agent
-from chainforge.core.llm import LLM, LLMResponse
+from chainforge.core.llm import LLMResponse
 from chainforge.enterprise.stream_a2a import (
     BackpressurePolicy,
     StreamBridge,
@@ -42,32 +42,33 @@ from chainforge.enterprise.stream_a2a.protocol import FrameType
 # ── Mock LLM for testing (no real API calls) ────────────────────────────────
 
 
-class MockLLM(LLM):
-    """Fake LLM that returns canned responses for smoke testing."""
+class MockLLM:
+    """Fake LLM that returns canned responses for smoke testing.
 
-    model_config = {"arbitrary_types_allowed": True}
+    Duck-types the chainforge.core.llm.LLM protocol — not a subclass
+    because LLM is a Protocol, not a BaseModel.
+    """
 
-    _responses: list = []
-    _index: int = 0
+    model: str = "mock/test"
 
-    def __init__(self, responses: list | None = None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, responses: list[str] | None = None):
         self._responses = responses or ["Hello from mock agent."]
         self._index = 0
+
+    @property
+    def capabilities(self) -> set[str]:
+        return {"chat", "streaming"}
 
     async def generate(self, messages, tools=None, **kwargs):
         text = self._responses[self._index % len(self._responses)]
         self._index += 1
-        return LLMResponse(content=text, finish_reason="stop")
+        return LLMResponse(content=text, finish_reason="stop", model=self.model)
 
-    async def generate_stream(self, messages, tools=None, **kwargs):
+    async def stream_generate(self, messages, tools=None, **kwargs):
         text = self._responses[self._index % len(self._responses)]
         self._index += 1
-        yield LLMResponse(content=text[: len(text) // 2], finish_reason=None)
-        yield LLMResponse(content=text[len(text) // 2 :], finish_reason="stop")
-
-    def supports(self, capability):
-        return True
+        yield LLMResponse(content=text[: len(text) // 2], finish_reason=None, model=self.model)
+        yield LLMResponse(content=text[len(text) // 2 :], finish_reason="stop", model=self.model)
 
 
 # ── Test Helpers ────────────────────────────────────────────────────────────
