@@ -1065,17 +1065,17 @@ User Prompt
 
 ### Phase 32: Graph Intelligence, Distillation, Observability & Personalization (Coming Next)
 
-- [ ] **GraphRAG 3.0: Multi-Agent Knowledge Graph Engine** — 去中心化 Knowledge Graph、跨 Agent 知识共享、Graph-native Agent Memory、GraphQL-native query layer、Graph Embedding-powered semantic search
-- [ ] **Agent Distillation Pipeline** — Agent 行为蒸馏到小模型（llama/qwen）、自动训练数据生成、LoRA fine-tuning 集成、成本优化 80%+
-- [ ] **Agent Observability 2.0 — 行为异常检测** — 实时异常检测（失败率飙升/陌生工具调用/token 异常）、SOC 级告警、自动根因分析
-- [ ] **Agent Personalization Engine** — 用户级偏好学习、行为 Profile 建模、自适应响应风格、Multi-tenant personality isolation
+- [x] **GraphRAG 3.0: Multi-Agent Knowledge Graph Engine** — 去中心化 Knowledge Graph、跨 Agent 知识共享、Graph-native Agent Memory、GraphQL-native query layer、Graph Embedding-powered semantic search
+- [x] **Agent Distillation Pipeline** — Agent 行为蒸馏到小模型（llama/qwen）、自动训练数据生成、LoRA fine-tuning 集成、成本优化 80%+
+- [x] **Agent Observability 2.0 — 行为异常检测** — 实时异常检测（失败率飙升/陌生工具调用/token 异常）、SOC 级告警、自动根因分析
+- [x] **Agent Personalization Engine** — 用户级偏好学习、行为 Profile 建模、自适应响应风格、Multi-tenant personality isolation
 
-### Longer Term
+### Phase 33: Agent Mesh, Streaming A2A, Fine-Tuning, Multi-Modal (Coming Next)
 
-- [ ] Agent Mesh Networking (multi-region agent clusters)
-- [ ] Streaming Agent-to-Agent Protocol (WebSocket-based real-time agent chains)
-- [ ] Agent Fine-Tuning Pipeline (collective memory → LoRA fine-tuning feedback loop)
-- [ ] Multi-Modal Agent Orchestration (vision + audio + structured data in a single agent)
+- [ ] **Agent Mesh Networking** — 多区域 Agent 集群、跨区域服务发现、全球负载均衡、去中心化 Registry Federation
+- [ ] **Streaming Agent-to-Agent Protocol** — WebSocket-based 实时 Agent 链、双向流式通信、背压控制、心跳保活
+- [ ] **Agent Fine-Tuning Loop** — Collective Memory → LoRA fine-tuning 反馈闭环、自动训练数据清洗、质量评估
+- [ ] **Multi-Modal Agent Orchestration** — Vision + Audio + Structured Data 统一 Pipeline、跨模态 Tool 编排、Multi-modal Memory
 
 ---
 
