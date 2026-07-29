@@ -41,6 +41,7 @@ __all__ = [
     "observe",
     "personalize",
     "promptsec",
+    "rbac",
     "registry",
     "stream_a2a",
     "supply_chain",
