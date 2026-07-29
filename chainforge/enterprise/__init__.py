@@ -19,6 +19,7 @@ Each submodule is lazily imported. Import what you need:
     from chainforge.enterprise.compliance import ComplianceGuard
     from chainforge.enterprise.collective import CollectiveMemory
     from chainforge.enterprise.supply_chain import SupplyChainScanner
+    from chainforge.enterprise.promptsec import PromptSecurityScanner
 """
 
 __all__ = [
@@ -39,6 +40,7 @@ __all__ = [
     "multimodal",
     "observe",
     "personalize",
+    "promptsec",
     "registry",
     "stream_a2a",
     "supply_chain",
