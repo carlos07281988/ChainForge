@@ -21,6 +21,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from chainforge.core.llm import LLMResponse
+from chainforge.core.stream import EventType
 from chainforge.enterprise.observe.alert import (
     Alert,
     AlertChannel,
@@ -115,7 +116,7 @@ class AnomalyDetector:
             async for event in next_handler(messages, ctx):
                 if (
                     hasattr(event, "type")
-                    and event.type == "tool_call"
+                    and event.type == EventType.tool_call
                     and event.data
                 ):
                     tn = event.data.get("tool_name", "")

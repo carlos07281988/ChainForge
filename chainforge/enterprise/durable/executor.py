@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
+import asyncio
 from typing import Any
 import time
 import uuid
@@ -65,7 +66,7 @@ class DurableExecutor:
         logger.info(f"Job submitted: {job.job_id}")
         return job
 
-    async def run_sync(self, agent, prompt: str, **opts) -> Any:
+    async def execute(self, agent, prompt: str, **opts) -> Any:
         """Run synchronously with automatic checkpointing."""
         job = await self.submit(agent, prompt, **opts)
         job.status = "running"
@@ -87,6 +88,11 @@ class DurableExecutor:
         job = self._jobs.get(job_id)
         if not job:
             return None
+        deadline = time.monotonic() + timeout if timeout else None
+        while job.status not in ("done", "failed", "cancelled"):
+            if deadline is not None and time.monotonic() >= deadline:
+                raise TimeoutError(f"Job {job_id} timed out after {timeout}s")
+            await asyncio.sleep(0.1)
         return job.result
 
     async def cancel(self, job_id: str) -> bool:

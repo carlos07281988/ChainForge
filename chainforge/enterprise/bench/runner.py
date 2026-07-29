@@ -21,6 +21,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from chainforge.enterprise.bench.suite import BenchmarkScenario, BenchmarkSuite
+from chainforge.core.stream import EventType
 
 
 class BenchmarkResult(BaseModel):
@@ -84,11 +85,11 @@ class BenchmarkRunner:
             stream = await agent.run(sc.input)
             async for event in stream:
                 if hasattr(event, "type"):
-                    if event.type == "tool_call":
+                    if event.type == EventType.tool_call:
                         tn = event.data.get("tool_name", "") if event.data else ""
                         if tn:
                             tool_calls.append(tn)
-                    elif event.type == "text":
+                    elif event.type == EventType.text:
                         output += (
                             str(event.data.get("content", "") if event.data else event)
                             if event.data

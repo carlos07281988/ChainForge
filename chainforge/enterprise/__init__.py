@@ -20,3 +20,26 @@ Each submodule is lazily imported. Import what you need:
     from chainforge.enterprise.collective import CollectiveMemory
     from chainforge.enterprise.supply_chain import SupplyChainScanner
 """
+
+__all__ = [
+    "bench",
+    "collective",
+    "compliance",
+    "distill",
+    "durable",
+    "economics",
+    "economy",
+    "federation",
+    "finetune",
+    "graphrag",
+    "identity",
+    "justice",
+    "lineage",
+    "mesh",
+    "multimodal",
+    "observe",
+    "personalize",
+    "registry",
+    "stream_a2a",
+    "supply_chain",
+]
