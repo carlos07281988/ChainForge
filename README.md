@@ -8,8 +8,22 @@
 
 ---
 
+## Project Stats
+
+| Aspect | Status |
+|--------|--------|
+| Core Features | 60+ built-in capabilities |
+| Enterprise Modules | 20 production-grade SDK modules |
+| Tests | 30+ existing + 64 new enterprise tests |
+| Examples | 20 runnable enterprise example scripts |
+| Provider Support | 8 LLM providers (OpenAI, Anthropic, Google, Azure, Bedrock, Ollama, DeepSeek, NVIDIA NIM) |
+| Architecture | Pure SDK, zero frontend, middleware-first, no breaking changes |
+
+---
+
 ## Table of Contents
 
+- [Project Stats](#project-stats)
 - [Table of Contents](#table-of-contents)
 - [What Makes ChainForge Unique](#what-makes-chainforge-unique--为什么是-chainforge)
 - [Quick Start](#quick-start--快速开始)
@@ -62,6 +76,7 @@
   - [Agent Economics Layer](#-agent-economics-layer--经济核算)
   - [Agent Supply Chain Security](#-agent-supply-chain-security--供应链安全)
   - [Collective Agent Memory](#-collective-agent-memory--群体记忆)
+  - [Additional Enterprise Modules](#additional-enterprise-modules)
 - [NVIDIA NIM Provider + Governance 2.0 + SmartRouter 3.0](#nvidia-nim-provider--governance-20--smartrouter-30)
   - [NVIDIA NIM Provider](#-nvidia-nim-provider-)
   - [Governance 2.0](#-governance-20-)
@@ -709,7 +724,7 @@ agent = Agent(llm=..., tools=mcp_tools)
 ```
 chainforge/
 ├── routing/             # SmartRouter 3.0 — governance-aware model routing
-├── enterprise/           # Enterprise Fabric™ — 13 enterprise modules (SDK only)
+├── enterprise/           # Enterprise Fabric — 20 enterprise modules (SDK only)
 │   ├── __init__.py
 │   ├── compliance/       # EU AI Act engine — risk classification + HITL + audit
 │   ├── economics/        # Cost tracking + budget guards + attribution
@@ -722,7 +737,15 @@ chainforge/
 │   ├── lineage/          # Data Lineage — GDPR Right-to-Forget + deletion proof
 │   ├── justice/          # Agent Justice — contestable decisions + human appeal
 │   ├── bench/            # Benchmarking as Code — YAML suites + regression detection
-│   └── federation/       # Agent Federation — cross-framework interop protocol
+│   ├── federation/       # Agent Federation — cross-framework interop protocol
+│   ├── distill/          # Agent Distillation — teacher-to-student behavior transfer
+│   ├── observe/          # Observability 2.0 — anomaly detection + SOC alerting
+│   ├── personalize/      # User-level preference learning + response adaptation
+│   ├── mesh/             # Multi-region Agent Mesh Networking + cross-region failover
+│   ├── stream_a2a/       # WebSocket-based real-time agent-to-agent streaming
+│   ├── finetune/         # Collective Memory → LoRA fine-tuning feedback loop
+│   ├── graphrag/         # GraphRAG 3.0 — multi-agent knowledge graph engine
+│   └── multimodal/       # Vision + Audio + Structured Data unified pipeline
 ├── governance/           # PolicyEngine, DataResidency, ModelVersionTracker, AuditReporter
 ├── __init__.py          # Public API exports
 ├── __main__.py          # python -m chainforge
@@ -1063,7 +1086,7 @@ User Prompt
 - [x] **Agent Benchmarking as Code** — YAML 声明式 benchmark、`chainforge bench` CLI、自动回归检测、多 model/tool 对比
 - [x] **Agent Federation Protocol** — 跨框架 Agent 互操作、HTTP+JSON Schema 标准协议、LangChain/CrewAI/AutoGen 互调
 
-### Phase 32: Graph Intelligence, Distillation, Observability & Personalization (Coming Next)
+### Phase 32: Graph Intelligence, Distillation, Observability & Personalization
 
 - [x] **GraphRAG 3.0: Multi-Agent Knowledge Graph Engine** — 去中心化 Knowledge Graph、跨 Agent 知识共享、Graph-native Agent Memory、GraphQL-native query layer、Graph Embedding-powered semantic search
 - [x] **Agent Distillation Pipeline** — Agent 行为蒸馏到小模型（llama/qwen）、自动训练数据生成、LoRA fine-tuning 集成、成本优化 80%+
@@ -1076,14 +1099,6 @@ User Prompt
 - [x] **Streaming Agent-to-Agent Protocol** — WebSocket-based 实时 Agent 链、双向流式通信、背压控制、心跳保活
 - [x] **Agent Fine-Tuning Loop** — Collective Memory → LoRA fine-tuning 反馈闭环、自动训练数据清洗、质量评估
 - [x] **Multi-Modal Agent Orchestration** — Vision + Audio + Structured Data 统一 Pipeline、跨模态 Tool 编排、Multi-modal Memory
-
-### Phase 34: Agent Simulation, Prompt Security, Handoff, Drift Detection & RBAC (Coming Next)
-
-- [ ] **Agent Simulator & Digital Twin** — 大规模合成流量模拟、变更前影响评估、Agent Chaos Engineering、Digital Twin 沙箱验证
-- [ ] **Prompt Security Scanner (SAST for Prompts)** — System Prompt 静态安全分析、信息泄露检测、越狱脆弱性扫描、Prompt 复杂度评分
-- [ ] **Agent-to-Human Handoff Protocol** — 标准化人工交接格式、Handoff Package 自动生成、优先级分级、SLA 追踪
-- [ ] **Agent Drift Detection** — Agent 行为漂移实时检测、特征向量监控、自动回滚建议、与 Benchmarking 联动验证
-- [ ] **Agent RBAC** — 策略即代码 (OPA 风格)、Agent 级别访问控制、基于身份+时间+数据标签的细粒度鉴权
 
 ### Future Horizons
 
@@ -1233,6 +1248,21 @@ for c in resolver.find_conflicts():
 ```
 
 **独特价值:** 现有 Memory 系统全是单 agent 的。多 agent 协作真正瓶颈是知识共享，ChainForge 是唯一解决这个问题的框架。
+
+---
+
+### Additional Enterprise Modules
+
+| Module | Description |
+|--------|-------------|
+| `distill/` | Agent Distillation Pipeline — teacher-to-student behavior transfer |
+| `observe/` | Agent Observability 2.0 — anomaly detection + SOC alerting |
+| `personalize/` | User-level preference learning + response adaptation |
+| `mesh/` | Multi-region Agent Mesh Networking + cross-region failover |
+| `stream_a2a/` | WebSocket-based real-time agent-to-agent streaming |
+| `finetune/` | Collective Memory → LoRA fine-tuning feedback loop |
+| `graphrag/` | GraphRAG 3.0 — multi-agent knowledge graph engine |
+| `multimodal/` | Vision + Audio + Structured Data unified pipeline |
 
 ---
 
