@@ -1077,6 +1077,14 @@ User Prompt
 - [x] **Agent Fine-Tuning Loop** — Collective Memory → LoRA fine-tuning 反馈闭环、自动训练数据清洗、质量评估
 - [x] **Multi-Modal Agent Orchestration** — Vision + Audio + Structured Data 统一 Pipeline、跨模态 Tool 编排、Multi-modal Memory
 
+### Phase 34: Agent Simulation, Prompt Security, Handoff, Drift Detection & RBAC (Coming Next)
+
+- [ ] **Agent Simulator & Digital Twin** — 大规模合成流量模拟、变更前影响评估、Agent Chaos Engineering、Digital Twin 沙箱验证
+- [ ] **Prompt Security Scanner (SAST for Prompts)** — System Prompt 静态安全分析、信息泄露检测、越狱脆弱性扫描、Prompt 复杂度评分
+- [ ] **Agent-to-Human Handoff Protocol** — 标准化人工交接格式、Handoff Package 自动生成、优先级分级、SLA 追踪
+- [ ] **Agent Drift Detection** — Agent 行为漂移实时检测、特征向量监控、自动回滚建议、与 Benchmarking 联动验证
+- [ ] **Agent RBAC** — 策略即代码 (OPA 风格)、Agent 级别访问控制、基于身份+时间+数据标签的细粒度鉴权
+
 ### Future Horizons
 
 - [ ] Agent Operating System (AgentOS) — Self-bootstrapping agent ecosystems
